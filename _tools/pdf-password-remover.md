@@ -567,13 +567,32 @@ async function removePassword() {
         const formData = new FormData();
         formData.append('pdf', selectedFile);
         formData.append('password', password);
+        formData.append('action', 'remove-password'); // Specify the action
         
         // Update progress
         progressFill.style.width = '60%';
         progressText.textContent = 'Removing password protection...';
         
+        // For now, show a message that this feature is coming soon
+        // TODO: Implement actual API endpoint for password removal
+        setTimeout(() => {
+            progressFill.style.width = '100%';
+            progressText.textContent = 'Feature coming soon!';
+            
+            setTimeout(() => {
+                document.getElementById('progressSection').style.display = 'none';
+                document.getElementById('passwordSection').style.display = 'block';
+                alert('PDF Password Removal feature is coming soon! Please check back later or contact support for assistance.');
+            }, 1000);
+        }, 2000);
+        return;
+        
+        // Commented out until API endpoint is ready
+        
+        /* 
+        // API call - commented out until endpoint is ready
         // Make API call to remove password
-        const response = await fetch('https://api.tundasportsclub.com/remove-pdf-password', {
+        const response = await fetch('https://api.tundasportsclub.com/convert', {
             method: 'POST',
             body: formData
         });
@@ -582,8 +601,26 @@ async function removePassword() {
         progressText.textContent = 'Finalizing...';
         
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to remove password');
+            // Try to get error message from response
+            let errorMessage = 'Failed to remove password';
+            try {
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    const errorData = await response.json();
+                    errorMessage = errorData.error || errorMessage;
+                } else {
+                    // If response is not JSON, it might be an HTML error page
+                    const errorText = await response.text();
+                    if (errorText.includes('404') || errorText.includes('Not Found')) {
+                        errorMessage = 'Service temporarily unavailable. Please try again later.';
+                    } else if (errorText.includes('500') || errorText.includes('Internal Server Error')) {
+                        errorMessage = 'Server error. Please try again later.';
+                    }
+                }
+            } catch (e) {
+                console.error('Error parsing error response:', e);
+            }
+            throw new Error(errorMessage);
         }
         
         // Get the unlocked PDF blob
@@ -598,6 +635,7 @@ async function removePassword() {
             document.getElementById('progressSection').style.display = 'none';
             document.getElementById('resultSection').style.display = 'block';
         }, 500);
+        */
         
     } catch (error) {
         console.error('Password removal failed:', error);
