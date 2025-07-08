@@ -1,0 +1,36 @@
+---
+layout: default
+---
+
+<!-- Dynamic Breadcrumb Navigation -->
+<nav class="breadcrumb-nav">
+  <div class="wrapper">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="/">🏠 Home</a></li>
+      <li class="breadcrumb-item"><a href="/tools.html">🛠️ All Tools</a></li>
+      <li class="breadcrumb-item active" aria-current="page">{{ page.tool_name | default: page.title }}</li>
+    </ol>
+  </div>
+</nav>
+
+<!-- Enhanced SEO Meta Tags -->
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "{{ page.tool_name | default: page.title }}",
+    "description": "{{ page.description }}",
+    "url": "{{ site.url }}{{ page.url }}",
+    "applicationCategory": "Productivity",
+    "operatingSystem": "Any",
+    "permissions": "Safe",
+    "isAccessibleForFree": true,
+    "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+    }
+}
+</script>
+
+{{ content }}
