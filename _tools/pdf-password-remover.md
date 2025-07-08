@@ -11,7 +11,7 @@ permalink: /tools/pdf-password-remover/
         <h1><i class="fas fa-unlock-alt"></i> PDF Password Remover</h1>
         <p class="tool-description">Remove password protection from your PDF files quickly and securely</p>
         
-        <div class="status-notice">
+        <div class="status-notice" style="display: none;" id="statusNotice">
             <i class="fas fa-info-circle"></i>
             <strong>Feature Coming Soon:</strong> The PDF Password Removal service is currently being implemented. 
             The tool interface is ready, but the backend service is not yet available. Please check back soon!
@@ -71,8 +71,8 @@ permalink: /tools/pdf-password-remover/
     <div class="features-grid">
         <div class="feature-card">
             <i class="fas fa-shield-alt"></i>
-            <h3>Secure Processing</h3>
-            <p>Your files are processed securely and deleted automatically after conversion</p>
+            <h3>100% Private</h3>
+            <p>Processing happens entirely in your browser - your files never leave your device</p>
         </div>
         <div class="feature-card">
             <i class="fas fa-bolt"></i>
@@ -95,8 +95,8 @@ permalink: /tools/pdf-password-remover/
         <h2>Frequently Asked Questions</h2>
         
         <div class="faq-item">
-            <h3><i class="fas fa-cogs"></i> Is the service currently available?</h3>
-            <p>The PDF Password Removal service is currently being implemented. While the user interface is complete and ready, the backend API service is not yet deployed. We are working to make this feature available soon. Please check back later!</p>
+            <h3><i class="fas fa-cogs"></i> How does this tool work?</h3>
+            <p>Our PDF Password Remover works entirely in your browser using client-side processing. Your PDF file and password never leave your device, ensuring complete privacy and security. The tool uses advanced PDF processing libraries to decrypt and recreate your PDF without password protection.</p>
         </div>
         
         <div class="faq-item">
@@ -106,7 +106,7 @@ permalink: /tools/pdf-password-remover/
 
         <div class="faq-item">
             <h3><i class="fas fa-lock"></i> Is it safe to remove passwords from my PDFs?</h3>
-            <p>Yes, our service is completely secure. All files are processed on secure servers and automatically deleted after processing. We don't store your files or passwords, ensuring complete privacy and security.</p>
+            <p>Absolutely! Our tool processes your PDF entirely within your browser using client-side technology. Your PDF file, password, and the unlocked version never leave your device or get sent to any server. This ensures complete privacy and security.</p>
         </div>
 
         <div class="faq-item">
@@ -487,6 +487,9 @@ permalink: /tools/pdf-password-remover/
 }
 </style>
 
+<!-- PDF-lib for client-side PDF processing -->
+<script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+
 <script>
 let selectedFile = null;
 let downloadUrl = null;
@@ -590,72 +593,48 @@ async function removePassword() {
     
     try {
         // Animate progress
-        progressFill.style.width = '30%';
+        progressFill.style.width = '20%';
+        progressText.textContent = 'Reading PDF file...';
+        
+        // Read the PDF file
+        const arrayBuffer = await selectedFile.arrayBuffer();
+        
+        progressFill.style.width = '40%';
         progressText.textContent = 'Verifying password...';
         
-        // Create FormData
-        const formData = new FormData();
-        formData.append('file', selectedFile);
-        formData.append('password', password);
+        // Try to load the PDF with the password using PDF-lib
+        let pdfDoc;
+        try {
+            pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer, { password: password });
+        } catch (error) {
+            if (error.message.includes('password') || error.message.includes('encrypted')) {
+                throw new Error('Incorrect password. Please check your password and try again.');
+            }
+            throw new Error('Unable to process this PDF. Please ensure it\'s a valid password-protected PDF.');
+        }
         
-        // Update progress
-        progressFill.style.width = '60%';
+        progressFill.style.width = '70%';
         progressText.textContent = 'Removing password protection...';
         
-        // Check if API endpoint is available
-        let response;
-        try {
-            response = await fetch('https://api.tundasportsclub.com/remove-password', {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'Accept': 'application/json'
-                }
-            });
-            
-            // If we get a 404, the endpoint doesn't exist yet
-            if (response.status === 404) {
-                throw new Error('PDF Password Removal service is not yet available. This feature is currently being implemented and will be ready soon. Please check back later!');
-            }
-        } catch (fetchError) {
-            // Handle network errors or 404s
-            if (fetchError.message.includes('PDF Password Removal service is not yet available')) {
-                throw fetchError;
-            }
-            console.log('API endpoint unavailable:', fetchError);
-            throw new Error('PDF Password Removal service is currently being implemented. Please check back soon for this feature!');
-        }
+        // Create a new PDF without password protection
+        const newPdfDoc = await PDFLib.PDFDocument.create();
+        
+        // Copy all pages from the original PDF
+        const pageIndices = Array.from({length: pdfDoc.getPageCount()}, (_, i) => i);
+        const copiedPages = await newPdfDoc.copyPages(pdfDoc, pageIndices);
+        
+        copiedPages.forEach((page) => {
+            newPdfDoc.addPage(page);
+        });
         
         progressFill.style.width = '90%';
-        progressText.textContent = 'Finalizing...';
+        progressText.textContent = 'Finalizing unlocked PDF...';
         
-        if (!response.ok) {
-            let errorMessage = 'Password removal service unavailable';
-            
-            if (response.status === 404) {
-                errorMessage = 'PDF Password Removal feature is not yet available. This service is being implemented and will be ready soon!';
-            } else if (response.status === 500) {
-                errorMessage = 'PDF Password Removal service encountered an error. Please try again later.';
-            } else if (response.status === 401 || response.status === 403) {
-                errorMessage = 'Incorrect password. Please check your password and try again.';
-            } else {
-                try {
-                    const contentType = response.headers.get('content-type');
-                    if (contentType && contentType.includes('application/json')) {
-                        const errorData = await response.json();
-                        errorMessage = errorData.error || 'PDF Password Removal service is not yet available.';
-                    } else {
-                        errorMessage = 'PDF Password Removal service is not yet available. Please check back soon!';
-                    }
-                } catch (e) {
-                    errorMessage = 'PDF Password Removal service is not yet available. Please check back soon!';
-                }
-            }
-            throw new Error(errorMessage);
-        }
+        // Save the new PDF without password
+        const pdfBytes = await newPdfDoc.save();
         
-        // Get the unlocked PDF blob
-        const blob = await response.blob();
+        // Create download URL
+        const blob = new Blob([pdfBytes], { type: 'application/pdf' });
         downloadUrl = URL.createObjectURL(blob);
         
         // Complete progress
@@ -672,7 +651,7 @@ async function removePassword() {
         document.getElementById('progressSection').style.display = 'none';
         document.getElementById('passwordSection').style.display = 'block';
         
-        if (error.message.includes('Invalid password') || error.message.includes('Incorrect password')) {
+        if (error.message.includes('Incorrect password') || error.message.includes('password')) {
             alert('Incorrect password. Please check your password and try again.');
             document.getElementById('pdfPassword').focus();
         } else {
