@@ -16,7 +16,7 @@ description: "Browse all our free online tools for PDF processing, document conv
     "@type": "ItemList",
     "name": "Office Tools",
     "description": "Professional online tools for PDF processing, document conversion, and everyday tasks",
-    "numberOfItems": 20,
+    "numberOfItems": 21,
     "itemListElement": [
       {
         "@type": "SoftwareApplication",
@@ -50,6 +50,15 @@ description: "Browse all our free online tools for PDF processing, document conv
         "name": "PDF Compressor",
         "description": "Reduce PDF file size while maintaining quality", 
         "url": "{{ site.url }}/tools/pdf-compressor",
+        "applicationCategory": "PDF Tools",
+        "operatingSystem": "Any",
+        "isAccessibleForFree": true
+      },
+      {
+        "@type": "SoftwareApplication",
+        "name": "PDF Password Remover",
+        "description": "Remove password protection from PDF files instantly",
+        "url": "{{ site.url }}/tools/pdf-password-remover",
         "applicationCategory": "PDF Tools",
         "operatingSystem": "Any",
         "isAccessibleForFree": true
@@ -208,6 +217,18 @@ description: "Browse all our free online tools for PDF processing, document conv
             <span class="feature-tag">Secure</span>
           </div>
           <a href="/tools/protect-pdf" class="tool-btn">Protect PDF</a>
+        </div>
+
+        <div class="tool-card" data-category="pdf" data-keywords="pdf password remove unlock decrypt unprotect">
+          <div class="tool-icon">🔓</div>
+          <h3>PDF Password Remover</h3>
+          <p>Remove password protection from PDF files instantly</p>
+          <div class="tool-features">
+            <span class="feature-tag">Password Removal</span>
+            <span class="feature-tag">Unlock PDFs</span>
+            <span class="feature-tag">Secure Process</span>
+          </div>
+          <a href="/tools/pdf-password-remover" class="tool-btn">Remove Password</a>
         </div>
 
         <div class="tool-card" data-category="pdf" data-keywords="pdf rotate pages orientation portrait landscape">

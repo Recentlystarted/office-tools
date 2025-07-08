@@ -36,7 +36,6 @@ jobs:
 
     - name: Build with Jekyll
       run: |
-        cd office-tools
         bundle exec jekyll build --baseurl "${{ steps.pages.outputs.base_path }}"
       env:
         JEKYLL_ENV: production
@@ -44,7 +43,7 @@ jobs:
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v3
       with:
-        path: office-tools/_site
+        path: _site
 
   deploy:
     environment:
