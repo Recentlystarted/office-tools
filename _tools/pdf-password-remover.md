@@ -13,8 +13,8 @@ permalink: /tools/pdf-password-remover/
         
         <div class="status-notice">
             <i class="fas fa-info-circle"></i>
-            <strong>Service Notice:</strong> Our PDF Password Removal service is currently being configured. 
-            You can try the tool, but if you encounter errors, please check back soon as we finalize the setup.
+            <strong>Feature Coming Soon:</strong> The PDF Password Removal service is currently being implemented. 
+            The tool interface is ready, but the backend service is not yet available. Please check back soon!
         </div>
     </div>
 
@@ -96,7 +96,7 @@ permalink: /tools/pdf-password-remover/
         
         <div class="faq-item">
             <h3><i class="fas fa-cogs"></i> Is the service currently available?</h3>
-            <p>We are currently finalizing the configuration of our PDF Password Removal service. While the tool interface is ready, the backend API is being set up. If you encounter any errors, please check back soon as we complete the implementation.</p>
+            <p>The PDF Password Removal service is currently being implemented. While the user interface is complete and ready, the backend API service is not yet deployed. We are working to make this feature available soon. Please check back later!</p>
         </div>
         
         <div class="faq-item">
@@ -602,7 +602,7 @@ async function removePassword() {
         progressFill.style.width = '60%';
         progressText.textContent = 'Removing password protection...';
         
-        // Try the API call first
+        // Check if API endpoint is available
         let response;
         try {
             response = await fetch('https://api.tundasportsclub.com/remove-password', {
@@ -612,10 +612,18 @@ async function removePassword() {
                     'Accept': 'application/json'
                 }
             });
+            
+            // If we get a 404, the endpoint doesn't exist yet
+            if (response.status === 404) {
+                throw new Error('PDF Password Removal service is not yet available. This feature is currently being implemented and will be ready soon. Please check back later!');
+            }
         } catch (fetchError) {
-            // If specific endpoint doesn't exist, try alternative approach
-            console.log('Primary endpoint unavailable, trying alternative...');
-            throw new Error('PDF Password Removal service is currently being configured. Please check back soon or contact support for assistance.');
+            // Handle network errors or 404s
+            if (fetchError.message.includes('PDF Password Removal service is not yet available')) {
+                throw fetchError;
+            }
+            console.log('API endpoint unavailable:', fetchError);
+            throw new Error('PDF Password Removal service is currently being implemented. Please check back soon for this feature!');
         }
         
         progressFill.style.width = '90%';
@@ -625,9 +633,9 @@ async function removePassword() {
             let errorMessage = 'Password removal service unavailable';
             
             if (response.status === 404) {
-                errorMessage = 'PDF Password Removal feature is being implemented. Please check back soon!';
+                errorMessage = 'PDF Password Removal feature is not yet available. This service is being implemented and will be ready soon!';
             } else if (response.status === 500) {
-                errorMessage = 'PDF Password Removal service is currently being configured. Please try again later or contact support.';
+                errorMessage = 'PDF Password Removal service encountered an error. Please try again later.';
             } else if (response.status === 401 || response.status === 403) {
                 errorMessage = 'Incorrect password. Please check your password and try again.';
             } else {
@@ -635,12 +643,12 @@ async function removePassword() {
                     const contentType = response.headers.get('content-type');
                     if (contentType && contentType.includes('application/json')) {
                         const errorData = await response.json();
-                        errorMessage = errorData.error || errorMessage;
+                        errorMessage = errorData.error || 'PDF Password Removal service is not yet available.';
                     } else {
-                        errorMessage = 'PDF Password Removal service is currently being configured. Please try again later.';
+                        errorMessage = 'PDF Password Removal service is not yet available. Please check back soon!';
                     }
                 } catch (e) {
-                    errorMessage = 'PDF Password Removal service is currently being configured. Please try again later.';
+                    errorMessage = 'PDF Password Removal service is not yet available. Please check back soon!';
                 }
             }
             throw new Error(errorMessage);
