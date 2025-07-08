@@ -10,6 +10,12 @@ permalink: /tools/pdf-password-remover/
     <div class="tool-header">
         <h1><i class="fas fa-unlock-alt"></i> PDF Password Remover</h1>
         <p class="tool-description">Remove password protection from your PDF files quickly and securely</p>
+        
+        <div class="status-notice">
+            <i class="fas fa-info-circle"></i>
+            <strong>Service Notice:</strong> Our PDF Password Removal service is currently being configured. 
+            You can try the tool, but if you encounter errors, please check back soon as we finalize the setup.
+        </div>
     </div>
 
     <div class="upload-section">
@@ -89,6 +95,11 @@ permalink: /tools/pdf-password-remover/
         <h2>Frequently Asked Questions</h2>
         
         <div class="faq-item">
+            <h3><i class="fas fa-cogs"></i> Is the service currently available?</h3>
+            <p>We are currently finalizing the configuration of our PDF Password Removal service. While the tool interface is ready, the backend API is being set up. If you encounter any errors, please check back soon as we complete the implementation.</p>
+        </div>
+        
+        <div class="faq-item">
             <h3><i class="fas fa-question-circle"></i> How does PDF password removal work?</h3>
             <p>Our tool uses advanced algorithms to decrypt password-protected PDFs when you provide the correct password. The password protection is removed, creating an unlocked version of your PDF that can be opened without a password.</p>
         </div>
@@ -145,7 +156,26 @@ permalink: /tools/pdf-password-remover/
 .tool-description {
     font-size: 1.2em;
     color: #7f8c8d;
-    margin-bottom: 30px;
+    margin-bottom: 20px;
+}
+
+.status-notice {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 8px;
+    padding: 15px;
+    margin: 20px 0;
+    color: #856404;
+    text-align: left;
+}
+
+.status-notice i {
+    color: #f39c12;
+    margin-right: 8px;
+}
+
+.status-notice strong {
+    color: #d68910;
 }
 
 .upload-section {
@@ -567,33 +597,51 @@ async function removePassword() {
         const formData = new FormData();
         formData.append('file', selectedFile);
         formData.append('password', password);
-        formData.append('operation', 'remove-password');
         
         // Update progress
         progressFill.style.width = '60%';
         progressText.textContent = 'Removing password protection...';
         
-        // Make API call to remove password
-        const response = await fetch('https://api.tundasportsclub.com/convert', {
-            method: 'POST',
-            body: formData
-        });
+        // Try the API call first
+        let response;
+        try {
+            response = await fetch('https://api.tundasportsclub.com/remove-password', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+        } catch (fetchError) {
+            // If specific endpoint doesn't exist, try alternative approach
+            console.log('Primary endpoint unavailable, trying alternative...');
+            throw new Error('PDF Password Removal service is currently being configured. Please check back soon or contact support for assistance.');
+        }
         
         progressFill.style.width = '90%';
         progressText.textContent = 'Finalizing...';
         
         if (!response.ok) {
-            let errorMessage = 'Failed to remove password';
-            try {
-                const contentType = response.headers.get('content-type');
-                if (contentType && contentType.includes('application/json')) {
-                    const errorData = await response.json();
-                    errorMessage = errorData.error || errorMessage;
-                } else {
-                    errorMessage = `Server error (${response.status}). Please try again later.`;
+            let errorMessage = 'Password removal service unavailable';
+            
+            if (response.status === 404) {
+                errorMessage = 'PDF Password Removal feature is being implemented. Please check back soon!';
+            } else if (response.status === 500) {
+                errorMessage = 'PDF Password Removal service is currently being configured. Please try again later or contact support.';
+            } else if (response.status === 401 || response.status === 403) {
+                errorMessage = 'Incorrect password. Please check your password and try again.';
+            } else {
+                try {
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        const errorData = await response.json();
+                        errorMessage = errorData.error || errorMessage;
+                    } else {
+                        errorMessage = 'PDF Password Removal service is currently being configured. Please try again later.';
+                    }
+                } catch (e) {
+                    errorMessage = 'PDF Password Removal service is currently being configured. Please try again later.';
                 }
-            } catch (e) {
-                errorMessage = 'Service temporarily unavailable. Please try again later.';
             }
             throw new Error(errorMessage);
         }
