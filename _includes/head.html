@@ -1,0 +1,52 @@
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+{%- seo -%}
+
+<!-- Favicon -->
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/favicon.ico">
+
+<!-- Theme CSS -->
+<link rel="stylesheet" href="{{ "/assets/main.css" | relative_url }}">
+{%- feed_meta -%}
+{%- if jekyll.environment == 'production' and site.google_analytics -%}
+  {%- include google-analytics.html -%}
+{%- endif -%}
+
+<!-- Additional meta tags for SEO -->
+<meta name="robots" content="index, follow">
+<meta name="author" content="Office Tools">
+<meta name="theme-color" content="#2196F3">
+
+<!-- Mobile Navigation Script -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const menuIcon = document.querySelector('.site-nav .menu-icon');
+  const trigger = document.querySelector('.site-nav .trigger');
+  
+  if (menuIcon && trigger) {
+    menuIcon.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      trigger.classList.toggle('active');
+    });
+    
+    // Close menu when clicking outside
+    document.addEventListener('click', function(e) {
+      if (!menuIcon.contains(e.target) && !trigger.contains(e.target)) {
+        trigger.classList.remove('active');
+      }
+    });
+    
+    // Close menu when clicking on a link
+    const menuLinks = trigger.querySelectorAll('.page-link');
+    menuLinks.forEach(link => {
+      link.addEventListener('click', function() {
+        trigger.classList.remove('active');
+      });
+    });
+  }
+});
+</script>
