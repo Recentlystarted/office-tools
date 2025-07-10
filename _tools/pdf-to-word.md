@@ -276,7 +276,7 @@ async function convertPDF() {
     progressFill.style.width = '30%';
     
     // Call the live API
-    const response = await fetch('https://api.tundasportsclub.com/api/convert', {
+    const response = await fetch('https://api.tundasportsclub.com/convert', {
       method: 'POST',
       body: formData
     });
