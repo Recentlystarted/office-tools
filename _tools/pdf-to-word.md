@@ -102,11 +102,10 @@ console.log('PDF to Word API converter initialized');
       <div class="faq-item">
         <h3>Is this PDF to Word converter free to use?</h3>
         <p>Yes, our PDF to Word converter is completely free to use with no hidden costs or limitations.</p>
-      </div>
-      <div class="faq-item">
-        <h3>What is the maximum file size I can convert?</h3>
-        <p>You can convert PDF files up to 50MB in size. For larger files, we recommend splitting them first.</p>
-      </div>
+      </div>        <div class="faq-item">
+          <h3>What is the maximum file size I can convert?</h3>
+          <p>You can convert PDF files up to 50MB in size using our enhanced API. For larger files, we recommend splitting them first or using our async conversion feature for files up to 100MB.</p>
+        </div>
       <div class="faq-item">
         <h3>Will the formatting be preserved?</h3>
         <p>Yes, our converter maintains the original formatting, fonts, and layout as much as possible.</p>
@@ -250,9 +249,12 @@ async function convertPDF() {
     return;
   }
   
-  // Validate file size (50MB limit)
-  if (selectedFile.size > 50 * 1024 * 1024) {
-    showMessage('File too large. Maximum size is 50MB.', 'error');
+  // Check file size and determine conversion method
+  const isLargeFile = selectedFile.size > 50 * 1024 * 1024; // 50MB
+  const maxSize = isLargeFile ? 100 * 1024 * 1024 : 50 * 1024 * 1024; // 100MB for async, 50MB for sync
+  
+  if (selectedFile.size > maxSize) {
+    showMessage(`File too large. Maximum size is ${maxSize / 1024 / 1024}MB.`, 'error');
     return;
   }
   
@@ -264,52 +266,17 @@ async function convertPDF() {
     const progressFill = document.getElementById('progressFill');
     const progressText = document.getElementById('progressText');
     
-    // Upload to API
-    progressText.textContent = 'Uploading PDF to server...';
-    progressFill.style.width = '10%';
-    
     // Prepare form data for API
     const formData = new FormData();
     formData.append('file', selectedFile);
     
-    progressText.textContent = 'Processing with professional API...';
-    progressFill.style.width = '30%';
-    
-    // Call the live API
-    const response = await fetch('https://api.tundasportsclub.com/convert', {
-      method: 'POST',
-      body: formData
-    });
-    
-    progressText.textContent = 'Converting to Word format...';
-    progressFill.style.width = '70%';
-    
-    if (!response.ok) {
-      let errorMessage = 'Conversion failed';
-      try {
-        const errorData = await response.json();
-        errorMessage = errorData.error || errorMessage;
-      } catch (e) {
-        errorMessage = `Server error: ${response.status}`;
-      }
-      throw new Error(errorMessage);
+    if (isLargeFile) {
+      // Use async conversion for large files
+      await convertPDFAsync(formData, progressFill, progressText);
+    } else {
+      // Use regular conversion for smaller files
+      await convertPDFSync(formData, progressFill, progressText);
     }
-    
-    progressText.textContent = 'Finalizing conversion...';
-    progressFill.style.width = '90%';
-    
-    // Get the converted file
-    const blob = await response.blob();
-    convertedDoc = blob;
-    
-    progressText.textContent = 'Conversion complete!';
-    progressFill.style.width = '100%';
-    
-    // Show download section
-    setTimeout(() => {
-      document.getElementById('progressSection').style.display = 'none';
-      document.getElementById('downloadSection').style.display = 'block';
-    }, 500);
     
   } catch (error) {
     console.error('Error converting PDF:', error);
@@ -317,6 +284,123 @@ async function convertPDF() {
     document.getElementById('progressSection').style.display = 'none';
     document.getElementById('fileInfo').style.display = 'block';
   }
+}
+
+async function convertPDFSync(formData, progressFill, progressText) {
+  // Upload to API
+  progressText.textContent = 'Uploading PDF to server...';
+  progressFill.style.width = '10%';
+  
+  progressText.textContent = 'Processing with enhanced API...';
+  progressFill.style.width = '30%';
+  
+  // Call the enhanced modular API with fallback to legacy
+  let response;
+  try {
+    response = await fetch('https://api.tundasportsclub.com/api/pdf/convert', {
+      method: 'POST',
+      body: formData
+    });
+  } catch (error) {
+    // Fallback to legacy endpoint if modular fails
+    console.log('Trying legacy endpoint...');
+    response = await fetch('https://api.tundasportsclub.com/convert', {
+      method: 'POST',
+      body: formData
+    });
+  }
+  
+  progressText.textContent = 'Converting to Word format...';
+  progressFill.style.width = '70%';
+  
+  if (!response.ok) {
+    let errorMessage = 'Conversion failed';
+    try {
+      const errorData = await response.json();
+      errorMessage = errorData.error || errorMessage;
+    } catch (e) {
+      errorMessage = `Server error: ${response.status}`;
+    }
+    throw new Error(errorMessage);
+  }
+  
+  progressText.textContent = 'Finalizing conversion...';
+  progressFill.style.width = '90%';
+  
+  // Get the converted file
+  const blob = await response.blob();
+  convertedDoc = blob;
+  
+  progressText.textContent = 'Conversion complete!';
+  progressFill.style.width = '100%';
+  
+  // Show download section
+  setTimeout(() => {
+    document.getElementById('progressSection').style.display = 'none';
+    document.getElementById('downloadSection').style.display = 'block';
+  }, 500);
+}
+
+async function convertPDFAsync(formData, progressFill, progressText) {
+  // Start async conversion
+  progressText.textContent = 'Starting async conversion for large file...';
+  progressFill.style.width = '10%';
+  
+  // Submit for async processing
+  let response = await fetch('https://api.tundasportsclub.com/api/pdf/convert-async', {
+    method: 'POST',
+    body: formData
+  });
+  
+  if (!response.ok) {
+    throw new Error('Failed to start async conversion');
+  }
+  
+  const { job_id } = await response.json();
+  
+  progressText.textContent = 'Processing large file... This may take a few minutes.';
+  progressFill.style.width = '30%';
+  
+  // Poll for status
+  let attempts = 0;
+  const maxAttempts = 60; // 5 minutes max
+  
+  while (attempts < maxAttempts) {
+    await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds
+    
+    const statusResponse = await fetch(`https://api.tundasportsclub.com/api/pdf/status/${job_id}`);
+    const statusData = await statusResponse.json();
+    
+    if (statusData.status === 'completed') {
+      progressText.textContent = 'Downloading converted file...';
+      progressFill.style.width = '90%';
+      
+      // Download the result
+      const downloadResponse = await fetch(`https://api.tundasportsclub.com/api/pdf/download/${job_id}`);
+      convertedDoc = await downloadResponse.blob();
+      
+      progressText.textContent = 'Conversion complete!';
+      progressFill.style.width = '100%';
+      
+      setTimeout(() => {
+        document.getElementById('progressSection').style.display = 'none';
+        document.getElementById('downloadSection').style.display = 'block';
+      }, 500);
+      return;
+      
+    } else if (statusData.status === 'failed') {
+      throw new Error(statusData.error || 'Conversion failed');
+    }
+    
+    // Update progress
+    const progress = Math.min(30 + (attempts * 1.5), 80);
+    progressFill.style.width = `${progress}%`;
+    progressText.textContent = `Processing... (${Math.round(progress)}%)`;
+    
+    attempts++;
+  }
+  
+  throw new Error('Conversion timed out. Please try again with a smaller file.');
 }
 
 function initializeButtons() {

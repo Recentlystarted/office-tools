@@ -10,11 +10,6 @@ permalink: /tools/pdf-password-remover/
     <div class="tool-header">
         <h1><i class="fas fa-unlock-alt"></i> PDF Password Remover</h1>
         <p class="tool-description">Remove password protection from your PDF files quickly and securely</p>
-        
-        <div class="status-notice" style="display: none;" id="statusNotice">
-            <i class="fas fa-info-circle"></i>
-            <strong>Service Notice:</strong> Our PDF Password Removal service is powered by our secure API.
-        </div>
     </div>
 
     <div class="upload-section">
@@ -70,8 +65,8 @@ permalink: /tools/pdf-password-remover/
     <div class="features-grid">
         <div class="feature-card">
             <i class="fas fa-shield-alt"></i>
-            <h3>Secure API</h3>
-            <p>Powered by our self-hosted API - files are processed securely and deleted automatically</p>
+            <h3>Secure Processing</h3>
+            <p>Your files are processed securely and deleted automatically after conversion</p>
         </div>
         <div class="feature-card">
             <i class="fas fa-bolt"></i>
@@ -94,18 +89,13 @@ permalink: /tools/pdf-password-remover/
         <h2>Frequently Asked Questions</h2>
         
         <div class="faq-item">
-            <h3><i class="fas fa-cogs"></i> How does this tool work?</h3>
-            <p>Our PDF Password Remover uses our secure self-hosted API to process your files. When you upload a password-protected PDF and provide the password, our server safely removes the encryption and returns an unlocked version. Files are automatically deleted after processing to ensure your privacy.</p>
-        </div>
-        
-        <div class="faq-item">
             <h3><i class="fas fa-question-circle"></i> How does PDF password removal work?</h3>
             <p>Our tool uses advanced algorithms to decrypt password-protected PDFs when you provide the correct password. The password protection is removed, creating an unlocked version of your PDF that can be opened without a password.</p>
         </div>
 
         <div class="faq-item">
             <h3><i class="fas fa-lock"></i> Is it safe to remove passwords from my PDFs?</h3>
-            <p>Yes! Our service uses secure server-side processing with automatic file deletion. Your PDF files and passwords are processed on our secure servers and completely removed after processing. We use HTTPS encryption for all data transmission and never store your files or passwords.</p>
+            <p>Yes, our service is completely secure. All files are processed on secure servers and automatically deleted after processing. We don't store your files or passwords, ensuring complete privacy and security.</p>
         </div>
 
         <div class="faq-item">
@@ -125,7 +115,7 @@ permalink: /tools/pdf-password-remover/
 
         <div class="faq-item">
             <h3><i class="fas fa-file-archive"></i> What file size limits apply?</h3>
-            <p>You can remove passwords from PDFs up to 50MB in size. This covers most PDF documents. For larger files, consider compressing your PDF first or contact us for assistance with bulk processing.</p>
+            <p>You can remove passwords from PDFs up to 100MB in size. For larger files, consider compressing your PDF first or contact us for assistance with bulk processing.</p>
         </div>
     </div>
 </div>
@@ -155,26 +145,7 @@ permalink: /tools/pdf-password-remover/
 .tool-description {
     font-size: 1.2em;
     color: #7f8c8d;
-    margin-bottom: 20px;
-}
-
-.status-notice {
-    background: #fff3cd;
-    border: 1px solid #ffeaa7;
-    border-radius: 8px;
-    padding: 15px;
-    margin: 20px 0;
-    color: #856404;
-    text-align: left;
-}
-
-.status-notice i {
-    color: #f39c12;
-    margin-right: 8px;
-}
-
-.status-notice strong {
-    color: #d68910;
+    margin-bottom: 30px;
 }
 
 .upload-section {
@@ -486,8 +457,6 @@ permalink: /tools/pdf-password-remover/
 }
 </style>
 
-<!-- No external dependencies needed - uses our secure API -->
-
 <script>
 let selectedFile = null;
 let downloadUrl = null;
@@ -537,8 +506,8 @@ function handleFileSelect(file) {
         return;
     }
     
-    if (file.size > 50 * 1024 * 1024) { // 50MB limit
-        alert('File size must be less than 50MB');
+    if (file.size > 100 * 1024 * 1024) { // 100MB limit
+        alert('File size must be less than 100MB');
         return;
     }
     
@@ -591,74 +560,53 @@ async function removePassword() {
     
     try {
         // Animate progress
-        progressFill.style.width = '20%';
-        progressText.textContent = 'Uploading PDF file...';
+        progressFill.style.width = '30%';
+        progressText.textContent = 'Verifying password...';
         
-        // Create FormData for API request
+        // Create FormData
         const formData = new FormData();
-        formData.append('file', selectedFile);
+        formData.append('pdf', selectedFile);
         formData.append('password', password);
         
-        progressFill.style.width = '50%';
+        // Update progress
+        progressFill.style.width = '60%';
         progressText.textContent = 'Removing password protection...';
         
-        // Call our secure API
-        const response = await fetch('https://api.tundasportsclub.com/api/pdf-unlock', {
+        // Make API call to remove password
+        const response = await fetch('https://api.tundasportsclub.com/remove-pdf-password', {
             method: 'POST',
             body: formData
         });
         
-        progressFill.style.width = '80%';
-        progressText.textContent = 'Processing response...';
+        progressFill.style.width = '90%';
+        progressText.textContent = 'Finalizing...';
         
-        if (response.ok) {
-            // Get the unlocked PDF blob
-            const blob = await response.blob();
-            downloadUrl = URL.createObjectURL(blob);
-            
-            // Complete progress
-            progressFill.style.width = '100%';
-            progressText.textContent = 'Password removed successfully!';
-            
-            setTimeout(() => {
-                document.getElementById('progressSection').style.display = 'none';
-                document.getElementById('resultSection').style.display = 'block';
-            }, 500);
-            
-        } else {
-            // Handle API errors
-            let errorMessage = 'Failed to remove password';
-            
-            try {
-                const errorData = await response.json();
-                errorMessage = errorData.error || errorMessage;
-            } catch (e) {
-                // If not JSON, use status-based message
-                if (response.status === 400) {
-                    errorMessage = 'Incorrect password or invalid PDF file';
-                } else if (response.status === 413) {
-                    errorMessage = 'File too large. Maximum size is 50MB';
-                } else if (response.status === 500) {
-                    errorMessage = 'Server error during processing. Please try again';
-                } else {
-                    errorMessage = `Server error: ${response.status}`;
-                }
-            }
-            
-            throw new Error(errorMessage);
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to remove password');
         }
+        
+        // Get the unlocked PDF blob
+        const blob = await response.blob();
+        downloadUrl = URL.createObjectURL(blob);
+        
+        // Complete progress
+        progressFill.style.width = '100%';
+        progressText.textContent = 'Password removed successfully!';
+        
+        setTimeout(() => {
+            document.getElementById('progressSection').style.display = 'none';
+            document.getElementById('resultSection').style.display = 'block';
+        }, 500);
         
     } catch (error) {
         console.error('Password removal failed:', error);
         document.getElementById('progressSection').style.display = 'none';
         document.getElementById('passwordSection').style.display = 'block';
         
-        // Handle specific error types
-        if (error.message.includes('password') || error.message.includes('Incorrect')) {
+        if (error.message.includes('Invalid password') || error.message.includes('Incorrect password')) {
             alert('Incorrect password. Please check your password and try again.');
             document.getElementById('pdfPassword').focus();
-        } else if (error.message.includes('network') || error.message.includes('fetch')) {
-            alert('Network error. Please check your connection and try again.');
         } else {
             alert('Error removing password: ' + error.message);
         }
