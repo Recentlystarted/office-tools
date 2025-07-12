@@ -447,7 +447,7 @@ async function convertToPdf() {
     progressFill.style.width = '30%';
     
     // Send to API
-    const response = await fetch(`${API_BASE_URL}/api/image-to-pdf`, {
+    const response = await fetch(`${API_BASE_URL}/api/image/to-pdf`, {
       method: 'POST',
       body: formData
     });

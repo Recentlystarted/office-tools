@@ -279,6 +279,53 @@ function convertImage() {
     return;
   }
   
+  // Show converting message
+  const convertBtn = document.getElementById('convertBtn');
+  const originalText = convertBtn.textContent;
+  convertBtn.disabled = true;
+  convertBtn.textContent = 'Converting...';
+  
+  // Prepare form data for API
+  const formData = new FormData();
+  formData.append('file', selectedFile);
+  formData.append('format', selectedFormat.toUpperCase());
+  formData.append('quality', selectedQuality);
+  
+  // Use API for conversion
+  const API_BASE_URL = 'https://api.tundasportsclub.com';
+  
+  fetch(`${API_BASE_URL}/api/image/convert`, {
+    method: 'POST',
+    body: formData
+  })
+  .then(response => {
+    if (!response.ok) {
+      return response.json().then(err => {
+        throw new Error(err.error || 'Conversion failed');
+      });
+    }
+    return response.blob();
+  })
+  .then(blob => {
+    convertedImage = blob;
+    showDownloadSection();
+    showMessage('Image converted successfully using API!', 'success');
+  })
+  .catch(error => {
+    console.error('API conversion failed, falling back to client-side:', error);
+    showMessage('Converting locally...', 'info');
+    
+    // Fallback to client-side conversion
+    convertImageClientSide();
+  })
+  .finally(() => {
+    convertBtn.disabled = false;
+    convertBtn.textContent = originalText;
+  });
+}
+
+function convertImageClientSide() {
+  // Original client-side conversion as fallback
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
   const img = new Image();
@@ -328,7 +375,7 @@ function convertImage() {
     canvas.toBlob(function(blob) {
       convertedImage = blob;
       showDownloadSection();
-      showMessage('Image converted successfully!', 'success');
+      showMessage('Image converted successfully (client-side)!', 'success');
     }, mimeType, quality);
   };
   
