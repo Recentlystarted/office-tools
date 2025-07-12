@@ -10,10 +10,10 @@ tool_category: "PDF Tools"
 <!-- PDF-lib for PDF manipulation -->
 <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 
-<div class="tool-container">
-  <div class="tool-header">
-    <h1>Protect PDF</h1>
-    <p>Add password protection and security settings to your PDF files</p>
+<div class="card">
+  <div class="card-content">
+    <h1 class="text-2xl font-bold text-foreground mb-2">Protect PDF</h1>
+    <p class="text-muted-foreground mb-6">Add password protection and security settings to your PDF files</p>
   </div>
 
   <div class="upload-section">

@@ -6,10 +6,10 @@ tool_name: "Rotate PDF"
 permalink: /tools/rotate-pdf/
 ---
 
-<div class="tool-container">
-  <div class="tool-header">
-    <h1>Rotate PDF</h1>
-    <p>Rotate your PDF pages to the correct orientation</p>
+<div class="card">
+  <div class="card-content">
+    <h1 class="text-2xl font-bold text-foreground mb-2">Rotate PDF</h1>
+    <p class="text-muted-foreground mb-6">Rotate your PDF pages to the correct orientation</p>
   </div>
 
   <div class="upload-area" id="uploadArea">

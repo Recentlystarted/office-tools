@@ -1,231 +1,95 @@
-<footer class="site-footer h-card">
-  <data class="u-url" href="{{ "/" | relative_url }}"></data>
-
-  <div class="wrapper">
-
-    <div class="footer-content">
-      <div class="footer-section">
-        <h3 class="footer-title">Office Tools</h3>
-        <p class="footer-description">
+<footer class="bg-card border-t border-border">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+      
+      <!-- Main Section -->
+      <div class="lg:col-span-1">
+        <div class="flex items-center space-x-2 mb-4">
+          <span class="text-2xl">🔧</span>
+          <h3 class="text-xl font-bold text-foreground">Office Tools</h3>
+        </div>
+        <p class="text-muted-foreground text-sm mb-6 max-w-sm">
           Professional online tools for PDF processing, document conversion, and office productivity. 
-          Free, secure, and easy to use.
+          Free, secure, and easy to use. No registration required.
         </p>
-        <div class="social-links">
-          <a href="https://twitter.com/{{ site.twitter_username }}" class="social-link" title="Twitter">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+        <div class="flex space-x-3">
+          <a href="https://twitter.com/{{ site.twitter_username }}" class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-muted hover:bg-accent text-muted-foreground hover:text-accent-foreground transition-colors" title="Follow us on Twitter" aria-label="Twitter">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
               <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
             </svg>
           </a>
-          <a href="https://github.com/{{ site.github_username }}" class="social-link" title="GitHub">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <a href="https://github.com/{{ site.github_username }}" class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-muted hover:bg-accent text-muted-foreground hover:text-accent-foreground transition-colors" title="View on GitHub" aria-label="GitHub">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
               <path d="M12 0C5.374 0 0 5.373 0 12 0 17.302 3.438 21.8 8.207 23.387c.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+            </svg>
+          </a>
+          <a href="mailto:contact@office-tools.com" class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-muted hover:bg-accent text-muted-foreground hover:text-accent-foreground transition-colors" title="Contact us" aria-label="Email">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
             </svg>
           </a>
         </div>
       </div>
 
-      <div class="footer-section">
-        <h4>PDF Tools</h4>
-        <ul class="footer-links">
-          <li><a href="/tools/pdf-to-word/">PDF to Word</a></li>
-          <li><a href="/tools/pdf-password-remover/">Remove PDF Password</a></li>
-          <li><a href="/tools/pdf-merger/">Merge PDFs</a></li>
-          <li><a href="/tools/split-pdf/">Split PDF</a></li>
-          <li><a href="/tools/pdf-compressor/">Compress PDF</a></li>
+      <!-- PDF Tools -->
+      <div>
+        <h4 class="flex items-center space-x-2 text-sm font-semibold text-foreground mb-4">
+          <span>📄</span>
+          <span>PDF Tools</span>
+        </h4>
+        <ul class="space-y-2">
+          <li><a href="/tools/pdf-to-word/" class="text-sm text-muted-foreground hover:text-primary transition-colors">PDF to Word</a></li>
+          <li><a href="/tools/pdf-password-remover/" class="text-sm text-muted-foreground hover:text-primary transition-colors">Remove PDF Password</a></li>
+          <li><a href="/tools/pdf-merger/" class="text-sm text-muted-foreground hover:text-primary transition-colors">Merge PDFs</a></li>
+          <li><a href="/tools/split-pdf/" class="text-sm text-muted-foreground hover:text-primary transition-colors">Split PDF</a></li>
+          <li><a href="/tools/pdf-compressor/" class="text-sm text-muted-foreground hover:text-primary transition-colors">Compress PDF</a></li>
         </ul>
       </div>
 
-      <div class="footer-section">
-        <h4>Text & Generator Tools</h4>
-        <ul class="footer-links">
-          <li><a href="/tools/text-case-converter/">Text Case Converter</a></li>
-          <li><a href="/tools/password-generator/">Password Generator</a></li>
-          <li><a href="/tools/qr-code-generator/">QR Code Generator</a></li>
-          <li><a href="/tools/base64-encoder-decoder/">Base64 Encoder</a></li>
-          <li><a href="/tools/url-encoder-decoder/">URL Encoder</a></li>
+      <!-- Text & Generator Tools -->
+      <div>
+        <h4 class="flex items-center space-x-2 text-sm font-semibold text-foreground mb-4">
+          <span>📝</span>
+          <span>Text & Generator Tools</span>
+        </h4>
+        <ul class="space-y-2">
+          <li><a href="/tools/text-case-converter/" class="text-sm text-muted-foreground hover:text-primary transition-colors">Text Case Converter</a></li>
+          <li><a href="/tools/password-generator/" class="text-sm text-muted-foreground hover:text-primary transition-colors">Password Generator</a></li>
+          <li><a href="/tools/qr-code-generator/" class="text-sm text-muted-foreground hover:text-primary transition-colors">QR Code Generator</a></li>
+          <li><a href="/tools/base64-encoder-decoder/" class="text-sm text-muted-foreground hover:text-primary transition-colors">Base64 Encoder</a></li>
+          <li><a href="/tools/url-encoder-decoder/" class="text-sm text-muted-foreground hover:text-primary transition-colors">URL Encoder</a></li>
         </ul>
       </div>
 
-      <div class="footer-section">
-        <h4>More Tools</h4>
-        <ul class="footer-links">
-          <li><a href="/tools/image-converter/">Image Converter</a></li>
-          <li><a href="/tools/color-picker/">Color Picker</a></li>
-          <li><a href="/tools/json-formatter/">JSON Formatter</a></li>
-          <li><a href="/tools/url-shortener/">URL Shortener</a></li>
-          <li><a href="/tools.html">All Tools</a></li>
+      <!-- More Tools -->
+      <div>
+        <h4 class="flex items-center space-x-2 text-sm font-semibold text-foreground mb-4">
+          <span>🎨</span>
+          <span>More Tools</span>
+        </h4>
+        <ul class="space-y-2">
+          <li><a href="/tools/image-converter/" class="text-sm text-muted-foreground hover:text-primary transition-colors">Image Converter</a></li>
+          <li><a href="/tools/color-picker/" class="text-sm text-muted-foreground hover:text-primary transition-colors">Color Picker</a></li>
+          <li><a href="/tools/json-formatter/" class="text-sm text-muted-foreground hover:text-primary transition-colors">JSON Formatter</a></li>
+          <li><a href="/tools/url-shortener/" class="text-sm text-muted-foreground hover:text-primary transition-colors">URL Shortener</a></li>
+          <li><a href="/tools.html" class="text-sm text-muted-foreground hover:text-primary transition-colors">All Tools</a></li>
         </ul>
       </div>
     </div>
 
-    <div class="footer-bottom">
-      <div class="footer-meta">
-        <p>&copy; {{ 'now' | date: "%Y" }} {{ site.title | escape }}. All rights reserved.</p>
-        <p class="footer-tagline">Professional office tools for everyone, completely free.</p>
-      </div>
-      <div class="footer-legal">
-        <a href="/privacy-policy.html">Privacy Policy</a>
-        <a href="/terms-of-service.html">Terms of Service</a>
-        <a href="/contact.html">Contact</a>
+    <!-- Footer Bottom -->
+    <div class="mt-8 pt-6 border-t border-border">
+      <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+        <div class="text-center md:text-left">
+          <p class="text-sm text-muted-foreground">&copy; {{ 'now' | date: "%Y" }} {{ site.title | escape }}. All rights reserved.</p>
+          <p class="text-xs text-muted-foreground mt-1">Professional office tools for everyone, completely free.</p>
+        </div>
+        <div class="flex space-x-6">
+          <a href="/privacy-policy.html" class="text-sm text-muted-foreground hover:text-primary transition-colors">Privacy Policy</a>
+          <a href="/terms-of-service.html" class="text-sm text-muted-foreground hover:text-primary transition-colors">Terms of Service</a>
+          <a href="/contact.html" class="text-sm text-muted-foreground hover:text-primary transition-colors">Contact</a>
+        </div>
       </div>
     </div>
-
   </div>
-
 </footer>
-
-<style>
-.site-footer {
-  background: #2c3e50;
-  color: #ecf0f1;
-  padding: 40px 0 20px;
-  margin-top: 60px;
-}
-
-.footer-content {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr;
-  gap: 40px;
-  margin-bottom: 40px;
-}
-
-.footer-section h3.footer-title {
-  color: #fff;
-  font-size: 24px;
-  margin-bottom: 15px;
-  font-weight: 600;
-}
-
-.footer-section h4 {
-  color: #fff;
-  font-size: 16px;
-  margin-bottom: 15px;
-  font-weight: 600;
-}
-
-.footer-description {
-  font-size: 14px;
-  line-height: 1.6;
-  margin-bottom: 20px;
-  color: #bdc3c7;
-}
-
-.social-links {
-  display: flex;
-  gap: 15px;
-}
-
-.social-link {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  background: #34495e;
-  border-radius: 50%;
-  color: #ecf0f1;
-  text-decoration: none;
-  transition: all 0.3s ease;
-}
-
-.social-link:hover {
-  background: #3498db;
-  color: #fff;
-  transform: translateY(-2px);
-}
-
-.footer-links {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.footer-links li {
-  margin-bottom: 8px;
-}
-
-.footer-links a {
-  color: #bdc3c7;
-  text-decoration: none;
-  font-size: 14px;
-  transition: color 0.3s ease;
-}
-
-.footer-links a:hover {
-  color: #3498db;
-}
-
-.footer-bottom {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-top: 20px;
-  border-top: 1px solid #34495e;
-  flex-wrap: wrap;
-  gap: 20px;
-}
-
-.footer-meta p {
-  margin: 0;
-  font-size: 14px;
-  color: #bdc3c7;
-}
-
-.footer-tagline {
-  font-style: italic;
-  opacity: 0.8;
-}
-
-.footer-legal {
-  display: flex;
-  gap: 20px;
-}
-
-.footer-legal a {
-  color: #bdc3c7;
-  text-decoration: none;
-  font-size: 14px;
-  transition: color 0.3s ease;
-}
-
-.footer-legal a:hover {
-  color: #3498db;
-}
-
-/* Mobile Styles */
-@media screen and (max-width: 768px) {
-  .footer-content {
-    grid-template-columns: 1fr;
-    gap: 30px;
-  }
-
-  .footer-bottom {
-    flex-direction: column;
-    text-align: center;
-    gap: 15px;
-  }
-
-  .footer-legal {
-    justify-content: center;
-  }
-
-  .social-links {
-    justify-content: flex-start;
-  }
-}
-
-@media screen and (max-width: 480px) {
-  .site-footer {
-    padding: 30px 0 15px;
-  }
-
-  .footer-content {
-    gap: 25px;
-  }
-
-  .footer-legal {
-    flex-direction: column;
-    gap: 10px;
-  }
-}
-</style>

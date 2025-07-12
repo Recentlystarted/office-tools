@@ -5,10 +5,10 @@ description: "Extract tables from PDF files and convert them to Excel format wit
 tool_name: "PDF to Excel"
 ---
 
-<div class="tool-container">
-  <div class="tool-header">
-    <h1>PDF to Excel Converter</h1>
-    <p>Extract tables from PDF files and convert them to Excel format with preserved formatting</p>
+<div class="card">
+  <div class="card-content">
+    <h1 class="text-2xl font-bold text-foreground mb-2">PDF to Excel Converter</h1>
+    <p class="text-muted-foreground mb-6">Extract tables from PDF files and convert them to Excel format with preserved formatting</p>
   </div>
 
   <div class="upload-area" id="uploadArea">

@@ -2,26 +2,38 @@
 layout: default
 ---
 
-<!-- Dynamic Breadcrumb Navigation -->
-<nav class="breadcrumb-nav">
-  <div class="wrapper">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a href="/">🏠 Home</a></li>
-      <li class="breadcrumb-item"><a href="/tools.html">🛠️ All Tools</a></li>
-      <li class="breadcrumb-item active" aria-current="page">{{ page.tool_name | default: page.title }}</li>
-    </ol>
+<!-- Enhanced Breadcrumb Navigation -->
+<div class="bg-muted/30 border-b border-border">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+    <nav class="flex items-center space-x-2 text-sm" aria-label="Breadcrumb">
+      <a href="/" class="flex items-center space-x-1 text-muted-foreground hover:text-primary transition-colors group">
+        <span class="group-hover:scale-110 transition-transform">🏠</span>
+        <span>Home</span>
+      </a>
+      <span class="text-muted-foreground/60">›</span>
+      <a href="/tools.html" class="flex items-center space-x-1 text-muted-foreground hover:text-primary transition-colors group">
+        <span class="group-hover:scale-110 transition-transform">🛠️</span>
+        <span>Tools</span>
+      </a>
+      <span class="text-muted-foreground/60">›</span>
+      {% if page.tool_category %}
+        <span class="text-muted-foreground font-medium">{{ page.tool_category }}</span>
+        <span class="text-muted-foreground/60">›</span>
+      {% endif %}
+      <span class="text-foreground font-semibold">{{ page.tool_name | default: page.title }}</span>
+    </nav>
   </div>
-</nav>
+</div>
 
 <!-- Enhanced SEO Meta Tags -->
 <script type="application/ld+json">
 {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    "name": "{{ page.tool_name }}",
-    "description": "{{ page.description }}",
+    "name": "{{ page.tool_name | default: page.title }}",
+    "description": "{{ page.description | default: page.excerpt }}",
     "url": "{{ site.url }}{{ page.url }}",
-    "applicationCategory": "{{ page.tool_category }}",
+    "applicationCategory": "{{ page.tool_category | default: 'ProductivityApplication' }}",
     "operatingSystem": "Any",
     "permissions": "Safe",
     "isAccessibleForFree": true,
@@ -29,6 +41,14 @@ layout: default
         "@type": "Offer",
         "price": "0",
         "priceCurrency": "USD"
+    },
+    "author": {
+        "@type": "Organization",
+        "name": "Office Tools"
+    },
+    "publisher": {
+        "@type": "Organization",
+        "name": "Office Tools"
     }
 }
 </script>

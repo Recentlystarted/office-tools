@@ -3,17 +3,52 @@
 
   {%- include head.html -%}
 
-  <body>
+  <body class="{% if page.layout %}layout-{{ page.layout }}{% endif %}">
 
     {%- include header.html -%}
 
-    <main class="page-content" aria-label="Content">
-      <div class="wrapper">
+    <main class="min-h-screen bg-background text-foreground" aria-label="Content">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {{ content }}
       </div>
     </main>
 
     {%- include footer.html -%}
+
+    <!-- Back to Top Button -->
+    <button id="back-to-top" class="fixed bottom-6 right-6 w-12 h-12 bg-primary text-primary-foreground rounded-full shadow-lg opacity-0 invisible transition-all duration-300 hover:bg-primary/90 hover:-translate-y-1 hover:shadow-xl z-50 flex items-center justify-center font-semibold" aria-label="Back to top">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12"></path>
+      </svg>
+    </button>
+
+    <script>
+    // Back to Top functionality
+    document.addEventListener('DOMContentLoaded', function() {
+      const backToTopButton = document.getElementById('back-to-top');
+      
+      if (backToTopButton) {
+        // Show/hide button based on scroll position
+        window.addEventListener('scroll', function() {
+          if (window.pageYOffset > 300) {
+            backToTopButton.classList.remove('opacity-0', 'invisible');
+            backToTopButton.classList.add('opacity-100', 'visible');
+          } else {
+            backToTopButton.classList.add('opacity-0', 'invisible');
+            backToTopButton.classList.remove('opacity-100', 'visible');
+          }
+        });
+        
+        // Smooth scroll to top when clicked
+        backToTopButton.addEventListener('click', function() {
+          window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+          });
+        });
+      }
+    });
+    </script>
 
   </body>
 

@@ -1,415 +1,210 @@
-<header class="site-header" role="banner">
+<header class="bg-background border-b border-border sticky top-0 z-50">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between items-center h-16">
+      {%- assign default_paths = site.pages | map: "path" -%}
+      {%- assign page_paths = site.header_pages | default: default_paths -%}
+      
+      <!-- Logo and Site Title -->
+      <a class="flex items-center space-x-2 text-primary hover:text-primary/80 transition-colors" rel="author" href="{{ "/" | relative_url }}">
+        <span class="text-2xl">🔧</span>
+        <span class="hidden sm:block font-bold text-lg">{{ site.title | escape }}</span>
+      </a>
 
-  <div class="wrapper">
-    {%- assign default_paths = site.pages | map: "path" -%}
-    {%- assign page_paths = site.header_pages | default: default_paths -%}
-    <a class="site-title" rel="author" href="{{ "/" | relative_url }}">
-      <span class="site-logo">🔧</span>
-      {{ site.title | escape }}
-    </a>
-
-    {%- if page_paths -%}
-      <nav class="site-nav">
-        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
-        <label for="nav-trigger" class="menu-icon">
-          <svg viewBox="0 0 18 15" width="18px" height="15px">
-            <path d="m18,1.484c0,0.82-0.665,1.484-1.484,1.484h-15.032c-0.819,0-1.484-0.665-1.484-1.484s0.665-1.484,1.484-1.484h15.032c0.819,0,1.484,0.665,1.484,1.484zm0,6.016c0,0.82-0.665,1.484-1.484,1.484h-15.032c-0.819,0-1.484-0.665-1.484-1.484s0.665-1.484,1.484-1.484h15.032c0.819,0,1.484,0.665,1.484,1.484zm0,6.016c0,0.82-0.665,1.484-1.484,1.484h-15.032c-0.819,0-1.484-0.665-1.484-1.484s0.665-1.484,1.484-1.484h15.032c0.819,0,1.484,0.665,1.484,1.484z"/>
-          </svg>
-        </label>
-
-        <div class="trigger">
-          <a class="page-link" href="{{ "/" | relative_url }}">🏠 Home</a>
-          <a class="page-link" href="/tools.html">🛠️ All Tools</a>
+      {%- if page_paths -%}
+        <!-- Desktop Navigation -->
+        <nav class="hidden md:flex items-center space-x-1">
+          <a class="px-3 py-2 rounded-md text-sm font-medium text-foreground hover:text-primary hover:bg-accent transition-colors" href="{{ "/" | relative_url }}">
+            <span class="mr-1">🏠</span>
+            Home
+          </a>
+          <a class="px-3 py-2 rounded-md text-sm font-medium text-foreground hover:text-primary hover:bg-accent transition-colors" href="/tools.html">
+            <span class="mr-1">🛠️</span>
+            All Tools
+          </a>
           
           <!-- PDF Tools Dropdown -->
-          <div class="dropdown">
-            <a class="page-link dropdown-toggle" href="#" onclick="return false;">📄 PDF Tools <span class="dropdown-arrow">▼</span></a>
-            <div class="dropdown-menu">
-              <a class="dropdown-item" href="/tools/pdf-to-word/">PDF to Word</a>
-              <a class="dropdown-item" href="/tools/pdf-password-remover/">Remove PDF Password</a>
-              <a class="dropdown-item" href="/tools/pdf-merger/">Merge PDFs</a>
-              <a class="dropdown-item" href="/tools/split-pdf/">Split PDF</a>
-              <a class="dropdown-item" href="/tools/pdf-compressor/">Compress PDF</a>
-              <a class="dropdown-item" href="/tools/protect-pdf/">Protect PDF</a>
-              <a class="dropdown-item" href="/tools/rotate-pdf/">Rotate PDF</a>
+          <div class="relative dropdown">
+            <button class="dropdown-toggle px-3 py-2 rounded-md text-sm font-medium text-foreground hover:text-primary hover:bg-accent transition-colors flex items-center">
+              <span class="mr-1">📄</span>
+              PDF Tools
+              <svg class="ml-1 h-4 w-4 dropdown-arrow transition-transform" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+              </svg>
+            </button>
+            
+            <div class="dropdown-menu absolute left-0 mt-2 w-56 bg-popover border border-border rounded-md shadow-lg opacity-0 invisible">
+              <div class="py-1">
+                <a href="/tools/pdf-to-word/" class="dropdown-item">
+                  <span class="tool-icon mr-3">📝</span>
+                  PDF to Word
+                </a>
+                <a href="/tools/pdf-to-excel/" class="dropdown-item">
+                  <span class="tool-icon mr-3">📊</span>
+                  PDF to Excel
+                </a>
+                <a href="/tools/pdf-merger/" class="dropdown-item">
+                  <span class="tool-icon mr-3">🔗</span>
+                  PDF Merger
+                </a>
+                <a href="/tools/split-pdf/" class="dropdown-item">
+                  <span class="tool-icon mr-3">✂️</span>
+                  Split PDF
+                </a>
+              </div>
             </div>
           </div>
 
-          <!-- Text Tools Dropdown -->
-          <div class="dropdown">
-            <a class="page-link dropdown-toggle" href="#" onclick="return false;">📝 Text Tools <span class="dropdown-arrow">▼</span></a>
-            <div class="dropdown-menu">
-              <a class="dropdown-item" href="/tools/text-case-converter/">Text Case Converter</a>
-              <a class="dropdown-item" href="/tools/base64-encoder-decoder/">Base64 Encoder/Decoder</a>
-              <a class="dropdown-item" href="/tools/url-encoder-decoder/">URL Encoder/Decoder</a>
-              <a class="dropdown-item" href="/tools/password-generator/">Password Generator</a>
-            </div>
-          </div>
+          <a class="px-3 py-2 rounded-md text-sm font-medium text-foreground hover:text-primary hover:bg-accent transition-colors" href="/about/">
+            <span class="mr-1">ℹ️</span>
+            About
+          </a>
+          
+          <!-- Dark Mode Toggle -->
+          <button id="dark-mode-toggle" class="dark-mode-toggle" title="Toggle dark mode">
+            <svg class="h-4 w-4 dark:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+            </svg>
+            <svg class="h-4 w-4 hidden dark:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+          </button>
+        </nav>
 
-          <!-- Generator Tools Dropdown -->
-          <div class="dropdown">
-            <a class="page-link dropdown-toggle" href="#" onclick="return false;">⚡ Generators <span class="dropdown-arrow">▼</span></a>
-            <div class="dropdown-menu">
-              <a class="dropdown-item" href="/tools/qr-code-generator/">QR Code Generator</a>
-              <a class="dropdown-item" href="/tools/password-generator/">Password Generator</a>
-            </div>
-          </div>
-
-          <!-- Image & Other Tools -->
-          <div class="dropdown">
-            <a class="page-link dropdown-toggle" href="#" onclick="return false;">🎨 More Tools <span class="dropdown-arrow">▼</span></a>
-            <div class="dropdown-menu">
-              <a class="dropdown-item" href="/tools/image-converter/">Image Converter</a>
-              <a class="dropdown-item" href="/tools/color-picker/">Color Picker</a>
-              <a class="dropdown-item" href="/tools/json-formatter/">JSON Formatter</a>
-              <a class="dropdown-item" href="/tools/url-shortener/">URL Shortener</a>
-            </div>
-          </div>
-
-          <a class="page-link" href="/about.html">ℹ️ About</a>
+        <!-- Mobile menu button and dark mode toggle -->
+        <div class="md:hidden flex items-center space-x-2">
+          <!-- Dark Mode Toggle -->
+          <button id="mobile-dark-mode-toggle" class="dark-mode-toggle" title="Toggle dark mode">
+            <svg class="h-4 w-4 dark:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+            </svg>
+            <svg class="h-4 w-4 hidden dark:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+          </button>
+          
+          <button id="mobile-menu-button" class="p-2 rounded-md text-foreground hover:text-primary hover:bg-accent transition-colors">
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
         </div>
-      </nav>
-    {%- endif -%}
-  </div>
+      {%- endif -%}
+    </div>
 
+    <!-- Mobile Navigation Menu -->
+    <div id="mobile-menu" class="md:hidden hidden">
+      <div class="px-2 pt-2 pb-3 space-y-1 bg-background border-t border-border">
+        <a href="{{ "/" | relative_url }}" class="block px-3 py-2 rounded-md text-base font-medium text-foreground hover:text-primary hover:bg-accent">
+          🏠 Home
+        </a>
+        <a href="/tools.html" class="block px-3 py-2 rounded-md text-base font-medium text-foreground hover:text-primary hover:bg-accent">
+          🛠️ All Tools
+        </a>
+        <a href="/tools/pdf-to-word/" class="block px-3 py-2 text-sm text-muted-foreground hover:text-primary">📝 PDF to Word</a>
+        <a href="/tools/pdf-to-excel/" class="block px-3 py-2 text-sm text-muted-foreground hover:text-primary">📊 PDF to Excel</a>
+        <a href="/about/" class="block px-3 py-2 rounded-md text-base font-medium text-foreground hover:text-primary hover:bg-accent">
+          ℹ️ About
+        </a>
+      </div>
+    </div>
+  </div>
 </header>
 
-<style>
-/* Enhanced Header Styles */
-.site-header {
-  border-top: 5px solid #424242;
-  border-bottom: 1px solid #e8e8e8;
-  min-height: 55.95px;
-  position: relative;
-  background: #fff;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-}
-
-.site-title {
-  font-size: 26px;
-  font-weight: 600;
-  line-height: 54px;
-  letter-spacing: -1px;
-  margin-bottom: 0;
-  float: left;
-  text-decoration: none;
-  color: #424242;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.site-title:hover {
-  text-decoration: none;
-  color: #2a7ae4;
-}
-
-.site-logo {
-  font-size: 1.2em;
-}
-
-.site-nav {
-  float: right;
-  line-height: 54px;
-}
-
-.site-nav .nav-trigger {
-  display: none;
-}
-
-.site-nav .menu-icon {
-  display: none;
-}
-
-.site-nav .page-link {
-  color: #424242;
-  line-height: 1.5;
-  text-decoration: none;
-  margin-left: 20px;
-  font-weight: 500;
-  transition: color 0.3s ease;
-}
-
-.site-nav .page-link:hover {
-  color: #2a7ae4;
-  text-decoration: none;
-}
-
-/* Dropdown Styles */
-.dropdown {
-  position: relative;
-  display: inline-block;
-}
-
-.dropdown-toggle {
-  cursor: pointer;
-  user-select: none;
-}
-
-.dropdown-arrow {
-  font-size: 0.8em;
-  margin-left: 4px;
-  transition: transform 0.3s ease;
-}
-
-.dropdown:hover .dropdown-arrow {
-  transform: rotate(180deg);
-}
-
-.dropdown-menu {
-  display: none;
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  background: white;
-  min-width: 200px;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-  border-radius: 8px;
-  border: 1px solid #e8e8e8;
-  z-index: 1000;
-  padding: 8px 0;
-  margin-top: 5px;
-}
-
-.dropdown:hover .dropdown-menu {
-  display: block;
-  animation: fadeInDown 0.3s ease;
-}
-
-.dropdown-item {
-  display: block;
-  padding: 10px 20px;
-  color: #424242 !important;
-  text-decoration: none;
-  font-weight: 400;
-  font-size: 14px;
-  line-height: 1.4;
-  margin: 0;
-  transition: all 0.2s ease;
-}
-
-.dropdown-item:hover {
-  background: #f8f9fa;
-  color: #2a7ae4 !important;
-  text-decoration: none;
-}
-
-@keyframes fadeInDown {
-  from {
-    opacity: 0;
-    transform: translateX(-50%) translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
-}
-
-/* Mobile Styles */
-@media screen and (max-width: 768px) {
-  .site-nav {
-    position: absolute;
-    top: 9px;
-    right: 15px;
-    background-color: #fdfdfd;
-    border: 1px solid #e8e8e8;
-    border-radius: 8px;
-    text-align: right;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-  }
-
-  .site-nav label[for="nav-trigger"] {
-    display: block;
-    float: right;
-    width: 36px;
-    height: 36px;
-    z-index: 2;
-    cursor: pointer;
-    background: #2a7ae4;
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-  }
-
-  .site-nav label[for="nav-trigger"]:hover {
-    background: #1a5bb8;
-    transform: scale(1.05);
-  }
-
-  .site-nav .menu-icon {
-    display: block;
-    float: right;
-    width: 36px;
-    height: 26px;
-    line-height: 0;
-    padding-top: 10px;
-    text-align: center;
-  }
-
-  .site-nav .menu-icon > svg {
-    fill: white;
-    width: 18px;
-    height: 15px;
-  }
-
-  .site-nav input ~ .trigger {
-    clear: both;
-    display: none;
-    background: white;
-    border-radius: 8px;
-    padding: 20px;
-    margin-top: 45px;
-    min-width: 280px;
-  }
-
-  .site-nav input:checked ~ .trigger {
-    display: block;
-    animation: slideDown 0.3s ease;
-  }
-
-  .site-nav .page-link {
-    display: block;
-    padding: 12px 0;
-    margin-left: 0;
-    border-bottom: 1px solid #f0f0f0;
-    color: #424242;
-    font-size: 16px;
-    font-weight: 500;
-  }
-
-  .site-nav .page-link:last-child {
-    border-bottom: none;
-  }
-
-  /* Mobile Dropdown Styles */
-  .dropdown {
-    display: block;
-  }
-
-  .dropdown-toggle {
-    width: 100%;
-    text-align: left;
-    padding: 12px 0;
-    position: relative;
-  }
-
-  .dropdown-menu {
-    position: static;
-    display: none;
-    transform: none;
-    box-shadow: none;
-    border: none;
-    border-radius: 0;
-    background: #f8f9fa;
-    margin: 8px 0;
-    padding: 0;
-  }
-
-  .dropdown:hover .dropdown-menu {
-    display: none; /* Disable hover on mobile */
-  }
-
-  .dropdown.active .dropdown-menu {
-    display: block;
-  }
-
-  .dropdown-item {
-    padding: 10px 15px;
-    border-bottom: 1px solid #e8e8e8;
-    font-size: 14px;
-  }
-
-  .dropdown-item:hover {
-    background: #e9ecef;
-  }
-
-  .site-title {
-    font-size: 22px;
-    line-height: 54px;
-  }
-
-  .site-logo {
-    font-size: 1.1em;
-  }
-}
-
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Small mobile devices */
-@media screen and (max-width: 480px) {
-  .site-nav input ~ .trigger {
-    min-width: 250px;
-    right: 0;
-  }
-
-  .site-title {
-    font-size: 18px;
-    max-width: calc(100% - 60px);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-}
-</style>
-
 <script>
-// Mobile dropdown functionality
+// Dark mode functionality
+function initDarkMode() {
+  const darkModeToggle = document.getElementById('dark-mode-toggle');
+  const mobileDarkModeToggle = document.getElementById('mobile-dark-mode-toggle');
+  
+  // Check for saved theme preference or default to 'light'
+  const savedTheme = localStorage.getItem('theme') || 'light';
+  
+  // Apply the saved theme
+  if (savedTheme === 'dark') {
+    document.documentElement.classList.add('dark');
+  } else {
+    document.documentElement.classList.remove('dark');
+  }
+  
+  // Toggle dark mode
+  function toggleDarkMode() {
+    if (document.documentElement.classList.contains('dark')) {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    } else {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    }
+  }
+  
+  // Add event listeners
+  if (darkModeToggle) {
+    darkModeToggle.addEventListener('click', toggleDarkMode);
+  }
+  if (mobileDarkModeToggle) {
+    mobileDarkModeToggle.addEventListener('click', toggleDarkMode);
+  }
+}
+
+// Simple dropdown and mobile menu functionality
 document.addEventListener('DOMContentLoaded', function() {
-  // Handle mobile dropdown clicks
-  document.querySelectorAll('.dropdown-toggle').forEach(function(toggle) {
-    toggle.addEventListener('click', function(e) {
-      e.preventDefault();
-      
-      // Only handle clicks on mobile
-      if (window.innerWidth <= 768) {
-        const dropdown = this.closest('.dropdown');
-        const isActive = dropdown.classList.contains('active');
+  // Initialize dark mode
+  initDarkMode();
+  
+  // Mobile menu toggle
+  const mobileMenuButton = document.getElementById('mobile-menu-button');
+  const mobileMenu = document.getElementById('mobile-menu');
+  
+  if (mobileMenuButton && mobileMenu) {
+    mobileMenuButton.addEventListener('click', function() {
+      mobileMenu.classList.toggle('hidden');
+    });
+  }
+  
+  // Desktop dropdown functionality
+  const dropdowns = document.querySelectorAll('.dropdown');
+  
+  dropdowns.forEach(dropdown => {
+    const toggle = dropdown.querySelector('.dropdown-toggle');
+    const menu = dropdown.querySelector('.dropdown-menu');
+    
+    if (toggle && menu) {
+      toggle.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
         
-        // Close all other dropdowns
-        document.querySelectorAll('.dropdown.active').forEach(function(d) {
-          d.classList.remove('active');
+        // Close other dropdowns
+        dropdowns.forEach(otherDropdown => {
+          if (otherDropdown !== dropdown) {
+            const otherMenu = otherDropdown.querySelector('.dropdown-menu');
+            if (otherMenu) {
+              otherMenu.classList.add('opacity-0', 'invisible');
+              otherMenu.classList.remove('opacity-100', 'visible');
+            }
+          }
         });
         
         // Toggle current dropdown
-        if (!isActive) {
-          dropdown.classList.add('active');
+        if (menu.classList.contains('opacity-0')) {
+          menu.classList.remove('opacity-0', 'invisible');
+          menu.classList.add('opacity-100', 'visible');
+        } else {
+          menu.classList.add('opacity-0', 'invisible');
+          menu.classList.remove('opacity-100', 'visible');
         }
-      }
-    });
-  });
-
-  // Close dropdowns when clicking outside
-  document.addEventListener('click', function(e) {
-    if (!e.target.closest('.dropdown')) {
-      document.querySelectorAll('.dropdown.active').forEach(function(dropdown) {
-        dropdown.classList.remove('active');
       });
     }
   });
-
-  // Close mobile menu when nav trigger is clicked again
-  const navTrigger = document.getElementById('nav-trigger');
-  if (navTrigger) {
-    navTrigger.addEventListener('change', function() {
-      if (!this.checked) {
-        // Close all dropdowns when menu closes
-        document.querySelectorAll('.dropdown.active').forEach(function(dropdown) {
-          dropdown.classList.remove('active');
-        });
+  
+  // Close dropdowns when clicking outside
+  document.addEventListener('click', function() {
+    dropdowns.forEach(dropdown => {
+      const menu = dropdown.querySelector('.dropdown-menu');
+      if (menu) {
+        menu.classList.add('opacity-0', 'invisible');
+        menu.classList.remove('opacity-100', 'visible');
       }
     });
-  }
+  });
 });
 </script>

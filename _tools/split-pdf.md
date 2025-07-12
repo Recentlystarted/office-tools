@@ -12,10 +12,10 @@ tool_category: "PDF Tools"
 <!-- PDF-lib for PDF manipulation -->
 <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 
-<div class="tool-container">
-  <div class="tool-header">
-    <h1>Split PDF</h1>
-    <p>Split large PDF files into smaller documents or extract specific pages</p>
+<div class="card">
+  <div class="card-content">
+    <h1 class="text-2xl font-bold text-foreground mb-2">Split PDF</h1>
+    <p class="text-muted-foreground mb-6">Split large PDF files into smaller documents or extract specific pages</p>
   </div>
 
   <div class="upload-section">

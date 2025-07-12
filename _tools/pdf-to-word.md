@@ -12,19 +12,19 @@ tool_category: "PDF Tools"
 console.log('PDF to Word API converter initialized');
 </script>
 
-<div class="tool-container">
-  <div class="tool-header">
-    <h1>PDF to Word Converter</h1>
-    <p>Convert PDF files to editable Word documents easily and securely</p>
+<div class="max-w-4xl mx-auto px-4 py-8">
+  <div class="text-center mb-8">
+    <h1 class="text-3xl md:text-4xl font-bold text-foreground mb-4">PDF to Word Converter</h1>
+    <p class="text-lg text-muted-foreground max-w-2xl mx-auto">Convert PDF files to editable Word documents easily and securely</p>
   </div>
 
-  <div class="upload-section">
+  <div class="mb-8">
     <div class="upload-area" id="uploadArea">
-      <div class="upload-icon">📝</div>
-      <h3>Drop PDF file here or click to browse</h3>
-      <p>Convert your PDF to editable Word document</p>
-      <input type="file" id="fileInput" accept=".pdf" style="display: none;">
-      <button class="upload-btn" onclick="document.getElementById('fileInput').click()">Choose PDF File</button>
+      <div class="text-6xl mb-4">📝</div>
+      <h3 class="text-xl font-semibold text-foreground mb-2">Drop PDF file here or click to browse</h3>
+      <p class="text-muted-foreground mb-6">Convert your PDF to editable Word document</p>
+      <input type="file" id="fileInput" accept=".pdf" class="hidden">
+      <button class="btn btn-primary btn-lg" onclick="document.getElementById('fileInput').click()">Choose PDF File</button>
     </div>
   </div>
 
@@ -42,6 +42,10 @@ console.log('PDF to Word API converter initialized');
       <div class="progress-fill" id="progressFill"></div>
     </div>
     <p id="progressText">Converting PDF to Word...</p>
+    <div class="progress-details" id="progressDetails" style="display: none;">
+      <p class="progress-note">⏱️ Complex PDFs (like bank statements) may take 5-10 minutes to process</p>
+      <p class="progress-tip">💡 Tip: Simpler PDFs with just text convert much faster</p>
+    </div>
   </div>
 
   <div class="download-section" id="downloadSection" style="display: none;">
@@ -250,17 +254,33 @@ async function convertPDF() {
   }
   
   // Check file size and determine conversion method
-  const isLargeFile = selectedFile.size > 50 * 1024 * 1024; // 50MB
-  const maxSize = isLargeFile ? 100 * 1024 * 1024 : 50 * 1024 * 1024; // 100MB for async, 50MB for sync
+  const fileSize = selectedFile.size;
+  const isLargeFile = fileSize > 20 * 1024 * 1024; // 20MB threshold for async
+  const isComplexFile = selectedFile.name.toLowerCase().includes('bank') || 
+                       selectedFile.name.toLowerCase().includes('statement') ||
+                       fileSize > 10 * 1024 * 1024; // 10MB+ likely complex
   
-  if (selectedFile.size > maxSize) {
-    showMessage(`File too large. Maximum size is ${maxSize / 1024 / 1024}MB.`, 'error');
+  if (fileSize > 50 * 1024 * 1024) {
+    showMessage('File too large. Maximum size is 50MB. Please compress your PDF first.', 'error');
     return;
+  }
+  
+  // Show warning for complex files
+  if (isComplexFile && !isLargeFile) {
+    const proceed = confirm('This appears to be a complex PDF (like a bank statement). Conversion may take 5-10 minutes. Do you want to proceed?');
+    if (!proceed) {
+      return;
+    }
   }
   
   // Show progress
   document.getElementById('progressSection').style.display = 'block';
   document.getElementById('fileInfo').style.display = 'none';
+  
+  // Show additional info for complex files
+  if (isComplexFile) {
+    document.getElementById('progressDetails').style.display = 'block';
+  }
   
   try {
     const progressFill = document.getElementById('progressFill');
@@ -272,9 +292,10 @@ async function convertPDF() {
     
     if (isLargeFile) {
       // Use async conversion for large files
+      showMessage('Large file detected. Using async conversion...', 'info');
       await convertPDFAsync(formData, progressFill, progressText);
     } else {
-      // Use regular conversion for smaller files
+      // Use regular conversion with extended timeout for complex files
       await convertPDFSync(formData, progressFill, progressText);
     }
     
@@ -294,20 +315,67 @@ async function convertPDFSync(formData, progressFill, progressText) {
   progressText.textContent = 'Processing with enhanced API...';
   progressFill.style.width = '30%';
   
+  // Create AbortController for timeout handling
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => {
+    controller.abort();
+  }, 10 * 60 * 1000); // 10 minutes timeout for complex PDFs
+  
+  // Handle abort
+  controller.signal.addEventListener('abort', () => {
+    clearTimeout(timeoutId);
+    throw new Error('Processing was cancelled or timed out. Complex PDFs may require up to 10 minutes.');
+  });
+  
   // Call the enhanced modular API with fallback to legacy
   let response;
   try {
     response = await fetch('https://api.tundasportsclub.com/api/pdf/convert', {
       method: 'POST',
-      body: formData
+      body: formData,
+      mode: 'cors',
+      credentials: 'omit',
+      signal: controller.signal,
+      headers: {
+        'Accept': 'application/octet-stream, application/json'
+      }
     });
+    clearTimeout(timeoutId);
   } catch (error) {
+    clearTimeout(timeoutId);
+    
+    if (error.name === 'AbortError') {
+      throw new Error('Conversion timed out. This appears to be a complex PDF that requires more processing time. Please try with a simpler PDF or contact support.');
+    }
+    
     // Fallback to legacy endpoint if modular fails
     console.log('Trying legacy endpoint...');
-    response = await fetch('https://api.tundasportsclub.com/convert', {
-      method: 'POST',
-      body: formData
-    });
+    const fallbackController = new AbortController();
+    const fallbackTimeoutId = setTimeout(() => {
+      fallbackController.abort();
+    }, 10 * 60 * 1000);
+    
+    try {
+      response = await fetch('https://api.tundasportsclub.com/convert', {
+        method: 'POST',
+        body: formData,
+        mode: 'cors',
+        credentials: 'omit',
+        signal: fallbackController.signal,
+        headers: {
+          'Accept': 'application/octet-stream, application/json'
+        }
+      });
+      clearTimeout(fallbackTimeoutId);
+    } catch (fallbackError) {
+      clearTimeout(fallbackTimeoutId);
+      
+      if (fallbackError.name === 'AbortError') {
+        throw new Error('Conversion timed out. This PDF appears to be very complex. Please try with a simpler PDF.');
+      }
+      
+      throw new Error('Unable to connect to conversion server. Please check your internet connection and try again. If the issue persists, the PDF might be too complex for processing.');
+    }
   }
   
   progressText.textContent = 'Converting to Word format...';
@@ -316,10 +384,24 @@ async function convertPDFSync(formData, progressFill, progressText) {
   if (!response.ok) {
     let errorMessage = 'Conversion failed';
     try {
+      // Try to get JSON error message
       const errorData = await response.json();
       errorMessage = errorData.error || errorMessage;
     } catch (e) {
-      errorMessage = `Server error: ${response.status}`;
+      // If JSON parsing fails, provide specific error based on status
+      if (response.status === 500) {
+        errorMessage = 'Server error during conversion. This might be due to a complex PDF structure (like bank statements with tables). Please try a simpler PDF or contact support.';
+      } else if (response.status === 413) {
+        errorMessage = 'File too large. Please use a smaller PDF file.';
+      } else if (response.status === 400) {
+        errorMessage = 'Invalid PDF file. Please check your file and try again.';
+      } else if (response.status === 502 || response.status === 503) {
+        errorMessage = 'Server temporarily unavailable. Please try again in a few minutes.';
+      } else if (response.status === 504) {
+        errorMessage = 'Request timed out. This PDF might be too complex. Please try with a simpler document.';
+      } else {
+        errorMessage = `Server error: ${response.status}. Please try again later.`;
+      }
     }
     throw new Error(errorMessage);
   }
@@ -333,6 +415,9 @@ async function convertPDFSync(formData, progressFill, progressText) {
   
   progressText.textContent = 'Conversion complete!';
   progressFill.style.width = '100%';
+  
+  // Clear timeout since we completed successfully
+  clearTimeout(timeoutId);
   
   // Show download section
   setTimeout(() => {

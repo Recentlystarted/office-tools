@@ -34,10 +34,10 @@ tool_category: "Utility Tools"
 })();
 </script>
 
-<div class="tool-container">
-  <div class="tool-header">
-    <h1>QR Code Generator</h1>
-    <p>Generate custom QR codes for text, URLs, contact information, and more</p>
+<div class="card">
+  <div class="card-content">
+    <h1 class="text-2xl font-bold text-foreground mb-2">QR Code Generator</h1>
+    <p class="text-muted-foreground mb-6">Generate custom QR codes for text, URLs, contact information, and more</p>
   </div>
 
   <div class="generator-section">

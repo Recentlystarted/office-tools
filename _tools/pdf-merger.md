@@ -52,10 +52,10 @@ author: "Office Tools Team"
 <!-- PDF.js for preview functionality -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
-<div class="tool-container">
-  <div class="tool-header">
-    <h1>PDF Merger</h1>
-    <p>Combine multiple PDF files into one document easily and securely</p>
+<div class="card">
+  <div class="card-content">
+    <h1 class="text-2xl font-bold text-foreground mb-2">PDF Merger</h1>
+    <p class="text-muted-foreground mb-6">Combine multiple PDF files into one document easily and securely</p>
   </div>
 
   <div class="upload-section">

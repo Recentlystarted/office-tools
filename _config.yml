@@ -45,11 +45,15 @@ social:
     - https://github.com/officetools
 
 # Build settings
-theme: minima
+# theme: minima  # Disabled to use custom Tailwind CSS
 plugins:
   - jekyll-feed
   - jekyll-seo-tag
   - jekyll-sitemap
+
+# Sass configuration to prevent conflicts with Tailwind CSS
+sass:
+  style: compressed
 
 # Collections
 collections:
@@ -84,3 +88,4 @@ exclude:
   - vendor/cache/
   - vendor/gems/
   - vendor/ruby/
+  - api.office-tools/

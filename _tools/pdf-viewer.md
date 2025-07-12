@@ -10,10 +10,10 @@ tool_category: "PDF Tools"
 <!-- PDF.js for PDF viewing -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
-<div class="tool-container">
-  <div class="tool-header">
-    <h1>PDF Viewer</h1>
-    <p>View and manage PDF pages with advanced controls</p>
+<div class="card">
+  <div class="card-content">
+    <h1 class="text-2xl font-bold text-foreground mb-2">PDF Viewer</h1>
+    <p class="text-muted-foreground mb-6">View and manage PDF pages with advanced controls</p>
   </div>
 
   <div class="upload-section">

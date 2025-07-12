@@ -6,10 +6,10 @@ tool_name: "JSON Formatter"
 permalink: /tools/json-formatter/
 ---
 
-<div class="tool-container">
-  <div class="tool-header">
-    <h1>JSON Formatter & Validator</h1>
-    <p>Format, validate, minify, and beautify your JSON data</p>
+<div class="card">
+  <div class="card-content">
+    <h1 class="text-2xl font-bold text-foreground mb-2">JSON Formatter & Validator</h1>
+    <p class="text-muted-foreground mb-6">Format, validate, minify, and beautify your JSON data</p>
   </div>
 
   <div class="json-tools">

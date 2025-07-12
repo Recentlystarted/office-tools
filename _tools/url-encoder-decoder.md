@@ -6,10 +6,10 @@ tool_name: "URL Encoder/Decoder"
 permalink: /tools/url-encoder-decoder/
 ---
 
-<div class="tool-container">
-  <div class="tool-header">
-    <h1>URL Encoder/Decoder</h1>
-    <p>Encode and decode URLs and special characters for web use</p>
+<div class="card">
+  <div class="card-content">
+    <h1 class="text-2xl font-bold text-foreground mb-2">URL Encoder/Decoder</h1>
+    <p class="text-muted-foreground mb-6">Encode and decode URLs and special characters for web use</p>
   </div>
 
   <div class="url-tools">

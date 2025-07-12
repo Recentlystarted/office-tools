@@ -7,10 +7,10 @@ tool_name: "Text Case Converter"
 tool_category: "Text Tools"
 ---
 
-<div class="tool-container">
-  <div class="tool-header">
-    <h1>Text Case Converter</h1>
-    <p>Convert text between different cases - uppercase, lowercase, title case, and more</p>
+<div class="card">
+  <div class="card-content">
+    <h1 class="text-2xl font-bold text-foreground mb-2">Text Case Converter</h1>
+    <p class="text-muted-foreground mb-6">Convert text between different cases - uppercase, lowercase, title case, and more</p>
   </div>
 
   <div class="converter-section">

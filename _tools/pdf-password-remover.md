@@ -1,15 +1,15 @@
 ---
-layout: tool-clean
+layout: tool
 title: "PDF Password Remover - Remove PDF Password Protection"
 description: "Remove password protection from PDF files instantly. Unlock password-protected PDFs quickly and securely with our free online tool."
 keywords: "PDF password remover, unlock PDF, remove PDF password, PDF password protection, decrypt PDF"
 permalink: /tools/pdf-password-remover/
 ---
 
-<div class="tool-container">
-    <div class="tool-header">
-        <h1><i class="fas fa-unlock-alt"></i> PDF Password Remover</h1>
-        <p class="tool-description">Remove password protection from your PDF files quickly and securely</p>
+<div class="card">
+    <div class="card-content">
+        <h1 class="text-2xl font-bold text-foreground mb-2"><i class="fas fa-unlock-alt"></i> PDF Password Remover</h1>
+        <p class="text-muted-foreground mb-6">Remove password protection from your PDF files quickly and securely</p>
     </div>
 
     <div class="upload-section">

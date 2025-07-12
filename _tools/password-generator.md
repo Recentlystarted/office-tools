@@ -7,27 +7,33 @@ tool_name: "Password Generator"
 tool_category: "Security Tools"
 ---
 
-<div class="tool-container">
-  <div class="tool-header">
-    <h1>Password Generator</h1>
-    <p>Generate strong, secure passwords to protect your accounts</p>
+<div class="max-w-4xl mx-auto px-4 py-8">
+  <div class="text-center mb-8">
+    <h1 class="text-3xl md:text-4xl font-bold text-foreground mb-4">Password Generator</h1>
+    <p class="text-lg text-muted-foreground max-w-2xl mx-auto">Generate strong, secure passwords to protect your accounts</p>
   </div>
 
-  <div class="generator-section">
-    <div class="password-output">
-      <h3>Generated Password</h3>
-      <div class="password-display">
-        <input type="text" id="generatedPassword" readonly placeholder="Click generate to create a password">
-        <div class="password-actions">
-          <button id="copyPasswordBtn" class="action-btn">📋</button>
-          <button id="toggleVisibilityBtn" class="action-btn">👁️</button>
-          <button id="regenerateBtn" class="action-btn">🔄</button>
-        </div>
-      </div>
-      
-      <div class="strength-meter">
-        <div class="strength-bar">
-          <div id="strengthFill" class="strength-fill"></div>
+  <div class="space-y-8">
+    <div class="card">
+      <div class="card-content">
+        <h3 class="text-xl font-semibold text-foreground mb-4">Generated Password</h3>
+        <div class="space-y-4">
+          <div class="flex items-center space-x-2">
+            <input type="text" id="generatedPassword" readonly placeholder="Click generate to create a password" class="flex-1 p-3 border border-input rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring">
+            <div class="flex space-x-2">
+              <button id="copyPasswordBtn" class="btn-secondary p-2">📋</button>
+              <button id="toggleVisibilityBtn" class="btn-secondary p-2">👁️</button>
+              <button id="regenerateBtn" class="btn-secondary p-2">🔄</button>
+            </div>
+          </div>
+          
+          <div class="space-y-2">
+            <div class="flex justify-between text-sm">
+              <span class="text-muted-foreground">Strength:</span>
+              <span id="strengthText" class="font-medium">-</span>
+            </div>
+            <div class="w-full bg-muted rounded-full h-2">
+              <div id="strengthFill" class="h-2 rounded-full transition-all duration-300"></div>
         </div>
         <div class="strength-info">
           <span id="strengthText">Password Strength: -</span>

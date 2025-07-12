@@ -6,10 +6,10 @@ tool_name: "Base64 Encoder/Decoder"
 permalink: /tools/base64-encoder-decoder/
 ---
 
-<div class="tool-container">
-  <div class="tool-header">
-    <h1>Base64 Encoder/Decoder</h1>
-    <p>Convert text and files to Base64 and back</p>
+<div class="card">
+  <div class="card-content">
+    <h1 class="text-2xl font-bold text-foreground mb-2">Base64 Encoder/Decoder</h1>
+    <p class="text-muted-foreground mb-6">Convert text and files to Base64 and back</p>
   </div>
 
   <div class="tool-tabs">

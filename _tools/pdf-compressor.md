@@ -10,10 +10,10 @@ tool_category: "PDF Tools"
 <!-- PDF-lib library for PDF processing -->
 <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 
-<div class="tool-container">
-  <div class="tool-header">
-    <h1>PDF Compressor</h1>
-    <p>Reduce PDF file size while maintaining quality</p>
+<div class="card">
+  <div class="card-content">
+    <h1 class="text-2xl font-bold text-foreground mb-2">PDF Compressor</h1>
+    <p class="text-muted-foreground mb-6">Reduce PDF file size while maintaining quality</p>
   </div>
 
   <div class="upload-section">

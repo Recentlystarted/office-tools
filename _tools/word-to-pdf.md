@@ -12,10 +12,10 @@ tool_category: "PDF Tools"
 <!-- jsPDF for creating PDF files -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-<div class="tool-container">
-  <div class="tool-header">
-    <h1>Word to PDF Converter</h1>
-    <p>Convert Word documents to PDF files easily and securely</p>
+<div class="card">
+  <div class="card-content">
+    <h1 class="text-2xl font-bold text-foreground mb-2">Word to PDF Converter</h1>
+    <p class="text-muted-foreground mb-6">Convert Word documents to PDF files easily and securely</p>
   </div>
 
   <div class="upload-section">

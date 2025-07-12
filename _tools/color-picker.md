@@ -6,10 +6,10 @@ tool_name: "Color Picker"
 permalink: /tools/color-picker/
 ---
 
-<div class="tool-container">
-  <div class="tool-header">
-    <h1>Color Picker & Converter</h1>
-    <p>Pick colors, convert formats, and generate beautiful palettes</p>
+<div class="card">
+  <div class="card-content">
+    <h1 class="text-2xl font-bold text-foreground mb-2">Color Picker & Converter</h1>
+    <p class="text-muted-foreground mb-6">Pick colors, convert formats, and generate beautiful palettes</p>
   </div>
 
   <div class="color-main">

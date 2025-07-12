@@ -7,10 +7,10 @@ tool_name: "URL Shortener"
 tool_category: "Utility Tools"
 ---
 
-<div class="tool-container">
-  <div class="tool-header">
-    <h1>URL Shortener</h1>
-    <p>Create short, memorable links with analytics and custom aliases</p>
+<div class="card">
+  <div class="card-content">
+    <h1 class="text-2xl font-bold text-foreground mb-2">URL Shortener</h1>
+    <p class="text-muted-foreground mb-6">Create short, memorable links with analytics and custom aliases</p>
   </div>
 
   <div class="shortener-section">

@@ -1,0 +1,32 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://office-tools.com/sitemap.xml
+
+# Crawl-delay for respectful crawling
+Crawl-delay: 1
+
+# Disallow admin and private areas
+Disallow: /admin/
+Disallow: /private/
+Disallow: /_includes/
+Disallow: /_layouts/
+Disallow: /_posts/
+Disallow: /_site/
+Disallow: /.git/
+Disallow: /.github/
+Disallow: /.vscode/
+Disallow: /.jekyll-cache/
+
+# Allow important pages
+Allow: /tools/
+Allow: /about/
+Allow: /index.html
+Allow: /404.html
+
+# Allow assets
+Allow: /assets/
+Allow: /favicon.ico
+Allow: /favicon.svg
+Allow: /site.webmanifest 

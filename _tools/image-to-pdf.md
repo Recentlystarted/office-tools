@@ -7,13 +7,10 @@ tool_name: "Image to PDF"
 tool_category: "PDF Tools"
 ---
 
-<!-- jsPDF for PDF creation -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
-<div class="tool-container">
-  <div class="tool-header">
-    <h1>Image to PDF Converter</h1>
-    <p>Convert images to PDF format. Support for multiple images and batch conversion.</p>
+<div class="card">
+  <div class="card-content">
+    <h1 class="text-2xl font-bold text-foreground mb-2">Image to PDF Converter</h1>
+    <p class="text-muted-foreground mb-6">Convert images to PDF format. Support for multiple images and batch conversion.</p>
   </div>
 
   <div class="upload-section">
@@ -49,17 +46,7 @@ tool_category: "PDF Tools"
             <option value="letter">Letter (8.5 × 11 in)</option>
             <option value="a3">A3 (297 × 420 mm)</option>
             <option value="a5">A5 (148 × 210 mm)</option>
-            <option value="custom">Custom Size</option>
           </select>
-        </div>
-        
-        <div class="option-group" id="customSizeGroup" style="display: none;">
-          <label>Custom Size (mm):</label>
-          <div class="size-inputs">
-            <input type="number" id="customWidth" placeholder="Width" value="210">
-            <span>×</span>
-            <input type="number" id="customHeight" placeholder="Height" value="297">
-          </div>
         </div>
         
         <div class="option-group">
@@ -130,10 +117,6 @@ tool_category: "PDF Tools"
           <span class="info-value" id="totalImages">0</span>
         </div>
         <div class="info-item">
-          <span class="info-label">Pages:</span>
-          <span class="info-value" id="totalPages">0</span>
-        </div>
-        <div class="info-item">
           <span class="info-label">File Size:</span>
           <span class="info-value" id="pdfSize">0 MB</span>
         </div>
@@ -196,7 +179,10 @@ tool_category: "PDF Tools"
 <script>
 // Global variables
 let selectedImages = [];
-let convertedPdf = null;
+let convertedPdfUrl = null;
+
+// API Configuration
+const API_BASE_URL = 'https://api.tundasportsclub.com';
 
 // Notification system
 function showMessage(message, type = 'info') {
@@ -399,15 +385,6 @@ document.getElementById('removeSelectedBtn').addEventListener('click', () => {
 });
 
 // Options handling
-document.getElementById('pageSize').addEventListener('change', (e) => {
-  const customGroup = document.getElementById('customSizeGroup');
-  if (e.target.value === 'custom') {
-    customGroup.style.display = 'block';
-  } else {
-    customGroup.style.display = 'none';
-  }
-});
-
 document.getElementById('imageLayout').addEventListener('change', (e) => {
   const imagesPerPageGroup = document.getElementById('imagesPerPageGroup');
   if (e.target.value === 'multiple') {
@@ -439,65 +416,60 @@ async function convertToPdf() {
     const progressFill = document.getElementById('progressFill');
     const progressText = document.getElementById('progressText');
     
-    progressText.textContent = 'Initializing PDF creation...';
+    progressText.textContent = 'Preparing images for conversion...';
     progressFill.style.width = '10%';
     
     // Get options
     const pageSize = document.getElementById('pageSize').value;
     const orientation = document.getElementById('orientation').value;
     const imageLayout = document.getElementById('imageLayout').value;
-    const imagesPerPage = parseInt(document.getElementById('imagesPerPage').value);
-    const margin = parseFloat(document.getElementById('margin').value);
-    const quality = parseFloat(document.getElementById('imageQuality').value);
+    const imagesPerPage = document.getElementById('imagesPerPage').value;
+    const margin = document.getElementById('margin').value;
+    const imageQuality = document.getElementById('imageQuality').value;
     
-    // Calculate page dimensions
-    let pageWidth, pageHeight;
-    if (pageSize === 'custom') {
-      pageWidth = parseFloat(document.getElementById('customWidth').value);
-      pageHeight = parseFloat(document.getElementById('customHeight').value);
-    } else {
-      const pageSizes = {
-        a4: [210, 297],
-        letter: [215.9, 279.4],
-        a3: [297, 420],
-        a5: [148, 210]
-      };
-      [pageWidth, pageHeight] = pageSizes[pageSize];
-    }
+    // Create FormData
+    const formData = new FormData();
     
-    if (orientation === 'landscape') {
-      [pageWidth, pageHeight] = [pageHeight, pageWidth];
-    }
-    
-    // Create PDF
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF({
-      orientation: orientation,
-      unit: 'mm',
-      format: [pageWidth, pageHeight]
+    // Add selected images
+    selectedImagesList.forEach(image => {
+      formData.append('files', image.file);
     });
     
-    const effectiveWidth = pageWidth - (margin * 2);
-    const effectiveHeight = pageHeight - (margin * 2);
+    // Add options
+    formData.append('pageSize', pageSize);
+    formData.append('orientation', orientation);
+    formData.append('imageLayout', imageLayout);
+    formData.append('imagesPerPage', imagesPerPage);
+    formData.append('margin', margin);
+    formData.append('imageQuality', imageQuality);
+    
+    progressText.textContent = 'Uploading images to server...';
+    progressFill.style.width = '30%';
+    
+    // Send to API
+    const response = await fetch(`${API_BASE_URL}/api/image-to-pdf`, {
+      method: 'POST',
+      body: formData
+    });
     
     progressText.textContent = 'Processing images...';
+    progressFill.style.width = '70%';
     
-    if (imageLayout === 'multiple') {
-      await processMultipleImagesPerPage(pdf, selectedImagesList, imagesPerPage, effectiveWidth, effectiveHeight, margin, quality, progressFill, progressText);
-    } else {
-      await processSingleImagePerPage(pdf, selectedImagesList, imageLayout, effectiveWidth, effectiveHeight, margin, quality, progressFill, progressText);
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Conversion failed');
     }
     
     progressText.textContent = 'Finalizing PDF...';
-    progressFill.style.width = '95%';
+    progressFill.style.width = '90%';
     
-    // Generate PDF blob
-    convertedPdf = pdf.output('blob');
+    // Get the PDF blob
+    const pdfBlob = await response.blob();
+    convertedPdfUrl = URL.createObjectURL(pdfBlob);
     
     // Update UI
     document.getElementById('totalImages').textContent = selectedImagesList.length;
-    document.getElementById('totalPages').textContent = pdf.getNumberOfPages();
-    document.getElementById('pdfSize').textContent = (convertedPdf.size / 1024 / 1024).toFixed(2) + ' MB';
+    document.getElementById('pdfSize').textContent = (pdfBlob.size / 1024 / 1024).toFixed(2) + ' MB';
     
     // Show download section
     progressText.textContent = 'Complete!';
@@ -512,128 +484,24 @@ async function convertToPdf() {
     
   } catch (error) {
     console.error('Error converting images to PDF:', error);
-    showMessage('Error converting images to PDF. Please try again.', 'error');
+    showMessage(`Error: ${error.message}`, 'error');
     document.getElementById('progressSection').style.display = 'none';
     document.getElementById('imagesSection').style.display = 'block';
   }
 }
 
-async function processSingleImagePerPage(pdf, images, layout, effectiveWidth, effectiveHeight, margin, quality, progressFill, progressText) {
-  for (let i = 0; i < images.length; i++) {
-    const progress = 20 + (i / images.length) * 70;
-    progressFill.style.width = `${progress}%`;
-    progressText.textContent = `Processing image ${i + 1} of ${images.length}...`;
-    
-    if (i > 0) {
-      pdf.addPage();
-    }
-    
-    const image = images[i];
-    const imgRatio = image.width / image.height;
-    const pageRatio = effectiveWidth / effectiveHeight;
-    
-    let imgWidth, imgHeight, x, y;
-    
-    switch (layout) {
-      case 'fit':
-        if (imgRatio > pageRatio) {
-          imgWidth = effectiveWidth;
-          imgHeight = effectiveWidth / imgRatio;
-        } else {
-          imgHeight = effectiveHeight;
-          imgWidth = effectiveHeight * imgRatio;
-        }
-        x = margin + (effectiveWidth - imgWidth) / 2;
-        y = margin + (effectiveHeight - imgHeight) / 2;
-        break;
-        
-      case 'fill':
-        if (imgRatio > pageRatio) {
-          imgHeight = effectiveHeight;
-          imgWidth = effectiveHeight * imgRatio;
-        } else {
-          imgWidth = effectiveWidth;
-          imgHeight = effectiveWidth / imgRatio;
-        }
-        x = margin + (effectiveWidth - imgWidth) / 2;
-        y = margin + (effectiveHeight - imgHeight) / 2;
-        break;
-        
-      case 'original':
-        const scale = Math.min(effectiveWidth / (image.width * 0.264583), effectiveHeight / (image.height * 0.264583), 1);
-        imgWidth = image.width * 0.264583 * scale;
-        imgHeight = image.height * 0.264583 * scale;
-        x = margin + (effectiveWidth - imgWidth) / 2;
-        y = margin + (effectiveHeight - imgHeight) / 2;
-        break;
-    }
-    
-    pdf.addImage(image.dataUrl, 'JPEG', x, y, imgWidth, imgHeight, undefined, 'FAST');
-  }
-}
-
-async function processMultipleImagesPerPage(pdf, images, imagesPerPage, effectiveWidth, effectiveHeight, margin, quality, progressFill, progressText) {
-  const cols = Math.ceil(Math.sqrt(imagesPerPage));
-  const rows = Math.ceil(imagesPerPage / cols);
-  
-  const cellWidth = effectiveWidth / cols;
-  const cellHeight = effectiveHeight / rows;
-  const cellMargin = 5;
-  
-  for (let i = 0; i < images.length; i += imagesPerPage) {
-    if (i > 0) {
-      pdf.addPage();
-    }
-    
-    const progress = 20 + (i / images.length) * 70;
-    progressFill.style.width = `${progress}%`;
-    progressText.textContent = `Processing page ${Math.floor(i / imagesPerPage) + 1}...`;
-    
-    for (let j = 0; j < imagesPerPage && (i + j) < images.length; j++) {
-      const image = images[i + j];
-      const row = Math.floor(j / cols);
-      const col = j % cols;
-      
-      const cellX = margin + col * cellWidth + cellMargin;
-      const cellY = margin + row * cellHeight + cellMargin;
-      const availableWidth = cellWidth - (cellMargin * 2);
-      const availableHeight = cellHeight - (cellMargin * 2);
-      
-      const imgRatio = image.width / image.height;
-      const cellRatio = availableWidth / availableHeight;
-      
-      let imgWidth, imgHeight, x, y;
-      
-      if (imgRatio > cellRatio) {
-        imgWidth = availableWidth;
-        imgHeight = availableWidth / imgRatio;
-      } else {
-        imgHeight = availableHeight;
-        imgWidth = availableHeight * imgRatio;
-      }
-      
-      x = cellX + (availableWidth - imgWidth) / 2;
-      y = cellY + (availableHeight - imgHeight) / 2;
-      
-      pdf.addImage(image.dataUrl, 'JPEG', x, y, imgWidth, imgHeight, undefined, 'FAST');
-    }
-  }
-}
-
 function downloadPdf() {
-  if (!convertedPdf) {
+  if (!convertedPdfUrl) {
     showMessage('No PDF available for download.', 'error');
     return;
   }
   
-  const url = URL.createObjectURL(convertedPdf);
   const link = document.createElement('a');
-  link.href = url;
+  link.href = convertedPdfUrl;
   link.download = 'images_to_pdf_' + new Date().getTime() + '.pdf';
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
-  URL.revokeObjectURL(url);
   
   // Auto-clear after download
   setTimeout(() => {
@@ -644,7 +512,10 @@ function downloadPdf() {
 
 function clearAll() {
   selectedImages = [];
-  convertedPdf = null;
+  if (convertedPdfUrl) {
+    URL.revokeObjectURL(convertedPdfUrl);
+    convertedPdfUrl = null;
+  }
   
   document.getElementById('imagesSection').style.display = 'none';
   document.getElementById('progressSection').style.display = 'none';

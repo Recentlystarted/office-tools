@@ -7,10 +7,10 @@ tool_name: "Image Format Converter"
 tool_category: "Image Tools"
 ---
 
-<div class="tool-container">
-  <div class="tool-header">
-    <h1>Image Format Converter</h1>
-    <p>Convert images between different formats easily and quickly</p>
+<div class="card">
+  <div class="card-content">
+    <h1 class="text-2xl font-bold text-foreground mb-2">Image Format Converter</h1>
+    <p class="text-muted-foreground mb-6">Convert images between different formats easily and quickly</p>
   </div>
 
   <div class="upload-section">
