@@ -1,8 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'export',
-  basePath: '/office-tools',
-  assetPrefix: '/office-tools',
+  basePath: '',
+  assetPrefix: '',
   trailingSlash: true,
   images: {
     unoptimized: true

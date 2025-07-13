@@ -8,6 +8,7 @@ import { Toaster } from '@/components/ui/sonner'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata = {
+  metadataBase: new URL('https://office-tools.in'),
   title: 'Office Tools - Professional PDF & Document Tools',
   description: 'A comprehensive collection of 25+ professional online tools for PDF processing, document conversion, text manipulation, and office productivity.',
   keywords: 'PDF converter, PDF to Word, PDF merger, QR code generator, password generator, office tools, document conversion',

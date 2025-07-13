@@ -1,4 +1,4 @@
-# 🛠️ Office Tools - Next.js Frontend
+# 🛠️ Office Tools - Professional Online Tools
 
 [![Website](https://img.shields.io/website?url=https%3A%2F%2Foffice-tools.in)](https://office-tools.in)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
@@ -7,6 +7,8 @@
 [![shadcn/ui](https://img.shields.io/badge/components-shadcn%2Fui-000000.svg)](https://ui.shadcn.com/)
 
 A modern **Next.js 15** frontend for Office Tools - a comprehensive collection of **25+ professional online tools** for PDF processing, document conversion, text manipulation, and office productivity. Built with TypeScript, styled with Tailwind CSS and shadcn/ui components, and powered by our custom Flask API.
+
+🌟 **Live Site:** [https://office-tools.in](https://office-tools.in)
 
 ## 🚀 Quick Start
 
@@ -19,8 +21,8 @@ A modern **Next.js 15** frontend for Office Tools - a comprehensive collection o
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/your-username/office-tools.git
-   cd office-tools/office-tools-web
+   git clone https://github.com/Recentlystarted/office-tools.git
+   cd office-tools
    ```
 
 2. **Install dependencies**
@@ -53,7 +55,7 @@ pnpm start
 
 ## 🌟 Live Demo
 
-**Visit:** [https://your-username.github.io/office-tools-web](https://your-username.github.io/office-tools-web)
+**Visit:** [https://office-tools.in](https://office-tools.in)
 
 ## 📋 Table of Contents
 
@@ -246,40 +248,66 @@ office-tools-web/
 └── package.json                 # Dependencies and scripts
 ```
 
-## � Deployment to GitHub Pages
+## 🚀 Deployment to Custom Domain (office-tools.in)
 
-### Automatic Deployment
+### Automatic Deployment with GitHub Actions
 
-This project includes a GitHub Actions workflow that automatically builds and deploys to GitHub Pages when you push to the main branch.
+This project is configured to automatically deploy to your custom domain `office-tools.in` using GitHub Actions.
 
 ### Setup Instructions
 
-1. **Enable GitHub Pages**
-   - Go to your repository settings
-   - Navigate to "Pages" section
-   - Select "GitHub Actions" as the source
+1. **GitHub Pages Configuration**
+   - Go to your repository settings: `https://github.com/Recentlystarted/office-tools/settings/pages`
+   - Under "Source", select **"GitHub Actions"**
+   - The site will automatically deploy to `office-tools.in`
 
-2. **Configure Environment Variables** (Optional)
-   ```bash
-   # In your repository settings > Secrets and variables > Actions
-   NEXT_PUBLIC_API_BASE=https://api.tundasportsclub.com
-   NEXT_PUBLIC_MAX_FILE_SIZE=52428800
-   NEXT_PUBLIC_API_TIMEOUT=600000
+2. **Domain DNS Configuration**
+   Make sure your domain `office-tools.in` DNS points to GitHub Pages:
+   ```
+   # Add these DNS records at your domain registrar:
+   
+   # For apex domain (office-tools.in):
+   A    185.199.108.153
+   A    185.199.109.153  
+   A    185.199.110.153
+   A    185.199.111.153
+   
+   # For HTTPS and verification:
+   AAAA 2606:50c0:8000::153
+   AAAA 2606:50c0:8001::153
+   AAAA 2606:50c0:8002::153
+   AAAA 2606:50c0:8003::153
    ```
 
-3. **Update Configuration**
-   ```javascript
-   // In next.config.js, update the basePath for your repository
-   basePath: '/your-repository-name',
-   assetPrefix: '/your-repository-name',
-   ```
+3. **Verify Domain**
+   - In repository settings → Pages → Custom domain
+   - Enter: `office-tools.in` 
+   - Wait for DNS check to pass (can take up to 24 hours)
+   - Enable "Enforce HTTPS" once verification completes
 
-4. **Push to Deploy**
+4. **Deploy**
    ```bash
    git add .
-   git commit -m "Deploy to GitHub Pages"
+   git commit -m "Deploy to office-tools.in"
    git push origin main
    ```
+   
+   The GitHub Action will automatically build and deploy your site to `https://office-tools.in`
+
+### GitHub Actions Workflow
+
+The deployment is handled by `.github/workflows/deploy.yml` which:
+- ✅ Builds the Next.js application when you push to main
+- ✅ Exports static files optimized for GitHub Pages  
+- ✅ Deploys to your custom domain automatically
+- ✅ Handles CNAME file for domain routing
+- ✅ Optimizes build with caching for faster deployments
+
+### Monitoring Deployment
+
+1. **Check workflow status**: Go to Actions tab in your repository
+2. **View deployment**: Visit [https://office-tools.in](https://office-tools.in)
+3. **Debug issues**: Check the Actions logs if deployment fails
 
 ### Manual Deployment
 
@@ -314,8 +342,8 @@ from flask_cors import CORS
 
 app = Flask(__name__)
 CORS(app, origins=[
-    'https://your-username.github.io',
-    'https://your-custom-domain.com',  # If using custom domain
+    'https://office-tools.in',
+    'https://www.office-tools.in',    # If using www subdomain
     'http://localhost:3000'            # For development
 ])
 ```
