@@ -18,7 +18,7 @@ import { ThemeToggle } from '@/components/theme-toggle'
 import { Menu, Search, X, FileText, Combine, QrCode, Key, ChevronDown } from 'lucide-react'
 
 const tools = [
-  { name: 'PDF to Word', slug: 'pdf-to-word', description: 'Convert PDF to DOCX', icon: FileText, category: 'PDF Tools', popular: true },
+  { name: 'PDF to Word', slug: 'pdf-to-docx', description: 'Convert PDF to DOCX', icon: FileText, category: 'PDF Tools', popular: true },
   { name: 'PDF Merger', slug: 'pdf-merger', description: 'Combine multiple PDFs', icon: Combine, category: 'PDF Tools', popular: true },
   { name: 'QR Generator', slug: 'qr-code-generator', description: 'Create QR codes', icon: QrCode, category: 'Generators', popular: true },
   { name: 'Password Generator', slug: 'password-generator', description: 'Generate secure passwords', icon: Key, category: 'Generators', popular: true },

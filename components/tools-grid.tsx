@@ -34,7 +34,7 @@ const tools = [
   {
     name: 'PDF to Word',
     description: 'Convert PDF files to editable DOCX documents while preserving formatting',
-    slug: 'pdf-to-word',
+    slug: 'pdf-to-docx',
     icon: FileText,
     category: 'PDF Tools',
     popular: true
