@@ -46,9 +46,6 @@ A modern **Next.js 15** frontend for Office Tools - a comprehensive collection o
 # Build for production
 pnpm build
 
-# Export static files (for GitHub Pages)
-pnpm export
-
 # Start production server (if not using static export)
 pnpm start
 ```
@@ -93,7 +90,7 @@ pnpm start
 ### 🎨 User Experience
 - **Modern shadcn/ui Design** - Clean, professional interface
 - **Responsive Layout** - Optimized for desktop, tablet, and mobile
-- **Fast Loading** - Optimized performance with Jekyll static generation
+- **Fast Loading** - Optimized performance with Next.js static generation
 - **Accessibility** - WCAG compliant with keyboard navigation support
 - **Toast Notifications** - Clear feedback for all user actions
 
@@ -464,32 +461,6 @@ CORS(app, origins=[
 - **Progressive enhancement** for accessibility
 - **API integration** with proper fallbacks
 
-## 🚀 Deployment
-
-### Automatic Deployment
-The site is automatically deployed using GitHub Actions:
-
-1. **Push to main branch** triggers build
-2. **Jekyll builds** static site
-3. **Deploy to hosting platform** (Netlify/Vercel)
-4. **CDN cache invalidation** for instant updates
-
-### Manual Deployment
-```bash
-# Build for production
-JEKYLL_ENV=production bundle exec jekyll build
-
-# Deploy to hosting platform
-# (depends on your hosting provider)
-```
-
-### Performance Optimization
-- **Static site generation** for fast loading
-- **Image optimization** with responsive images
-- **CSS/JS minification** in production
-- **CDN integration** for global performance
-- **SEO optimization** with proper meta tags
-
 ## 📖 API Documentation
 
 ### Authentication
@@ -565,7 +536,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ## 🙏 Acknowledgments
 
-- **Jekyll Community** - For the excellent static site generator
+- **Next.js Community** - For the excellent React framework
 - **Tailwind CSS Team** - For the utility-first CSS framework
 - **shadcn** - For the beautiful UI component library
 - **API Contributors** - For maintaining the conversion services
