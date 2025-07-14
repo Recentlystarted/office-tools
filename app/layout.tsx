@@ -17,6 +17,12 @@ export const metadata = {
   creator: 'Office Tools',
   publisher: 'Office Tools',
   robots: 'index, follow',
+  verification: {
+    google: '5696950830848605', // AdSense publisher ID for verification
+  },
+  other: {
+    'google-adsense-account': 'ca-pub-5696950830848605',
+  },
   icons: {
     icon: [
       { url: '/favicon.svg', type: 'image/svg+xml' },
