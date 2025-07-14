@@ -2,7 +2,6 @@
 
 import { useState, useCallback } from 'react'
 import { useDropzone } from 'react-dropzone'
-import { getApiUrl } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
@@ -124,7 +123,7 @@ export default function PdfMergerPage() {
         formData.append('files', file)
       })
 
-      const response = await fetch(getApiUrl('pdfMerger'), {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/pdf-merger/merge`, {
         method: 'POST',
         body: formData,
       })

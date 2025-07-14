@@ -1,20 +1,13 @@
 'use client'
 
-import { useEffect } from 'react'
 import Script from 'next/script'
-import { loadAdSenseScript, ADSENSE_CONFIG } from '@/lib/adsense'
+import { ADSENSE_CONFIG } from '@/lib/adsense'
 
 /**
  * AdSense Head Component for Auto Ads
  * Much simpler setup - Google handles everything!
  */
 export function AdSenseHead() {
-  useEffect(() => {
-    if (ADSENSE_CONFIG.enabled) {
-      loadAdSenseScript()
-    }
-  }, [])
-
   // Only render script in production
   if (!ADSENSE_CONFIG.enabled) {
     return null

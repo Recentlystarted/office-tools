@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
-import { getApiUrl } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -142,7 +141,7 @@ export default function QRCodeGeneratorPage() {
 
     setIsLoading(true)
     try {
-      const response = await fetch(getApiUrl('qrGenerator'), {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/generator/qr-generate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

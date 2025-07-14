@@ -6,7 +6,28 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { FileText, Upload, Download, AlertCircle } from 'lucide-react'
-import { apiClient, downloadBlob, formatFileSize } from '@/lib/api'
+import { toast } from 'sonner'
+
+// Helper function to format file size
+const formatFileSize = (bytes: number): string => {
+  if (bytes === 0) return '0 Bytes'
+  const k = 1024
+  const sizes = ['Bytes', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+}
+
+// Helper function to download blob
+const downloadBlob = (blob: Blob, filename: string) => {
+  const url = window.URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  window.URL.revokeObjectURL(url)
+  document.body.removeChild(a)
+}
 
 export default function PdfToDocxPage() {
   const [file, setFile] = useState<File | null>(null)
@@ -39,35 +60,30 @@ export default function PdfToDocxPage() {
     setError(null)
 
     try {
-      // Try primary endpoint first
-      let result
-      try {
-        result = await apiClient.uploadFile({
-          endpoint: '/api/pdf/convert',
-          file,
-          onProgress: setProgress,
-        })
-      } catch (primaryError) {
-        // Fallback to legacy endpoint
-        result = await apiClient.uploadFile({
-          endpoint: '/convert',
-          file,
-          onProgress: setProgress,
-        })
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/pdf/convert`, {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
       }
 
-      if (result instanceof Blob) {
-        // Success - download the converted file
-        const filename = file.name.replace(/\.pdf$/i, '.docx')
-        downloadBlob(result, filename)
-      } else {
-        // Unexpected response format
-        throw new Error('Unexpected response format from server')
-      }
+      const result = await response.blob()
+      
+      // Success - download the converted file
+      const filename = file.name.replace(/\.pdf$/i, '.docx')
+      downloadBlob(result, filename)
+      toast.success('PDF converted to Word successfully!')
 
     } catch (error) {
       console.error('Conversion error:', error)
-      setError(error instanceof Error ? error.message : 'Conversion failed. Please try again.')
+      const errorMessage = error instanceof Error ? error.message : 'Conversion failed. Please try again.'
+      setError(errorMessage)
+      toast.error(errorMessage)
     } finally {
       setIsConverting(false)
       setProgress(0)
