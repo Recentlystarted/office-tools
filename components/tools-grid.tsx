@@ -254,12 +254,12 @@ const tools = [
   },
   {
     name: 'URL Shortener',
-    description: 'Create short, shareable links from long URLs',
+    description: 'Create short, shareable links from long URLs with click tracking',
     slug: 'url-shortener',
     icon: Link2,
     category: 'Web Tools',
-    popular: false,
-    status: 'coming-soon'
+    popular: true,
+    status: 'active'
   },
   {
     name: 'Color Picker',
@@ -283,12 +283,12 @@ const tools = [
   },
   {
     name: 'Timestamp Converter',
-    description: 'Convert between Unix timestamps and human-readable dates',
+    description: 'Convert between Unix timestamps and human-readable dates with timezone support',
     slug: 'timestamp-converter',
     icon: Clock,
     category: 'Utility Tools',
-    popular: false,
-    status: 'coming-soon'
+    popular: true,
+    status: 'active'
   }
 ]
 

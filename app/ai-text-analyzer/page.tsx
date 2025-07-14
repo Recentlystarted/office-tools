@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Separator } from '@/components/ui/separator'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { 
   Brain,
   Eye,
@@ -26,9 +27,32 @@ import {
   Sparkles,
   Copy,
   Download,
-  RefreshCw
+  RefreshCw,
+  Mail,
+  MessageSquare,
+  Edit,
+  Zap,
+  Shield,
+  FileText,
+  PenTool,
+  Target
 } from 'lucide-react'
 import { toast } from 'sonner'
+
+interface GrammarError {
+  type: 'grammar' | 'spelling' | 'punctuation' | 'style'
+  message: string
+  suggestion: string
+  position: { start: number; end: number }
+  severity: 'error' | 'warning' | 'suggestion'
+}
+
+interface RewriteOption {
+  title: string
+  description: string
+  text: string
+  tone: 'professional' | 'casual' | 'formal' | 'friendly' | 'concise'
+}
 
 interface TextAnalysis {
   // Basic Stats
@@ -64,6 +88,12 @@ interface TextAnalysis {
   passiveVoicePercentage: number
   adverbPercentage: number
   
+  // Grammar & Writing Quality
+  grammarErrors: GrammarError[]
+  correctedText: string
+  rewriteOptions: RewriteOption[]
+  writingScore: number // 0-100
+  
   // Recommendations
   recommendations: string[]
   strengths: string[]
@@ -75,6 +105,8 @@ export default function AITextAnalyzerPage() {
   const [analysis, setAnalysis] = useState<TextAnalysis | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [activeTab, setActiveTab] = useState<string>('analysis')
+  const [selectedRewrite, setSelectedRewrite] = useState<string>('')
 
   // Real-time basic analysis for immediate feedback
   const [basicStats, setBasicStats] = useState({
@@ -150,6 +182,158 @@ export default function AITextAnalyzerPage() {
     return { fleschScore, gradeLevel, level }
   }
 
+  // Advanced Grammar and Spelling Check
+  const checkGrammarAndSpelling = (text: string): { errors: GrammarError[]; correctedText: string; writingScore: number } => {
+    const errors: GrammarError[] = []
+    let correctedText = text
+    
+    // Common spelling mistakes and corrections
+    const spellingCorrections: { [key: string]: string } = {
+      'recieve': 'receive',
+      'seperate': 'separate',
+      'definately': 'definitely',
+      'occured': 'occurred',
+      'begining': 'beginning',
+      'accomodate': 'accommodate',
+      'neccessary': 'necessary',
+      'occassion': 'occasion',
+      'recomend': 'recommend',
+      'tommorrow': 'tomorrow',
+      'untill': 'until',
+      'wich': 'which',
+      'reccomend': 'recommend',
+      'sucessful': 'successful',
+      'buisness': 'business',
+      'managment': 'management',
+      'thier': 'their',
+      'youre': "you're",
+      'its': "it's",
+      'cant': "can't",
+      'wont': "won't",
+      'dont': "don't",
+      'isnt': "isn't",
+      'wasnt': "wasn't",
+      'hasnt': "hasn't",
+      'shouldnt': "shouldn't",
+      'couldnt': "couldn't",
+      'wouldnt': "wouldn't"
+    }
+    
+    // Grammar patterns to check
+    const grammarPatterns = [
+      { pattern: /\bi\s/gi, correction: 'I ', type: 'grammar' as const, message: 'Always capitalize "I"' },
+      { pattern: /\s{2,}/g, correction: ' ', type: 'style' as const, message: 'Remove extra spaces' },
+      { pattern: /([.!?])\s*([a-z])/g, correction: '$1 $2', type: 'punctuation' as const, message: 'Add space after punctuation and capitalize' },
+      { pattern: /([a-z])([.!?])/g, correction: '$1$2', type: 'punctuation' as const, message: 'No space before punctuation' },
+      { pattern: /\s+([.!?,:;])/g, correction: '$1', type: 'punctuation' as const, message: 'Remove space before punctuation' },
+      { pattern: /([.!?]){2,}/g, correction: '$1', type: 'punctuation' as const, message: 'Avoid repeated punctuation' }
+    ]
+    
+    // Check spelling
+    const words = text.split(/\b/)
+    words.forEach((word, index) => {
+      const cleanWord = word.toLowerCase().replace(/[^a-z]/g, '')
+      if (cleanWord && spellingCorrections[cleanWord]) {
+        const start = text.indexOf(word, index > 0 ? text.indexOf(words[index - 1]) : 0)
+        errors.push({
+          type: 'spelling',
+          message: `"${word}" should be "${spellingCorrections[cleanWord]}"`,
+          suggestion: spellingCorrections[cleanWord],
+          position: { start, end: start + word.length },
+          severity: 'error'
+        })
+        correctedText = correctedText.replace(new RegExp(`\\b${word}\\b`, 'gi'), spellingCorrections[cleanWord])
+      }
+    })
+    
+    // Check grammar patterns
+    grammarPatterns.forEach(pattern => {
+      const matches = Array.from(text.matchAll(pattern.pattern))
+      matches.forEach(match => {
+        if (match.index !== undefined) {
+          errors.push({
+            type: pattern.type,
+            message: pattern.message,
+            suggestion: match[0].replace(pattern.pattern, pattern.correction),
+            position: { start: match.index, end: match.index + match[0].length },
+            severity: pattern.type === 'grammar' ? 'error' : 'warning'
+          })
+        }
+      })
+      correctedText = correctedText.replace(pattern.pattern, pattern.correction)
+    })
+    
+    // Calculate writing score
+    const totalWords = text.split(/\s+/).length
+    const errorCount = errors.length
+    const writingScore = Math.max(0, Math.min(100, 100 - (errorCount / totalWords) * 100))
+    
+    return { errors, correctedText, writingScore }
+  }
+
+  // Generate rewrite options for emails/messages
+  const generateRewriteOptions = (text: string): RewriteOption[] => {
+    const options: RewriteOption[] = []
+    
+    // Professional version
+    const professionalText = text
+      .replace(/hey|hi|hello/gi, 'Dear')
+      .replace(/thanks|thx/gi, 'Thank you')
+      .replace(/asap/gi, 'as soon as possible')
+      .replace(/can't/gi, 'cannot')
+      .replace(/won't/gi, 'will not')
+      .replace(/don't/gi, 'do not')
+      .replace(/\?+/g, '?')
+      .replace(/!+/g, '.')
+    
+    options.push({
+      title: 'Professional & Formal',
+      description: 'Perfect for business emails and formal communication',
+      text: professionalText,
+      tone: 'professional'
+    })
+    
+    // Friendly version
+    const friendlyText = text
+      .replace(/dear/gi, 'Hi')
+      .replace(/thank you/gi, 'Thanks')
+      .replace(/i am writing to/gi, 'I wanted to')
+      .replace(/please find attached/gi, 'I\'ve attached')
+      .replace(/i would appreciate/gi, 'I\'d love')
+    
+    options.push({
+      title: 'Friendly & Approachable',
+      description: 'Warm and personal while maintaining professionalism',
+      text: friendlyText,
+      tone: 'friendly'
+    })
+    
+    // Concise version
+    const sentences = text.split(/[.!?]+/).filter(s => s.trim())
+    const conciseText = sentences
+      .map(s => s.trim())
+      .filter(s => s.length > 0)
+      .map(s => {
+        // Remove redundant words
+        return s
+          .replace(/\bin order to\b/gi, 'to')
+          .replace(/\bdue to the fact that\b/gi, 'because')
+          .replace(/\bat this point in time\b/gi, 'now')
+          .replace(/\bin the event that\b/gi, 'if')
+          .replace(/\bfor the purpose of\b/gi, 'for')
+      })
+      .join('. ')
+    
+    options.push({
+      title: 'Concise & Direct',
+      description: 'Clear and to the point without unnecessary words',
+      text: conciseText,
+      tone: 'concise'
+    })
+    
+    return options
+  }
+
   const performAnalysis = () => {
     if (!text.trim()) {
       toast.error('Please enter text to analyze')
@@ -177,6 +361,12 @@ export default function AITextAnalyzerPage() {
         
         // Sentiment
         const sentiment = analyzeSentiment(text)
+        
+        // Grammar and spelling check
+        const grammarCheck = checkGrammarAndSpelling(text)
+        
+        // Generate rewrite options
+        const rewriteOptions = generateRewriteOptions(text)
         
         // Keyword analysis
         const wordFreq: { [key: string]: number } = {}
@@ -285,6 +475,10 @@ export default function AITextAnalyzerPage() {
           vocabularyRichness,
           passiveVoicePercentage,
           adverbPercentage,
+          grammarErrors: grammarCheck.errors,
+          correctedText: grammarCheck.correctedText,
+          rewriteOptions,
+          writingScore: grammarCheck.writingScore,
           recommendations,
           strengths,
           improvements
@@ -374,7 +568,21 @@ ${analysis.improvements.map(i => `• ${i}`).join('\n')}
   const clearAll = () => {
     setText('')
     setAnalysis(null)
+    setSelectedRewrite('')
+    setActiveTab('analysis')
     toast.success('All content cleared')
+  }
+
+  const copyText = (textToCopy: string, label: string) => {
+    navigator.clipboard.writeText(textToCopy).then(() => {
+      toast.success(`${label} copied to clipboard!`)
+    })
+  }
+
+  const applyRewrite = (rewriteText: string) => {
+    setText(rewriteText)
+    setSelectedRewrite(rewriteText)
+    toast.success('Rewrite applied to editor!')
   }
 
   const sampleTexts = [
@@ -546,209 +754,398 @@ Sunlight streamed through the lantern room windows, illuminating dust particles 
           {/* Analysis Results */}
           <div className="space-y-6">
             {analysis ? (
-              <>
-                {/* Sentiment Analysis */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Heart className="h-5 w-5" />
-                      Sentiment & Tone Analysis
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className={`flex items-center gap-3 p-4 rounded-lg border ${getSentimentColor(analysis.sentimentLabel)}`}>
-                      {getSentimentIcon(analysis.sentimentLabel)}
-                      <div>
-                        <div className="font-semibold">{analysis.sentimentLabel}</div>
-                        <div className="text-sm opacity-80">Score: {analysis.sentimentScore.toFixed(2)}</div>
-                      </div>
-                    </div>
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="analysis" className="flex items-center gap-2">
+                    <BarChart3 className="h-4 w-4" />
+                    Analysis
+                  </TabsTrigger>
+                  <TabsTrigger value="grammar" className="flex items-center gap-2">
+                    <Shield className="h-4 w-4" />
+                    Grammar ({analysis.grammarErrors.length})
+                  </TabsTrigger>
+                  <TabsTrigger value="rewrite" className="flex items-center gap-2">
+                    <PenTool className="h-4 w-4" />
+                    Rewrite
+                  </TabsTrigger>
+                </TabsList>
 
-                    {analysis.emotionalTone.length > 0 && (
-                      <div>
-                        <Label className="text-sm font-medium">Emotional Tones</Label>
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          {analysis.emotionalTone.map((tone) => (
-                            <Badge key={tone} variant="outline" className="text-xs">
-                              {tone}
-                            </Badge>
+                <TabsContent value="analysis" className="space-y-6">
+                  {/* Writing Score Overview */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Target className="h-5 w-5" />
+                        Writing Quality Score
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-center space-y-2">
+                        <div className="text-4xl font-bold text-primary">
+                          {analysis.writingScore.toFixed(0)}/100
+                        </div>
+                        <Progress value={analysis.writingScore} className="h-3" />
+                        <p className="text-sm text-muted-foreground">
+                          {analysis.writingScore >= 90 ? 'Excellent' : 
+                           analysis.writingScore >= 80 ? 'Very Good' :
+                           analysis.writingScore >= 70 ? 'Good' :
+                           analysis.writingScore >= 60 ? 'Fair' : 'Needs Improvement'}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Sentiment Analysis */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Heart className="h-5 w-5" />
+                        Sentiment & Tone Analysis
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className={`flex items-center gap-3 p-4 rounded-lg border ${getSentimentColor(analysis.sentimentLabel)}`}>
+                        {getSentimentIcon(analysis.sentimentLabel)}
+                        <div>
+                          <div className="font-semibold">{analysis.sentimentLabel}</div>
+                          <div className="text-sm opacity-80">Score: {analysis.sentimentScore.toFixed(2)}</div>
+                        </div>
+                      </div>
+
+                      {analysis.emotionalTone.length > 0 && (
+                        <div>
+                          <Label className="text-sm font-medium">Emotional Tones</Label>
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            {analysis.emotionalTone.map((tone) => (
+                              <Badge key={tone} variant="outline" className="text-xs">
+                                {tone}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Readability Scores */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <BookOpen className="h-5 w-5" />
+                        Readability Analysis
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="text-center p-3 bg-muted/50 rounded-lg">
+                          <div className="text-2xl font-bold text-blue-600">
+                            {analysis.fleschReadingEase.toFixed(0)}
+                          </div>
+                          <div className="text-xs text-muted-foreground">Flesch Score</div>
+                        </div>
+                        <div className="text-center p-3 bg-muted/50 rounded-lg">
+                          <div className="text-2xl font-bold text-green-600">
+                            {analysis.fleschKincaidGrade.toFixed(1)}
+                          </div>
+                          <div className="text-xs text-muted-foreground">Grade Level</div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span>Reading Level: {analysis.readabilityLevel}</span>
+                          <span className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            {analysis.readingTime} min read
+                          </span>
+                        </div>
+                        <Progress value={Math.max(0, Math.min(100, analysis.fleschReadingEase))} className="h-2" />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Content Quality Metrics */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <BarChart3 className="h-5 w-5" />
+                        Content Quality
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <div className="flex justify-between">
+                            <span>Vocabulary Richness</span>
+                            <span className="font-medium">{analysis.vocabularyRichness.toFixed(1)}%</span>
+                          </div>
+                          <Progress value={analysis.vocabularyRichness} className="h-1 mt-1" />
+                        </div>
+                        <div>
+                          <div className="flex justify-between">
+                            <span>Passive Voice</span>
+                            <span className="font-medium">{analysis.passiveVoicePercentage.toFixed(1)}%</span>
+                          </div>
+                          <Progress value={analysis.passiveVoicePercentage} className="h-1 mt-1" />
+                        </div>
+                      </div>
+
+                      <Separator />
+
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div className="text-center">
+                          <div className="text-lg font-bold">{analysis.uniqueWords}</div>
+                          <div className="text-muted-foreground">Unique Words</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-lg font-bold">{analysis.averageWordsPerSentence.toFixed(1)}</div>
+                          <div className="text-muted-foreground">Avg Words/Sentence</div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Top Keywords */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Lightbulb className="h-5 w-5" />
+                        Top Keywords
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        {analysis.keywordDensity.slice(0, 5).map((keyword, index) => (
+                          <div key={keyword.word} className="flex items-center justify-between text-sm">
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline" className="text-xs">
+                                #{index + 1}
+                              </Badge>
+                              <span className="font-medium">{keyword.word}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span>{keyword.count}x</span>
+                              <span className="text-muted-foreground">({keyword.percentage.toFixed(1)}%)</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* AI Recommendations */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Sparkles className="h-5 w-5" />
+                        AI Insights & Recommendations
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {analysis.strengths.length > 0 && (
+                        <div>
+                          <div className="flex items-center gap-2 mb-2">
+                            <CheckCircle className="h-4 w-4 text-green-600" />
+                            <span className="font-medium text-green-600">Strengths</span>
+                          </div>
+                          <ul className="space-y-1 ml-6">
+                            {analysis.strengths.map((strength, index) => (
+                              <li key={index} className="text-sm text-muted-foreground">
+                                • {strength}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {analysis.improvements.length > 0 && (
+                        <div>
+                          <div className="flex items-center gap-2 mb-2">
+                            <AlertTriangle className="h-4 w-4 text-orange-600" />
+                            <span className="font-medium text-orange-600">Improvements</span>
+                          </div>
+                          <ul className="space-y-1 ml-6">
+                            {analysis.improvements.map((improvement, index) => (
+                              <li key={index} className="text-sm text-muted-foreground">
+                                • {improvement}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      <Button onClick={copyAnalysis} variant="outline" className="w-full">
+                        {copied ? (
+                          <>
+                            <CheckCircle className="mr-2 h-4 w-4" />
+                            Copied!
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="mr-2 h-4 w-4" />
+                            Copy Full Report
+                          </>
+                        )}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="grammar" className="space-y-6">
+                  {/* Grammar and Spelling Check */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Shield className="h-5 w-5" />
+                        Grammar & Spelling Check
+                      </CardTitle>
+                      <CardDescription>
+                        Found {analysis.grammarErrors.length} issues that can be improved
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {analysis.grammarErrors.length === 0 ? (
+                        <div className="text-center py-8">
+                          <CheckCircle className="h-12 w-12 mx-auto text-green-600 mb-4" />
+                          <h3 className="text-lg font-semibold text-green-600 mb-2">Perfect!</h3>
+                          <p className="text-muted-foreground">No grammar or spelling errors detected.</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          {analysis.grammarErrors.map((error, index) => (
+                            <div key={index} className={`p-4 rounded-lg border ${
+                              error.severity === 'error' ? 'border-red-200 bg-red-50' :
+                              error.severity === 'warning' ? 'border-yellow-200 bg-yellow-50' :
+                              'border-blue-200 bg-blue-50'
+                            }`}>
+                              <div className="flex items-start gap-3">
+                                <div className={`p-1 rounded ${
+                                  error.severity === 'error' ? 'bg-red-100 text-red-600' :
+                                  error.severity === 'warning' ? 'bg-yellow-100 text-yellow-600' :
+                                  'bg-blue-100 text-blue-600'
+                                }`}>
+                                  {error.type === 'spelling' ? '📝' : 
+                                   error.type === 'grammar' ? '📖' : 
+                                   error.type === 'punctuation' ? '❗' : '✨'}
+                                </div>
+                                <div className="flex-1">
+                                  <div className="font-medium capitalize">{error.type} {error.severity}</div>
+                                  <div className="text-sm text-muted-foreground">{error.message}</div>
+                                  {error.suggestion && (
+                                    <div className="mt-1">
+                                      <span className="text-sm font-medium">Suggestion: </span>
+                                      <span className="text-sm">{error.suggestion}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
                           ))}
                         </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
+                      )}
+                    </CardContent>
+                  </Card>
 
-                {/* Readability Scores */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <BookOpen className="h-5 w-5" />
-                      Readability Analysis
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="text-center p-3 bg-muted/50 rounded-lg">
-                        <div className="text-2xl font-bold text-blue-600">
-                          {analysis.fleschReadingEase.toFixed(0)}
+                  {/* Corrected Text */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Edit className="h-5 w-5" />
+                        Auto-Corrected Text
+                      </CardTitle>
+                      <CardDescription>
+                        Text with suggested corrections applied
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="p-4 bg-muted/50 rounded-lg">
+                        <div className="text-sm leading-relaxed whitespace-pre-wrap">
+                          {analysis.correctedText}
                         </div>
-                        <div className="text-xs text-muted-foreground">Flesch Score</div>
                       </div>
-                      <div className="text-center p-3 bg-muted/50 rounded-lg">
-                        <div className="text-2xl font-bold text-green-600">
-                          {analysis.fleschKincaidGrade.toFixed(1)}
-                        </div>
-                        <div className="text-xs text-muted-foreground">Grade Level</div>
+                      <div className="flex gap-2">
+                        <Button 
+                          onClick={() => copyText(analysis.correctedText, 'Corrected text')}
+                          variant="outline"
+                          size="sm"
+                        >
+                          <Copy className="mr-2 h-4 w-4" />
+                          Copy Corrected Text
+                        </Button>
+                        <Button 
+                          onClick={() => applyRewrite(analysis.correctedText)}
+                          size="sm"
+                        >
+                          <Zap className="mr-2 h-4 w-4" />
+                          Apply to Editor
+                        </Button>
                       </div>
-                    </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
 
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>Reading Level: {analysis.readabilityLevel}</span>
-                        <span className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {analysis.readingTime} min read
-                        </span>
-                      </div>
-                      <Progress value={Math.max(0, Math.min(100, analysis.fleschReadingEase))} className="h-2" />
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Content Quality Metrics */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <BarChart3 className="h-5 w-5" />
-                      Content Quality
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <div className="flex justify-between">
-                          <span>Vocabulary Richness</span>
-                          <span className="font-medium">{analysis.vocabularyRichness.toFixed(1)}%</span>
-                        </div>
-                        <Progress value={analysis.vocabularyRichness} className="h-1 mt-1" />
-                      </div>
-                      <div>
-                        <div className="flex justify-between">
-                          <span>Passive Voice</span>
-                          <span className="font-medium">{analysis.passiveVoicePercentage.toFixed(1)}%</span>
-                        </div>
-                        <Progress value={analysis.passiveVoicePercentage} className="h-1 mt-1" />
-                      </div>
-                    </div>
-
-                    <Separator />
-
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div className="text-center">
-                        <div className="text-lg font-bold">{analysis.uniqueWords}</div>
-                        <div className="text-muted-foreground">Unique Words</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-lg font-bold">{analysis.averageWordsPerSentence.toFixed(1)}</div>
-                        <div className="text-muted-foreground">Avg Words/Sentence</div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Top Keywords */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Lightbulb className="h-5 w-5" />
-                      Top Keywords
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      {analysis.keywordDensity.slice(0, 5).map((keyword, index) => (
-                        <div key={keyword.word} className="flex items-center justify-between text-sm">
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="text-xs">
-                              #{index + 1}
+                <TabsContent value="rewrite" className="space-y-6">
+                  {/* Email/Message Rewriter */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Mail className="h-5 w-5" />
+                        Email & Message Rewriter
+                      </CardTitle>
+                      <CardDescription>
+                        Get different versions of your text optimized for various communication styles
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      {analysis.rewriteOptions.map((option, index) => (
+                        <div key={index} className="border rounded-lg p-4 space-y-3">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h4 className="font-semibold">{option.title}</h4>
+                              <p className="text-sm text-muted-foreground">{option.description}</p>
+                            </div>
+                            <Badge variant="outline" className="capitalize">
+                              {option.tone}
                             </Badge>
-                            <span className="font-medium">{keyword.word}</span>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <span>{keyword.count}x</span>
-                            <span className="text-muted-foreground">({keyword.percentage.toFixed(1)}%)</span>
+                          
+                          <div className="p-3 bg-muted/50 rounded-md">
+                            <div className="text-sm leading-relaxed whitespace-pre-wrap">
+                              {option.text}
+                            </div>
+                          </div>
+                          
+                          <div className="flex gap-2">
+                            <Button 
+                              onClick={() => copyText(option.text, option.title)}
+                              variant="outline"
+                              size="sm"
+                            >
+                              <Copy className="mr-2 h-4 w-4" />
+                              Copy
+                            </Button>
+                            <Button 
+                              onClick={() => applyRewrite(option.text)}
+                              size="sm"
+                              variant={selectedRewrite === option.text ? "default" : "outline"}
+                            >
+                              <Zap className="mr-2 h-4 w-4" />
+                              {selectedRewrite === option.text ? 'Applied' : 'Apply'}
+                            </Button>
                           </div>
                         </div>
                       ))}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* AI Recommendations */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Sparkles className="h-5 w-5" />
-                      AI Insights & Recommendations
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {analysis.strengths.length > 0 && (
-                      <div>
-                        <div className="flex items-center gap-2 mb-2">
-                          <CheckCircle className="h-4 w-4 text-green-600" />
-                          <span className="font-medium text-green-600">Strengths</span>
-                        </div>
-                        <ul className="space-y-1 ml-6">
-                          {analysis.strengths.map((strength, index) => (
-                            <li key={index} className="text-sm text-muted-foreground">
-                              • {strength}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    {analysis.improvements.length > 0 && (
-                      <div>
-                        <div className="flex items-center gap-2 mb-2">
-                          <AlertTriangle className="h-4 w-4 text-orange-600" />
-                          <span className="font-medium text-orange-600">Improvements</span>
-                        </div>
-                        <ul className="space-y-1 ml-6">
-                          {analysis.improvements.map((improvement, index) => (
-                            <li key={index} className="text-sm text-muted-foreground">
-                              • {improvement}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    <Button onClick={copyAnalysis} variant="outline" className="w-full">
-                      {copied ? (
-                        <>
-                          <CheckCircle className="mr-2 h-4 w-4" />
-                          Copied!
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="mr-2 h-4 w-4" />
-                          Copy Full Report
-                        </>
-                      )}
-                    </Button>
-                  </CardContent>
-                </Card>
-              </>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              </Tabs>
             ) : (
               <Card>
                 <CardContent className="text-center py-12">
                   <Brain className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                   <h3 className="text-lg font-semibold mb-2">Ready to Analyze</h3>
                   <p className="text-muted-foreground">
-                    Enter your text on the left and click "Analyze Text" to get detailed insights about readability, sentiment, keywords, and more.
+                    Enter your text on the left and click "Analyze Text" to get detailed insights about readability, sentiment, keywords, grammar checking, and AI-powered rewriting options.
                   </p>
                 </CardContent>
               </Card>
