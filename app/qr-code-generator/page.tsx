@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
+import { getApiUrl } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -141,7 +142,7 @@ export default function QRCodeGeneratorPage() {
 
     setIsLoading(true)
     try {
-      const response = await fetch('https://api.tundasportsclub.com/api/generator/qr-generate', {
+      const response = await fetch(getApiUrl('qrGenerator'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

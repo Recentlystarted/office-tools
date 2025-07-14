@@ -38,3 +38,6 @@ Thumbs.db
 # Temporary
 *.tmp
 *.temp
+
+# API Backend (don't push to GitHub)
+api.office-tools/

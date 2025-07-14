@@ -54,9 +54,16 @@ jobs:
       - name: Build with Next.js
         run: pnpm build
         env:
-          NEXT_PUBLIC_API_BASE: ${{ vars.NEXT_PUBLIC_API_BASE || 'https://api.tundasportsclub.com' }}
-          NEXT_PUBLIC_MAX_FILE_SIZE: ${{ vars.NEXT_PUBLIC_MAX_FILE_SIZE || '52428800' }}
-          NEXT_PUBLIC_API_TIMEOUT: ${{ vars.NEXT_PUBLIC_API_TIMEOUT || '600000' }}
+          # AdSense Configuration (public)
+          NEXT_PUBLIC_ADSENSE_PUBLISHER_ID: ${{ secrets.ADSENSE_PUBLISHER_ID }}
+          
+          # API Configuration (public endpoint - safe to expose)
+          NEXT_PUBLIC_API_BASE_URL: ${{ secrets.API_BASE_URL }}
+          NEXT_PUBLIC_API_TIMEOUT: "600000"
+          NEXT_PUBLIC_MAX_FILE_SIZE: "52428800"
+          
+          # Production Environment
+          NODE_ENV: production
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

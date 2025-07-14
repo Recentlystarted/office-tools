@@ -6,14 +6,13 @@
 // Main API Configuration
 export const API_CONFIG = {
   // API base URL from environment variable - automatically injected during build
-  baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000',
+  baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.tundasportsclub.com',
   
-
   // Request configuration
   timeout: parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || '600000'), // 10 minutes
   maxFileSize: parseInt(process.env.NEXT_PUBLIC_MAX_FILE_SIZE || '52428800'), // 50MB
   
-  // API endpoints 
+  // API endpoints - your actual API routes
   endpoints: {
     // PDF Tools
     pdfToWord: '/api/pdf/convert',
@@ -141,68 +140,4 @@ export interface UploadOptions {
   maxSize?: number
   allowedTypes?: string[]
   multiple?: boolean
-}
-
-/**
- * Download blob as file
- */
-export const downloadBlob = (blob: Blob, filename: string): void => {
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
-  URL.revokeObjectURL(url)
-}
-
-/**
- * Format file size
- */
-export const formatFileSize = (bytes: number): string => {
-  if (bytes === 0) return '0 Bytes'
-  const k = 1024
-  const sizes = ['Bytes', 'KB', 'MB', 'GB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
-}
-
-/**
- * Simple API client for legacy compatibility
- */
-export const apiClient = {
-  async uploadFile(options: { 
-    endpoint: string, 
-    file: File, 
-    onProgress?: (progress: number) => void 
-  }): Promise<ApiResponse> {
-    const formData = new FormData()
-    formData.append('file', options.file)
-    
-    try {
-      const response = await fetch(options.endpoint, {
-        method: 'POST',
-        body: formData,
-      })
-      
-      if (!response.ok) {
-        return {
-          success: false,
-          error: `HTTP ${response.status}: ${response.statusText}`,
-        }
-      }
-      
-      const blob = await response.blob()
-      return {
-        success: true,
-        data: blob,
-      }
-    } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      }
-    }
-  }
 }

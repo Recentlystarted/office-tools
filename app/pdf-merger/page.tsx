@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react'
 import { useDropzone } from 'react-dropzone'
+import { getApiUrl } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
@@ -123,7 +124,7 @@ export default function PdfMergerPage() {
         formData.append('files', file)
       })
 
-      const response = await fetch('https://api.tundasportsclub.com/api/pdf-merger/merge', {
+      const response = await fetch(getApiUrl('pdfMerger'), {
         method: 'POST',
         body: formData,
       })

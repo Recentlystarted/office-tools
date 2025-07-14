@@ -182,7 +182,7 @@ const tools = [
     icon: Type,
     category: 'Generators',
     popular: false,
-    status: 'coming-soon'
+    status: 'active'
   },
   {
     name: 'UUID Generator',
@@ -191,7 +191,7 @@ const tools = [
     icon: Hash,
     category: 'Generators',
     popular: false,
-    status: 'coming-soon'
+    status: 'active'
   },
 
   // Text Tools
@@ -202,7 +202,7 @@ const tools = [
     icon: Type,
     category: 'Text Tools',
     popular: false,
-    status: 'coming-soon'
+    status: 'active'
   },
   {
     name: 'Word Counter',
@@ -211,7 +211,7 @@ const tools = [
     icon: Calculator,
     category: 'Text Tools',
     popular: false,
-    status: 'coming-soon'
+    status: 'active'
   },
   {
     name: 'JSON Formatter',
@@ -220,7 +220,7 @@ const tools = [
     icon: Code,
     category: 'Text Tools',
     popular: false,
-    status: 'coming-soon'
+    status: 'active'
   },
   {
     name: 'Base64 Encoder/Decoder',
@@ -229,7 +229,7 @@ const tools = [
     icon: FileCode,
     category: 'Text Tools',
     popular: false,
-    status: 'coming-soon'
+    status: 'active'
   },
 
   // Web Tools
@@ -240,7 +240,7 @@ const tools = [
     icon: Globe,
     category: 'Web Tools',
     popular: false,
-    status: 'coming-soon'
+    status: 'active'
   },
   {
     name: 'URL Shortener',
@@ -269,7 +269,7 @@ const tools = [
     icon: Settings,
     category: 'Utility Tools',
     popular: false,
-    status: 'coming-soon'
+    status: 'active'
   },
   {
     name: 'Timestamp Converter',

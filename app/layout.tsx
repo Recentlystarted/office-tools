@@ -4,6 +4,7 @@ import { ThemeProvider } from '@/components/theme-provider'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { Toaster } from '@/components/ui/sonner'
+import { AdSenseHead } from '@/components/ads/AdSenseHead'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -55,6 +56,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
+        <AdSenseHead />
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
