@@ -31,9 +31,6 @@ export function Footer() {
               <Link href="/pdf-merger" className="block text-muted-foreground hover:text-foreground">
                 PDF Merger
               </Link>
-              <Link href="/pdf-unlock" className="block text-muted-foreground hover:text-foreground">
-                PDF Unlock
-              </Link>
             </div>
           </div>
 

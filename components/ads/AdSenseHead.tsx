@@ -5,7 +5,7 @@ import { ADSENSE_CONFIG } from '@/lib/adsense'
 
 /**
  * AdSense Head Component for Auto Ads
- * Much simpler setup - Google handles everything!
+ * Auto Ads handles everything automatically once script is loaded
  */
 export function AdSenseHead() {
   // Only render script in production
@@ -22,16 +22,6 @@ export function AdSenseHead() {
       strategy="afterInteractive"
       onLoad={() => {
         console.log('AdSense Auto Ads script loaded successfully')
-        // Initialize Auto Ads
-        try {
-          // @ts-ignore
-          (window.adsbygoogle = window.adsbygoogle || []).push({
-            google_ad_client: ADSENSE_CONFIG.publisherId,
-            enable_page_level_ads: true
-          })
-        } catch (error) {
-          console.warn('Auto Ads initialization failed:', error)
-        }
       }}
       onError={(e) => {
         console.error('Failed to load AdSense script:', e)
