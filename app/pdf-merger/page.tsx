@@ -123,13 +123,33 @@ export default function PdfMergerPage() {
         formData.append('files', file)
       })
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/pdf-merger/merge`, {
+      // Add some debugging
+      console.log('Merging files:', files.map(f => ({ name: f.name, size: f.size })))
+      
+      if (!process.env.NEXT_PUBLIC_API_BASE_URL) {
+        throw new Error('API configuration not available. Please check your environment settings.')
+      }
+      
+      const apiEndpoint = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/pdf-merger/merge`
+      console.log('API endpoint configured')
+
+      const response = await fetch(apiEndpoint, {
         method: 'POST',
         body: formData,
       })
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+        // Get more detailed error information
+        let errorMessage = `HTTP error! status: ${response.status}`
+        try {
+          const errorText = await response.text()
+          if (errorText) {
+            errorMessage += ` - ${errorText}`
+          }
+        } catch (e) {
+          // If we can't read the error response, just use the status
+        }
+        throw new Error(errorMessage)
       }
 
       const blob = await response.blob()

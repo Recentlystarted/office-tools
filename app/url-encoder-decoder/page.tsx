@@ -208,29 +208,29 @@ export default function URLEncoderDecoderPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-4 sm:py-8">
         {/* Header */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-6 sm:mb-8">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="p-3 rounded-xl bg-primary/10 text-primary">
-              <Globe className="h-8 w-8" />
+            <div className="p-2 sm:p-3 rounded-xl bg-primary/10 text-primary">
+              <Globe className="h-6 w-6 sm:h-8 sm:w-8" />
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold">URL Encoder/Decoder</h1>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold">URL Encoder/Decoder</h1>
           </div>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Encode and decode URLs and query parameters for web development. Supports both component and full URL encoding.
+          <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-2">
+            Encode and decode URLs and query parameters for web development with advanced parsing
           </p>
-          <div className="flex items-center justify-center gap-2 mt-4">
-            <Badge variant="secondary">
+          <div className="flex items-center justify-center gap-2 mt-4 flex-wrap">
+            <Badge variant="secondary" className="text-xs sm:text-sm">
               {mode === 'encode' ? <Lock className="h-3 w-3 mr-1" /> : <Unlock className="h-3 w-3 mr-1" />}
               {mode === 'encode' ? 'Encoding' : 'Decoding'}
             </Badge>
-            <Badge variant="secondary">URL Parser</Badge>
-            <Badge variant="secondary">Component Mode</Badge>
+            <Badge variant="secondary" className="text-xs sm:text-sm">URL Parser</Badge>
+            <Badge variant="secondary" className="text-xs sm:text-sm">Component Mode</Badge>
           </div>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 sm:gap-8 max-w-7xl mx-auto">
           {/* Input Section */}
           <div className="space-y-6">
             <Card>
@@ -276,13 +276,13 @@ export default function URLEncoderDecoderPage() {
                         }`}
                         onClick={() => setEncodeType('component')}
                       >
-                        <div className="flex items-center gap-2 mb-1">
-                          <div className={`w-2 h-2 rounded-full ${
+                        <div className="flex items-start gap-2 mb-1">
+                          <div className={`w-2 h-2 rounded-full mt-1 flex-shrink-0 ${
                             encodeType === 'component' ? 'bg-primary' : 'bg-muted-foreground'
                           }`} />
-                          <span className="font-medium">Component Encoding</span>
+                          <span className="font-medium text-sm">Component Encoding</span>
                         </div>
-                        <p className="text-sm text-muted-foreground ml-4">
+                        <p className="text-xs sm:text-sm text-muted-foreground ml-4 pr-2">
                           Encode special characters for query parameters and form data
                         </p>
                       </div>
@@ -295,13 +295,13 @@ export default function URLEncoderDecoderPage() {
                         }`}
                         onClick={() => setEncodeType('full')}
                       >
-                        <div className="flex items-center gap-2 mb-1">
-                          <div className={`w-2 h-2 rounded-full ${
+                        <div className="flex items-start gap-2 mb-1">
+                          <div className={`w-2 h-2 rounded-full mt-1 flex-shrink-0 ${
                             encodeType === 'full' ? 'bg-primary' : 'bg-muted-foreground'
                           }`} />
-                          <span className="font-medium">Full URI Encoding</span>
+                          <span className="font-medium text-sm">Full URI Encoding</span>
                         </div>
-                        <p className="text-sm text-muted-foreground ml-4">
+                        <p className="text-xs sm:text-sm text-muted-foreground ml-4 pr-2">
                           Encode complete URLs while preserving URL structure
                         </p>
                       </div>
@@ -335,12 +335,12 @@ export default function URLEncoderDecoderPage() {
                         variant="outline"
                         size="sm"
                         onClick={() => setInputText(sample.text)}
-                        className="justify-start text-left h-auto p-3"
+                        className="justify-start text-left h-auto p-3 overflow-hidden"
                       >
-                        <div>
-                          <div className="font-medium">{sample.name}</div>
-                          <div className="text-xs text-muted-foreground font-mono truncate">
-                            {sample.text.length > 60 ? sample.text.substring(0, 60) + '...' : sample.text}
+                        <div className="w-full overflow-hidden">
+                          <div className="font-medium text-sm">{sample.name}</div>
+                          <div className="text-xs text-muted-foreground font-mono break-all line-clamp-2 overflow-hidden text-ellipsis">
+                            {sample.text.length > 50 ? sample.text.substring(0, 50) + '...' : sample.text}
                           </div>
                         </div>
                       </Button>
@@ -349,8 +349,8 @@ export default function URLEncoderDecoderPage() {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="grid grid-cols-2 gap-2">
-                  <Button onClick={processText} disabled={!inputText.trim()}>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <Button onClick={processText} disabled={!inputText.trim()} className="w-full">
                     {mode === 'encode' ? (
                       <>
                         <Lock className="mr-2 h-4 w-4" />
@@ -363,7 +363,7 @@ export default function URLEncoderDecoderPage() {
                       </>
                     )}
                   </Button>
-                  <Button onClick={switchMode} variant="outline">
+                  <Button onClick={switchMode} variant="outline" className="w-full">
                     <ArrowUpDown className="mr-2 h-4 w-4" />
                     Switch Mode
                   </Button>

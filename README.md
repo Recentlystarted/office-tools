@@ -156,7 +156,7 @@ pnpm start
 
 ### Primary API Endpoints
 
-**Base URL:** `https://api.tundasportsclub.com`
+**Base URL:** `https://your-api-domain.com`
 
 #### PDF Conversion APIs
 ```javascript
@@ -199,8 +199,8 @@ Body: { file: PDF_FILE }
 ### Error Handling & Fallbacks
 ```javascript
 // Multiple fallback strategies
-1. Primary API: api.tundasportsclub.com/api/pdf/convert
-2. Legacy API: api.tundasportsclub.com/convert
+1. Primary API: your-api-domain.com/api/pdf/convert
+2. Legacy API: your-api-domain.com/convert
 3. Client-side alternatives when server unavailable
 4. Helpful error messages with alternative solutions
 ```
@@ -324,7 +324,7 @@ Create a `.env.local` file in the root directory:
 
 ```bash
 # API Configuration
-NEXT_PUBLIC_API_BASE=https://api.tundasportsclub.com
+NEXT_PUBLIC_API_BASE=https://your-api-domain.com
 NEXT_PUBLIC_MAX_FILE_SIZE=52428800  # 50MB in bytes
 NEXT_PUBLIC_API_TIMEOUT=600000      # 10 minutes in milliseconds
 ```
@@ -475,7 +475,7 @@ CORS(app, origins=[
 const formData = new FormData();
 formData.append('file', file);
 
-fetch('https://api.tundasportsclub.com/api/pdf/convert', {
+fetch('https://your-api-domain.com/api/pdf/convert', {
   method: 'POST',
   body: formData,
   headers: {

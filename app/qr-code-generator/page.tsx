@@ -141,6 +141,10 @@ export default function QRCodeGeneratorPage() {
 
     setIsLoading(true)
     try {
+      if (!process.env.NEXT_PUBLIC_API_BASE_URL) {
+        throw new Error('API configuration not available. Please check your environment settings.')
+      }
+      
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/generator/qr-generate`, {
         method: 'POST',
         headers: {

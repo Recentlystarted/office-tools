@@ -31,7 +31,8 @@ import {
   Clock,
   Hash,
   Star,
-  ArrowRight
+  ArrowRight,
+  Brain
 } from 'lucide-react'
 
 const tools = [
@@ -229,6 +230,15 @@ const tools = [
     icon: FileCode,
     category: 'Text Tools',
     popular: false,
+    status: 'active'
+  },
+  {
+    name: 'AI Text Analyzer',
+    description: 'Advanced AI-powered text analysis with sentiment, readability, and SEO insights',
+    slug: 'ai-text-analyzer',
+    icon: Brain,
+    category: 'Text Tools',
+    popular: true,
     status: 'active'
   },
 

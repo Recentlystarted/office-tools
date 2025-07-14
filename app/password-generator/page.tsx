@@ -95,6 +95,10 @@ export default function PasswordGeneratorPage() {
     try {
       // Try API first, fallback to local generation
       try {
+        if (!process.env.NEXT_PUBLIC_API_BASE_URL) {
+          throw new Error('API configuration not available. Please check your environment settings.')
+        }
+        
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/password/generate`, {
           method: 'POST',
           headers: {

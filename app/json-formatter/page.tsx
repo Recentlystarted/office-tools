@@ -44,7 +44,66 @@ export default function JsonFormatterPage() {
   const [indentSize, setIndentSize] = useState([2])
   const [copied, setCopied] = useState<string | null>(null)
 
+  // Auto-correct common JSON issues
+  const autoCorrectJson = (jsonString: string): { corrected: string; corrections: string[] } => {
+    let corrected = jsonString.trim()
+    const corrections: string[] = []
+
+    // Fix common issues
+    const fixes = [
+      {
+        pattern: /,(\s*[}\]])/g,
+        replacement: '$1',
+        description: 'Removed trailing commas'
+      },
+      {
+        pattern: /([{,]\s*)(\w+)(\s*:)/g,
+        replacement: '$1"$2"$3',
+        description: 'Added quotes to property names'
+      },
+      {
+        pattern: /:\s*'([^']*)'/g,
+        replacement: ': "$1"',
+        description: 'Changed single quotes to double quotes'
+      },
+      {
+        pattern: /([^\\])\\([^"\\\/bfnrt])/g,
+        replacement: '$1\\\\$2',
+        description: 'Fixed escape sequences'
+      }
+    ]
+
+    fixes.forEach(fix => {
+      const before = corrected
+      corrected = corrected.replace(fix.pattern, fix.replacement)
+      if (before !== corrected) {
+        corrections.push(fix.description)
+      }
+    })
+
+    // Try to fix missing braces/brackets
+    const openBrace = (corrected.match(/\{/g) || []).length
+    const closeBrace = (corrected.match(/\}/g) || []).length
+    const openBracket = (corrected.match(/\[/g) || []).length
+    const closeBracket = (corrected.match(/\]/g) || []).length
+
+    if (openBrace > closeBrace) {
+      corrected += '}'.repeat(openBrace - closeBrace)
+      corrections.push(`Added ${openBrace - closeBrace} missing closing brace(s)`)
+    }
+    if (openBracket > closeBracket) {
+      corrected += ']'.repeat(openBracket - closeBracket)
+      corrections.push(`Added ${openBracket - closeBracket} missing closing bracket(s)`)
+    }
+
+    return { corrected, corrections }
+  }
+
   const analyzeJson = (jsonString: string): JsonValidationResult => {
+    if (!jsonString.trim()) {
+      return { isValid: false, error: 'Please enter JSON data' }
+    }
+
     try {
       const parsed = JSON.parse(jsonString)
       
@@ -127,7 +186,7 @@ export default function JsonFormatterPage() {
 
   const validateJson = () => {
     if (!inputJson.trim()) {
-      setValidation({ isValid: false })
+      setValidation({ isValid: false, error: 'Please enter JSON data' })
       return
     }
 
@@ -138,6 +197,42 @@ export default function JsonFormatterPage() {
       toast.success('JSON is valid!')
     } else {
       toast.error('JSON is invalid: ' + result.error)
+    }
+  }
+
+  const autoCorrectAndFormat = () => {
+    if (!inputJson.trim()) {
+      toast.error('Please enter JSON to auto-correct')
+      return
+    }
+
+    const { corrected, corrections } = autoCorrectJson(inputJson)
+    
+    try {
+      const parsed = JSON.parse(corrected)
+      const formatted = JSON.stringify(parsed, null, indentSize[0])
+      const minified = JSON.stringify(parsed)
+      
+      setInputJson(corrected)
+      setFormattedJson(formatted)
+      setMinifiedJson(minified)
+      setValidation(analyzeJson(corrected))
+      
+      if (corrections.length > 0) {
+        toast.success(`Auto-corrected and formatted! Fixes: ${corrections.join(', ')}`)
+      } else {
+        toast.success('JSON formatted successfully!')
+      }
+    } catch (error) {
+      // If auto-correction failed, show the corrections that were attempted
+      if (corrections.length > 0) {
+        setInputJson(corrected)
+        toast.info(`Applied fixes: ${corrections.join(', ')}, but JSON still has errors`)
+      }
+      
+      const errorMessage = error instanceof Error ? error.message : 'Invalid JSON'
+      setValidation({ isValid: false, error: errorMessage })
+      toast.error('Unable to auto-correct: ' + errorMessage)
     }
   }
 
@@ -230,27 +325,27 @@ export default function JsonFormatterPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-4 sm:py-8">
         {/* Header */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-6 sm:mb-8">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="p-3 rounded-xl bg-primary/10 text-primary">
-              <Code className="h-8 w-8" />
+            <div className="p-2 sm:p-3 rounded-xl bg-primary/10 text-primary">
+              <Code className="h-6 w-6 sm:h-8 sm:w-8" />
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold">JSON Formatter</h1>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold">JSON Formatter</h1>
           </div>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Format, validate, and beautify JSON data with syntax highlighting and error detection
+          <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-2">
+            Format, validate, and auto-fix JSON data with advanced error correction
           </p>
-          <div className="flex items-center justify-center gap-2 mt-4">
+          <div className="flex items-center justify-center gap-2 mt-4 flex-wrap">
+            <Badge variant="secondary">Auto-Fix</Badge>
             <Badge variant="secondary">Validate</Badge>
             <Badge variant="secondary">Format</Badge>
             <Badge variant="secondary">Minify</Badge>
-            <Badge variant="secondary">Download</Badge>
           </div>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 sm:gap-8 max-w-7xl mx-auto">
           {/* Input Section */}
           <div className="space-y-6">
             <Card>
@@ -329,21 +424,27 @@ export default function JsonFormatterPage() {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="grid grid-cols-2 gap-2">
-                  <Button onClick={formatJson} disabled={!inputJson.trim()}>
-                    <Maximize2 className="mr-2 h-4 w-4" />
-                    Format
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <Button onClick={autoCorrectAndFormat} className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+                    <Code className="mr-2 h-4 w-4" />
+                    Auto-Fix & Format
                   </Button>
+                  <Button onClick={formatJson} variant="outline" disabled={!inputJson.trim()}>
+                    <Maximize2 className="mr-2 h-4 w-4" />
+                    Format Only
+                  </Button>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <Button onClick={validateJson} variant="outline" disabled={!inputJson.trim()}>
                     <CheckCircle className="mr-2 h-4 w-4" />
                     Validate
                   </Button>
+                  <Button onClick={clearJson} variant="outline" disabled={!inputJson}>
+                    <RotateCcw className="mr-2 h-4 w-4" />
+                    Clear
+                  </Button>
                 </div>
-
-                <Button onClick={clearJson} variant="outline" className="w-full" disabled={!inputJson}>
-                  <RotateCcw className="mr-2 h-4 w-4" />
-                  Clear JSON
-                </Button>
               </CardContent>
             </Card>
           </div>

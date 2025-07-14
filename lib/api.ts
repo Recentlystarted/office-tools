@@ -42,7 +42,7 @@ export const API_CONFIG = {
 
 /**
  * Get full API URL for any tool
- * Usage: getApiUrl('qrGenerator') → 'https://api.tundasportsclub.com/api/generator/qr-generate'
+ * Usage: getApiUrl('qrGenerator') → 'https://your-api-domain.com/api/generator/qr-generate'
  */
 export const getApiUrl = (toolName: string): string => {
   const endpoint = API_CONFIG.endpoints[toolName as keyof typeof API_CONFIG.endpoints]

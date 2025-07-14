@@ -63,6 +63,10 @@ export default function PdfToDocxPage() {
       const formData = new FormData()
       formData.append('file', file)
 
+      if (!process.env.NEXT_PUBLIC_API_BASE_URL) {
+        throw new Error('API configuration not available. Please check your environment settings.')
+      }
+
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/pdf/convert`, {
         method: 'POST',
         body: formData,
