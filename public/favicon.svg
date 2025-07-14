@@ -1,0 +1,23 @@
+
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160">
+  <style>
+    .blue{fill:#1E3A8A;}
+    .blueStroke{fill:none;stroke:#1E3A8A;stroke-width:10;}
+    .orange{fill:#F59E0B;}
+  </style>
+  <circle cx="80" cy="80" r="55" class="blueStroke"/>
+  <rect x="139.00" y="74.00" width="12" height="12" transform="rotate(0,80,80)" class="blue"/>
+  <rect x="130.29" y="106.50" width="12" height="12" transform="rotate(30,80,80)" class="blue"/>
+  <rect x="106.50" y="130.29" width="12" height="12" transform="rotate(60,80,80)" class="blue"/>
+  <rect x="74.00" y="139.00" width="12" height="12" transform="rotate(90,80,80)" class="blue"/>
+  <rect x="41.50" y="130.29" width="12" height="12" transform="rotate(120,80,80)" class="blue"/>
+  <rect x="17.71" y="106.50" width="12" height="12" transform="rotate(150,80,80)" class="blue"/>
+  <rect x="9.00" y="74.00" width="12" height="12" transform="rotate(180,80,80)" class="blue"/>
+  <rect x="17.71" y="41.50" width="12" height="12" transform="rotate(210,80,80)" class="blue"/>
+  <rect x="41.50" y="17.71" width="12" height="12" transform="rotate(240,80,80)" class="blue"/>
+  <rect x="74.00" y="9.00" width="12" height="12" transform="rotate(270,80,80)" class="blue"/>
+  <rect x="106.50" y="17.71" width="12" height="12" transform="rotate(300,80,80)" class="blue"/>
+  <rect x="130.29" y="41.50" width="12" height="12" transform="rotate(330,80,80)" class="blue"/>
+  <polygon points="80,55 95,90 80,105 65,90" class="orange"/>
+  <circle cx="80" cy="83" r="6" class="blue"/>
+</svg>

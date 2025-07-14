@@ -5,11 +5,30 @@ import { useDropzone } from 'react-dropzone'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
-import { FileText, Upload, Download, AlertCircle, X, GripVertical } from 'lucide-react'
-import { apiClient, downloadBlob, formatFileSize } from '@/lib/api'
+import { FileText, Upload, Download, AlertCircle, X, GripVertical, Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
 
 interface FileWithId extends File {
   id: string
+}
+
+const formatFileSize = (bytes: number): string => {
+  if (bytes === 0) return '0 Bytes'
+  const k = 1024
+  const sizes = ['Bytes', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+}
+
+const downloadBlob = (blob: Blob, filename: string) => {
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
 }
 
 export default function PdfMergerPage() {
@@ -19,12 +38,23 @@ export default function PdfMergerPage() {
   const [error, setError] = useState<string | null>(null)
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
-    const newFiles = acceptedFiles.map(file => ({
+    const pdfFiles = acceptedFiles.filter(file => file.type === 'application/pdf')
+    
+    if (pdfFiles.length !== acceptedFiles.length) {
+      toast.error('Only PDF files are allowed')
+    }
+    
+    if (pdfFiles.length === 0) return
+
+    const newFiles = pdfFiles.map(file => ({
       ...file,
       id: Math.random().toString(36).substring(7)
     }))
+    
     setFiles(prev => [...prev, ...newFiles])
     setError(null)
+    
+    toast.success(`${newFiles.length} PDF file${newFiles.length > 1 ? 's' : ''} added successfully`)
   }, [])
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -57,36 +87,41 @@ export default function PdfMergerPage() {
   }
 
   const handleMerge = async () => {
-    if (files.length < 2) return
+    if (files.length < 2) {
+      toast.error('Please select at least 2 PDF files to merge')
+      return
+    }
 
     setIsMerging(true)
     setProgress(0)
     setError(null)
 
     try {
-      // Create FormData with multiple files
       const formData = new FormData()
       files.forEach((file, index) => {
-        formData.append(`file_${index}`, file)
-      })
-      formData.append('file_count', files.length.toString())
-
-      const result = await apiClient.uploadFile({
-        endpoint: '/api/pdf-merger/merge',
-        file: files[0], // Primary file for compatibility
-        additionalData: Object.fromEntries(formData),
-        onProgress: setProgress,
+        formData.append('files', file)
       })
 
-      if (result instanceof Blob) {
-        downloadBlob(result, 'merged-document.pdf')
-      } else {
-        throw new Error('Unexpected response format from server')
+      const response = await fetch('https://api.tundasportsclub.com/api/pdf-merger/merge', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
       }
+
+      const blob = await response.blob()
+      downloadBlob(blob, 'merged-document.pdf')
+      
+      toast.success('PDFs merged successfully!')
+      resetForm()
 
     } catch (error) {
       console.error('Merge error:', error)
-      setError(error instanceof Error ? error.message : 'Merge failed. Please try again.')
+      const errorMessage = error instanceof Error ? error.message : 'Merge failed. Please try again.'
+      setError(errorMessage)
+      toast.error(errorMessage)
     } finally {
       setIsMerging(false)
       setProgress(0)

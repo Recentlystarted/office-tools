@@ -16,6 +16,14 @@ export const metadata = {
   creator: 'Office Tools',
   publisher: 'Office Tools',
   robots: 'index, follow',
+  icons: {
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico', sizes: '32x32', type: 'image/x-icon' }
+    ],
+    shortcut: '/favicon.svg',
+    apple: '/favicon.svg',
+  },
   openGraph: {
     title: 'Office Tools - Professional PDF & Document Tools',
     description: 'Free online tools for PDF processing, document conversion, and office productivity.',

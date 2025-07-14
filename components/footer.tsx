@@ -9,9 +9,11 @@ export function Footer() {
           {/* Brand */}
           <div className="space-y-3">
             <div className="flex items-center space-x-2">
-              <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary text-primary-foreground">
-                <span className="text-xs font-bold">OT</span>
-              </div>
+              <img 
+                src="/favicon.svg" 
+                alt="Office Tools" 
+                className="h-6 w-6" 
+              />
               <span className="font-semibold">Office Tools</span>
             </div>
             <p className="text-sm text-muted-foreground">
@@ -39,7 +41,7 @@ export function Footer() {
           <div className="space-y-3">
             <h3 className="font-semibold">Generators</h3>
             <div className="space-y-2 text-sm">
-              <Link href="/qr-generator" className="block text-muted-foreground hover:text-foreground">
+              <Link href="/qr-code-generator" className="block text-muted-foreground hover:text-foreground">
                 QR Code Generator
               </Link>
               <Link href="/password-generator" className="block text-muted-foreground hover:text-foreground">

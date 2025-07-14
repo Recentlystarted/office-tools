@@ -41,8 +41,12 @@ export function Header() {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg">
-              <span className="text-sm font-bold">OT</span>
+            <div className="flex h-9 w-9 items-center justify-center">
+              <img 
+                src="/favicon.svg" 
+                alt="Office Tools" 
+                className="h-8 w-8" 
+              />
             </div>
             <div className="hidden sm:block">
               <span className="font-bold text-xl">Office Tools</span>

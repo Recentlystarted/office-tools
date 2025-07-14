@@ -39,7 +39,7 @@ const tools = [
   {
     name: 'PDF to Word',
     description: 'Convert PDF documents to editable Word files with perfect formatting preservation',
-    slug: 'pdf-to-word',
+    slug: 'pdf-to-docx',
     icon: FileText,
     category: 'PDF Tools',
     popular: true,
@@ -93,7 +93,7 @@ const tools = [
   {
     name: 'PDF Password Remover',
     description: 'Remove password protection from PDF files when you have the password',
-    slug: 'pdf-unlock',
+    slug: 'pdf-password-remover',
     icon: Unlock,
     category: 'PDF Tools',
     popular: false,
@@ -160,7 +160,7 @@ const tools = [
   {
     name: 'QR Code Generator',
     description: 'Create QR codes for text, URLs, WiFi, contact info, and more',
-    slug: 'qr-generator',
+    slug: 'qr-code-generator',
     icon: QrCode,
     category: 'Generators',
     popular: true,
@@ -225,7 +225,7 @@ const tools = [
   {
     name: 'Base64 Encoder/Decoder',
     description: 'Encode and decode Base64 text for data transmission',
-    slug: 'base64-converter',
+    slug: 'base64-encoder-decoder',
     icon: FileCode,
     category: 'Text Tools',
     popular: false,
@@ -236,7 +236,7 @@ const tools = [
   {
     name: 'URL Encoder/Decoder',
     description: 'Encode and decode URLs and query parameters for web development',
-    slug: 'url-encoder',
+    slug: 'url-encoder-decoder',
     icon: Globe,
     category: 'Web Tools',
     popular: false,
