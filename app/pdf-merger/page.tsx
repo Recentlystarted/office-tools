@@ -37,18 +37,36 @@ export default function PdfMergerPage() {
   const [progress, setProgress] = useState(0)
   const [error, setError] = useState<string | null>(null)
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    const pdfFiles = acceptedFiles.filter(file => file.type === 'application/pdf')
-    
-    if (pdfFiles.length !== acceptedFiles.length) {
-      toast.error('Only PDF files are allowed')
+  const onDrop = useCallback((acceptedFiles: File[], rejectedFiles: any[]) => {
+    // Handle rejected files
+    if (rejectedFiles.length > 0) {
+      const rejectedReasons = rejectedFiles.map(({ errors }) => 
+        errors.map((e: any) => e.message).join(', ')
+      ).join('; ')
+      toast.error(`Some files were rejected: ${rejectedReasons}`)
     }
+
+    // Filter and process accepted PDF files
+    const pdfFiles = acceptedFiles.filter(file => {
+      if (file.type !== 'application/pdf') {
+        toast.error(`${file.name} is not a PDF file`)
+        return false
+      }
+      if (file.size > 50 * 1024 * 1024) { // 50MB limit
+        toast.error(`${file.name} is too large (max 50MB)`)
+        return false
+      }
+      return true
+    })
     
     if (pdfFiles.length === 0) return
 
-    const newFiles = pdfFiles.map(file => ({
+    const newFiles: FileWithId[] = pdfFiles.map(file => ({
       ...file,
-      id: Math.random().toString(36).substring(7)
+      id: `${Date.now()}-${Math.random().toString(36).substring(7)}`,
+      name: file.name,
+      size: file.size,
+      type: file.type
     }))
     
     setFiles(prev => [...prev, ...newFiles])
@@ -57,13 +75,16 @@ export default function PdfMergerPage() {
     toast.success(`${newFiles.length} PDF file${newFiles.length > 1 ? 's' : ''} added successfully`)
   }, [])
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+  const { getRootProps, getInputProps, isDragActive, isDragReject } = useDropzone({
     onDrop,
     accept: {
       'application/pdf': ['.pdf']
     },
     multiple: true,
     maxSize: 50 * 1024 * 1024, // 50MB per file
+    maxFiles: 20, // Maximum 20 files
+    noClick: false,
+    noKeyboard: false
   })
 
   const removeFile = (fileId: string) => {
@@ -161,20 +182,37 @@ export default function PdfMergerPage() {
             <div
               {...getRootProps()}
               className={`
-                border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
-                ${isDragActive ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'}
+                border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all duration-200
+                ${isDragActive && !isDragReject ? 'border-primary bg-primary/5 scale-105' : ''}
+                ${isDragReject ? 'border-destructive bg-destructive/5' : ''}
+                ${!isDragActive ? 'border-border hover:border-primary/50 hover:bg-muted/50' : ''}
               `}
             >
               <input {...getInputProps()} />
-              <Upload className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+              <Upload className={`h-12 w-12 mx-auto mb-4 ${isDragActive ? 'text-primary' : 'text-muted-foreground'}`} />
               {isDragActive ? (
-                <p className="text-lg">Drop your PDF files here...</p>
+                isDragReject ? (
+                  <div className="space-y-2">
+                    <p className="text-lg text-destructive">Only PDF files are allowed!</p>
+                    <p className="text-sm text-muted-foreground">Please drop only PDF files</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <p className="text-lg text-primary">Drop your PDF files here...</p>
+                    <p className="text-sm text-muted-foreground">Release to add files</p>
+                  </div>
+                )
               ) : (
-                <div className="space-y-2">
-                  <p className="text-lg">Drag & drop your PDF files here</p>
-                  <p className="text-sm text-muted-foreground">
+                <div className="space-y-3">
+                  <p className="text-xl font-medium">Drag & drop your PDF files here</p>
+                  <p className="text-muted-foreground">
                     or click to browse files (select multiple files)
                   </p>
+                  <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground mt-4">
+                    <span>📄 PDF files only</span>
+                    <span>📦 Max 50MB per file</span>
+                    <span>🔢 Up to 20 files</span>
+                  </div>
                 </div>
               )}
             </div>
@@ -182,57 +220,81 @@ export default function PdfMergerPage() {
 
           {/* File List */}
           {files.length > 0 && (
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-medium">
-                  Files to Merge ({files.length})
-                </h3>
-                <div className="text-sm text-muted-foreground">
-                  Total size: {formatFileSize(totalSize)}
+            <div className="space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 bg-muted/50 rounded-lg">
+                <div>
+                  <h3 className="text-lg font-semibold flex items-center gap-2">
+                    <FileText className="h-5 w-5" />
+                    Files to Merge ({files.length})
+                  </h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Drag files to reorder • Total size: {formatFileSize(totalSize)}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={resetForm}>
+                    <X className="h-4 w-4 mr-2" />
+                    Clear All
+                  </Button>
                 </div>
               </div>
               
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {files.map((file, index) => (
                   <div
                     key={file.id}
-                    className="flex items-center gap-3 p-3 border rounded-lg bg-card"
+                    className="group flex items-center gap-4 p-4 border rounded-lg bg-card hover:bg-muted/50 transition-colors"
                   >
+                    <div className="flex items-center gap-1">
+                      <span className="text-sm font-medium text-muted-foreground bg-muted px-2 py-1 rounded">
+                        {index + 1}
+                      </span>
+                    </div>
+
                     <div className="flex flex-col gap-1">
                       <Button
                         variant="ghost"
-                        size="icon"
-                        className="h-6 w-6"
+                        size="sm"
+                        className="h-6 w-6 p-0 opacity-60 hover:opacity-100"
                         onClick={() => moveFile(file.id, 'up')}
                         disabled={index === 0}
+                        title="Move up"
                       >
                         ↑
                       </Button>
                       <Button
                         variant="ghost"
-                        size="icon"
-                        className="h-6 w-6"
+                        size="sm"
+                        className="h-6 w-6 p-0 opacity-60 hover:opacity-100"
                         onClick={() => moveFile(file.id, 'down')}
                         disabled={index === files.length - 1}
+                        title="Move down"
                       >
                         ↓
                       </Button>
                     </div>
                     
-                    <GripVertical className="h-4 w-4 text-muted-foreground" />
+                    <GripVertical className="h-4 w-4 text-muted-foreground opacity-60 group-hover:opacity-100" />
                     
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{file.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {formatFileSize(file.size)}
-                      </p>
+                      <div className="flex items-center gap-2 mb-1">
+                        <FileText className="h-4 w-4 text-red-500 flex-shrink-0" />
+                        <p className="font-medium truncate" title={file.name}>
+                          {file.name}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <span>{formatFileSize(file.size)}</span>
+                        <span>PDF Document</span>
+                      </div>
                     </div>
                     
                     <Button
                       variant="ghost"
-                      size="icon"
+                      size="sm"
                       onClick={() => removeFile(file.id)}
-                      className="text-destructive hover:text-destructive"
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10 opacity-60 hover:opacity-100"
+                      title="Remove file"
                     >
                       <X className="h-4 w-4" />
                     </Button>
@@ -240,17 +302,17 @@ export default function PdfMergerPage() {
                 ))}
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex gap-3">
                 <div
                   {...getRootProps()}
-                  className="flex-1 border border-dashed rounded-lg p-4 text-center cursor-pointer hover:border-primary/50 transition-colors"
+                  className="flex-1 border border-dashed rounded-lg p-4 text-center cursor-pointer hover:border-primary/50 hover:bg-muted/50 transition-colors"
                 >
                   <input {...getInputProps()} />
-                  <p className="text-sm">Add more files</p>
+                  <div className="flex items-center justify-center gap-2">
+                    <Upload className="h-4 w-4" />
+                    <span className="text-sm font-medium">Add more files</span>
+                  </div>
                 </div>
-                <Button variant="outline" onClick={resetForm}>
-                  Clear All
-                </Button>
               </div>
             </div>
           )}
@@ -263,35 +325,49 @@ export default function PdfMergerPage() {
             </div>
           )}
 
-          {/* Progress Bar */}
-          {isMerging && (
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Merging PDF files...</span>
-                <span>{Math.round(progress)}%</span>
+          {/* Merge Action */}
+          {files.length >= 2 && (
+            <div className="bg-primary/5 border border-primary/20 rounded-lg p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                  <h3 className="font-semibold text-lg mb-1">Ready to Merge</h3>
+                  <p className="text-muted-foreground text-sm">
+                    {files.length} PDF files will be combined into one document
+                  </p>
+                </div>
+                <Button 
+                  onClick={handleMerge} 
+                  disabled={isMerging}
+                  size="lg"
+                  className="min-w-[140px]"
+                >
+                  {isMerging ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Merging...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="mr-2 h-4 w-4" />
+                      Merge PDFs
+                    </>
+                  )}
+                </Button>
               </div>
-              <Progress value={progress} className="w-full" />
             </div>
           )}
 
-          {/* Merge Button */}
-          {files.length > 0 && (
-            <div className="flex justify-center">
-              <Button
-                onClick={handleMerge}
-                disabled={files.length < 2 || isMerging}
-                size="lg"
-                className="min-w-[200px]"
-              >
-                {isMerging ? (
-                  <>Merging...</>
-                ) : (
-                  <>
-                    <Download className="h-4 w-4 mr-2" />
-                    Merge PDFs ({files.length})
-                  </>
-                )}
-              </Button>
+          {/* Progress Bar */}
+          {isMerging && (
+            <div className="space-y-4 p-4 bg-muted/50 rounded-lg border">
+              <div className="flex items-center gap-3">
+                <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                <div>
+                  <p className="font-medium">Merging PDF files...</p>
+                  <p className="text-sm text-muted-foreground">This may take a few moments</p>
+                </div>
+              </div>
+              <Progress value={33} className="h-2" />
             </div>
           )}
         </CardContent>
