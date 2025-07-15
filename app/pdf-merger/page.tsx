@@ -8,8 +8,12 @@ import { Progress } from '@/components/ui/progress'
 import { FileText, Upload, Download, AlertCircle, X, GripVertical, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 
-interface FileWithId extends File {
+interface FileWithId {
   id: string
+  file: File
+  name: string
+  size: number
+  type: string
 }
 
 const formatFileSize = (bytes: number): string => {
@@ -62,8 +66,8 @@ export default function PdfMergerPage() {
     if (pdfFiles.length === 0) return
 
     const newFiles: FileWithId[] = pdfFiles.map(file => ({
-      ...file,
       id: `${Date.now()}-${Math.random().toString(36).substring(7)}`,
+      file: file,
       name: file.name,
       size: file.size,
       type: file.type
@@ -121,9 +125,9 @@ export default function PdfMergerPage() {
       const formData = new FormData()
       
       // Append each file with proper field name
-      files.forEach((file, index) => {
-        console.log(`Adding file ${index + 1}:`, file.name, `(${formatFileSize(file.size)})`)
-        formData.append('files', file, file.name)
+      files.forEach((fileWithId, index) => {
+        console.log(`Adding file ${index + 1}:`, fileWithId.name, `(${formatFileSize(fileWithId.size)})`)
+        formData.append('files', fileWithId.file, fileWithId.name)
       })
 
       // Verify FormData content
@@ -184,7 +188,7 @@ export default function PdfMergerPage() {
     setProgress(0)
   }
 
-  const totalSize = files.reduce((sum, file) => sum + file.size, 0)
+  const totalSize = files.reduce((sum, fileWithId) => sum + fileWithId.size, 0)
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
