@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback, useRef, useEffect } from 'react'
-import * as pdfjsLib from 'pdfjs-dist'
+import dynamic from 'next/dynamic'
 import { useDropzone } from 'react-dropzone'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -102,6 +102,9 @@ type EditElement = {
 }
 
 export default function PdfEditorPage() {
+  // Check if we're in the browser environment
+  const [isClient, setIsClient] = useState(false)
+  
   // File and conversion state
   const [file, setFile] = useState<File | null>(null)
   const [isConverting, setIsConverting] = useState(false)
@@ -143,15 +146,26 @@ export default function PdfEditorPage() {
   const [pdfDocument, setPdfDocument] = useState<any>(null)
   const [pdfPage, setPdfPage] = useState<any>(null)
 
-  // Initialize PDF.js worker
+  // Initialize PDF.js worker and client-side check
   useEffect(() => {
-    // Use local PDF.js worker - self-hosted
-    pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js'
+    // Set client flag
+    setIsClient(true)
+    
+    // Initialize PDF.js worker only in browser
+    if (typeof window !== 'undefined') {
+      const initPdfJs = async () => {
+        const pdfjsLib = await import('pdfjs-dist')
+        // Use local PDF.js worker - self-hosted
+        pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js'
+      }
+      initPdfJs()
+    }
   }, [])
 
   // Load and render PDF
   const loadPDF = async (file: File) => {
     try {
+      const pdfjsLib = await import('pdfjs-dist')
       const arrayBuffer = await file.arrayBuffer()
       const pdf = await pdfjsLib.getDocument(arrayBuffer).promise
       setPdfDocument(pdf)
@@ -197,6 +211,9 @@ export default function PdfEditorPage() {
 
   // File upload handling
   const onDrop = useCallback((acceptedFiles: File[]) => {
+    // Ensure we're in the browser
+    if (typeof window === 'undefined') return
+    
     const pdfFile = acceptedFiles.find(file => file.type === 'application/pdf')
     if (pdfFile) {
       if (pdfFile.size > 100 * 1024 * 1024) { // 100MB limit
@@ -492,26 +509,38 @@ export default function PdfEditorPage() {
 
   const selectedElementData = selectedElement ? elements.find(el => el.id === selectedElement) : null
 
+  // Show loading state during SSR
+  if (!isClient) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading PDF Editor...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold mb-4">Advanced PDF Editor</h1>
-          <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
+        <div className="text-center mb-6 md:mb-8 px-2">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3 md:mb-4">Advanced PDF Editor</h1>
+          <p className="text-base md:text-lg text-muted-foreground max-w-3xl mx-auto px-4">
             Visual PDF editing with smart conversion technology. Your PDF is displayed exactly as it appears, while edits are processed through advanced document conversion for perfect formatting preservation.
           </p>
-          <div className="flex items-center justify-center gap-4 mt-4 text-sm text-muted-foreground">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 mt-4 text-sm text-muted-foreground">
             <span className="flex items-center gap-1">
-              <Zap className="h-4 w-4 text-blue-500" />
+              <Zap className="h-4 w-4 text-primary" />
               PDF-to-DOCX-to-PDF workflow
             </span>
             <span className="flex items-center gap-1">
-              <Eye className="h-4 w-4 text-green-500" />
+              <Eye className="h-4 w-4 text-emerald-500" />
               Visual PDF interface
             </span>
             <span className="flex items-center gap-1">
-              <Shield className="h-4 w-4 text-purple-500" />
+              <Shield className="h-4 w-4 text-violet-500" />
               Format preservation
             </span>
           </div>
@@ -520,47 +549,47 @@ export default function PdfEditorPage() {
         {/* Step 1: Upload PDF */}
         {!file && (
           <Card className="max-w-4xl mx-auto">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Upload className="h-6 w-6" />
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
+                <Upload className="h-5 w-5 md:h-6 md:w-6" />
                 Upload Your PDF Document
               </CardTitle>
-              <CardDescription>
-                Select a PDF file to start editing. We'll convert it to DOCX behind the scenes while showing you the original PDF layout for visual editing.
+              <CardDescription className="text-sm md:text-base">
+                Select a PDF file to start editing.
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-4 md:px-6">
               <div
                 {...getRootProps()}
                 className={`
-                  border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-all duration-300
+                  border-2 border-dashed rounded-xl p-6 md:p-12 text-center cursor-pointer transition-all duration-300
                   ${isDragActive ? 'border-primary bg-primary/5 scale-[1.02]' : 'border-border hover:border-primary/50 hover:bg-muted/50'}
                 `}
               >
                 <input {...getInputProps()} />
-                <Upload className={`h-20 w-20 mx-auto mb-6 ${isDragActive ? 'text-primary' : 'text-muted-foreground'}`} />
+                <Upload className={`h-12 w-12 md:h-20 md:w-20 mx-auto mb-4 md:mb-6 ${isDragActive ? 'text-primary' : 'text-muted-foreground'}`} />
                 {isDragActive ? (
-                  <div className="space-y-3">
-                    <p className="text-2xl text-primary font-medium">Drop your PDF file here...</p>
-                    <p className="text-muted-foreground">Release to start editing</p>
+                  <div className="space-y-2 md:space-y-3">
+                    <p className="text-lg md:text-2xl text-primary font-medium">Drop your PDF file here...</p>
+                    <p className="text-muted-foreground text-sm md:text-base">Release to start editing</p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    <p className="text-3xl font-medium">Drag & drop your PDF file here</p>
-                    <p className="text-muted-foreground text-lg">
+                  <div className="space-y-3 md:space-y-4">
+                    <p className="text-xl md:text-3xl font-medium">Drag & drop your PDF file here</p>
+                    <p className="text-muted-foreground text-base md:text-lg">
                       or click to browse files
                     </p>
-                    <div className="flex items-center justify-center gap-8 text-sm text-muted-foreground mt-8">
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 text-sm text-muted-foreground mt-6 md:mt-8">
                       <span className="flex items-center gap-2">
-                        <FileText className="h-5 w-5" />
+                        <FileText className="h-4 w-4 md:h-5 md:w-5" />
                         PDF files only
                       </span>
                       <span className="flex items-center gap-2">
-                        <Shield className="h-5 w-5" />
+                        <Shield className="h-4 w-4 md:h-5 md:w-5" />
                         Max 100MB
                       </span>
                       <span className="flex items-center gap-2">
-                        <Zap className="h-5 w-5" />
+                        <Zap className="h-4 w-4 md:h-5 md:w-5" />
                         Visual editing
                       </span>
                     </div>
@@ -574,49 +603,49 @@ export default function PdfEditorPage() {
         {/* Step 2: Convert to Editable */}
         {file && !isEditing && !editedBlob && (
           <Card className="max-w-4xl mx-auto">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-6 w-6" />
-                Ready to Edit: {file.name}
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
+                <FileText className="h-5 w-5 md:h-6 md:w-6" />
+                <span className="truncate">Ready to Edit: {file.name}</span>
               </CardTitle>
-              <CardDescription>
-                Your PDF is ready for editing. We'll convert it to DOCX format behind the scenes while maintaining the visual PDF interface.
+              <CardDescription className="text-sm md:text-base">
+                Your PDF is ready for editing.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center gap-4 p-4 bg-muted rounded-lg">
-                <FileText className="h-10 w-10 text-red-500" />
-                <div className="flex-1">
-                  <p className="font-medium text-lg">{file.name}</p>
-                  <p className="text-muted-foreground">
+            <CardContent className="space-y-4 md:space-y-6 px-4 md:px-6">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4 p-3 md:p-4 bg-muted rounded-lg">
+                <FileText className="h-8 w-8 md:h-10 md:w-10 text-destructive flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-base md:text-lg truncate">{file.name}</p>
+                  <p className="text-muted-foreground text-sm md:text-base">
                     Size: {formatFileSize(file.size)} • Ready for editing
                   </p>
                 </div>
-                <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200 self-start sm:self-center">
                   PDF Document
                 </Badge>
               </div>
 
               {isConverting && (
                 <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                    <div>
-                      <p className="font-medium">Converting your PDF to editable format...</p>
-                      <p className="text-sm text-muted-foreground">This may take a moment</p>
+                  <div className="flex items-start sm:items-center gap-3">
+                    <Loader2 className="h-6 w-6 animate-spin text-primary flex-shrink-0 mt-0.5 sm:mt-0" />
+                    <div className="min-w-0">
+                      <p className="font-medium text-sm md:text-base">Converting your PDF to editable format...</p>
+                      <p className="text-xs md:text-sm text-muted-foreground">This may take a moment</p>
                     </div>
                   </div>
                   <Progress value={progress} className="w-full" />
-                  <p className="text-center text-sm text-muted-foreground">
+                  <p className="text-center text-xs md:text-sm text-muted-foreground">
                     {progress}% complete
                   </p>
                 </div>
               )}
 
               {error && (
-                <div className="flex items-center gap-2 p-4 bg-destructive/10 text-destructive rounded-lg">
-                  <AlertCircle className="h-5 w-5 flex-shrink-0" />
-                  <p className="text-sm">{error}</p>
+                <div className="flex items-start gap-2 p-3 md:p-4 bg-destructive/10 text-destructive rounded-lg">
+                  <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
+                  <p className="text-xs md:text-sm">{error}</p>
                 </div>
               )}
 
@@ -625,9 +654,9 @@ export default function PdfEditorPage() {
                   <Button
                     onClick={convertToEditable}
                     size="lg"
-                    className="min-w-[250px]"
+                    className="w-full sm:w-auto min-w-[250px]"
                   >
-                    <Edit3 className="mr-2 h-5 w-5" />
+                    <Edit3 className="mr-2 h-4 w-4 md:h-5 md:w-5" />
                     Start Visual Editing
                   </Button>
                 </div>
@@ -638,32 +667,34 @@ export default function PdfEditorPage() {
 
         {/* Step 3: Visual Editor */}
         {isEditing && !editedBlob && (
-          <div className="grid lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6">
             {/* Left Sidebar - Tools */}
-            <div className="lg:col-span-1 space-y-4">
+            <div className="lg:col-span-1 order-2 lg:order-1 space-y-4">
               <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Editor Tools</CardTitle>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base md:text-lg">Editor Tools</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-4 px-4 md:px-6">
                   {/* Mode Selection */}
                   <div className="space-y-2">
-                    <Label>Editor Mode</Label>
+                    <Label className="text-sm font-medium">Editor Mode</Label>
                     <div className="grid grid-cols-2 gap-2">
                       <Button
                         variant={editorMode === 'select' ? 'default' : 'outline'}
                         size="sm"
                         onClick={() => setEditorMode('select')}
+                        className="text-xs md:text-sm"
                       >
-                        <MousePointer className="h-4 w-4 mr-1" />
+                        <MousePointer className="h-3 w-3 md:h-4 md:w-4 mr-1" />
                         Select
                       </Button>
                       <Button
                         variant={editorMode === 'text' ? 'default' : 'outline'}
                         size="sm"
                         onClick={() => setEditorMode('text')}
+                        className="text-xs md:text-sm"
                       >
-                        <Type className="h-4 w-4 mr-1" />
+                        <Type className="h-3 w-3 md:h-4 md:w-4 mr-1" />
                         Text
                       </Button>
                     </div>
@@ -673,10 +704,10 @@ export default function PdfEditorPage() {
 
                   {/* Text Formatting */}
                   <div className="space-y-3">
-                    <Label>Text Formatting</Label>
+                    <Label className="text-sm font-medium">Text Formatting</Label>
                     
                     <div className="space-y-2">
-                      <Label className="text-xs">Font Size</Label>
+                      <Label className="text-xs text-muted-foreground">Font Size</Label>
                       <Slider
                         value={[textTool.fontSize]}
                         onValueChange={(value) => setTextTool({...textTool, fontSize: value[0]})}
@@ -689,12 +720,12 @@ export default function PdfEditorPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label className="text-xs">Font Family</Label>
+                      <Label className="text-xs text-muted-foreground">Font Family</Label>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="outline" className="w-full justify-between">
-                            {textTool.fontFamily}
-                            <ChevronDown className="h-4 w-4" />
+                          <Button variant="outline" className="w-full justify-between text-xs md:text-sm">
+                            <span className="truncate">{textTool.fontFamily}</span>
+                            <ChevronDown className="h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent className="w-full">
@@ -722,25 +753,27 @@ export default function PdfEditorPage() {
                         variant={textTool.fontWeight === 'bold' ? 'default' : 'outline'}
                         size="sm"
                         onClick={() => setTextTool({...textTool, fontWeight: textTool.fontWeight === 'bold' ? 'normal' : 'bold'})}
+                        className="flex-1"
                       >
-                        <Bold className="h-4 w-4" />
+                        <Bold className="h-3 w-3 md:h-4 md:w-4" />
                       </Button>
                       <Button
                         variant={textTool.fontStyle === 'italic' ? 'default' : 'outline'}
                         size="sm"
                         onClick={() => setTextTool({...textTool, fontStyle: textTool.fontStyle === 'italic' ? 'normal' : 'italic'})}
+                        className="flex-1"
                       >
-                        <Italic className="h-4 w-4" />
+                        <Italic className="h-3 w-3 md:h-4 md:w-4" />
                       </Button>
                     </div>
 
                     <div className="space-y-2">
-                      <Label className="text-xs">Text Color</Label>
+                      <Label className="text-xs text-muted-foreground">Text Color</Label>
                       <Input
                         type="color"
                         value={textTool.color}
                         onChange={(e) => setTextTool({...textTool, color: e.target.value})}
-                        className="w-full h-10"
+                        className="w-full h-8 md:h-10"
                       />
                     </div>
                   </div>
@@ -750,31 +783,32 @@ export default function PdfEditorPage() {
               {/* Element Properties */}
               {selectedElementData && (
                 <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg flex items-center justify-between">
-                      Element Properties
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base md:text-lg flex items-center justify-between">
+                      <span>Element Properties</span>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => deleteElement(selectedElementData.id)}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-3 w-3 md:h-4 md:w-4" />
                       </Button>
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-3">
+                  <CardContent className="space-y-3 px-4 md:px-6">
                     {selectedElementData.type === 'text' && (
                       <>
                         <div className="space-y-2">
-                          <Label className="text-xs">Content</Label>
+                          <Label className="text-xs text-muted-foreground">Content</Label>
                           <Input
                             value={selectedElementData.content || ''}
                             onChange={(e) => updateElement(selectedElementData.id, { content: e.target.value })}
                             placeholder="Enter text..."
+                            className="text-sm"
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-xs">Font Size</Label>
+                          <Label className="text-xs text-muted-foreground">Font Size</Label>
                           <Slider
                             value={[selectedElementData.fontSize || 14]}
                             onValueChange={(value) => updateElement(selectedElementData.id, { fontSize: value[0] })}
@@ -791,23 +825,23 @@ export default function PdfEditorPage() {
             </div>
 
             {/* Main Editor Area */}
-            <div className="lg:col-span-3 space-y-4">
+            <div className="lg:col-span-3 order-1 lg:order-2 space-y-4">
               {/* Editor Toolbar */}
               <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
+                <CardContent className="p-3 md:p-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
                       <div className="flex items-center gap-2">
                         <Button variant="outline" size="sm" onClick={zoomOut}>
-                          <ZoomOut className="h-4 w-4" />
+                          <ZoomOut className="h-3 w-3 md:h-4 md:w-4" />
                         </Button>
-                        <span className="text-sm font-medium min-w-[60px] text-center">{zoomLevel}%</span>
+                        <span className="text-xs md:text-sm font-medium min-w-[50px] md:min-w-[60px] text-center">{zoomLevel}%</span>
                         <Button variant="outline" size="sm" onClick={zoomIn}>
-                          <ZoomIn className="h-4 w-4" />
+                          <ZoomIn className="h-3 w-3 md:h-4 md:w-4" />
                         </Button>
                       </div>
                       
-                      <Separator orientation="vertical" className="h-6" />
+                      <Separator orientation="vertical" className="h-6 hidden sm:block" />
                       
                       <div className="flex items-center gap-2">
                         <Button
@@ -815,29 +849,31 @@ export default function PdfEditorPage() {
                           size="sm"
                           onClick={() => setShowEditableAreas(!showEditableAreas)}
                         >
-                          {showEditableAreas ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                          {showEditableAreas ? <Eye className="h-3 w-3 md:h-4 md:w-4" /> : <EyeOff className="h-3 w-3 md:h-4 md:w-4" />}
                         </Button>
-                        <Label className="text-sm">Highlight Editable Areas</Label>
+                        <Label className="text-xs md:text-sm hidden sm:inline">Highlight Editable Areas</Label>
+                        <Label className="text-xs md:text-sm sm:hidden">Highlight</Label>
                       </div>
                     </div>
 
                     <div className="flex items-center gap-2">
                       <Button variant="outline" size="sm">
-                        <Undo className="h-4 w-4" />
+                        <Undo className="h-3 w-3 md:h-4 md:w-4" />
                       </Button>
                       <Button variant="outline" size="sm">
-                        <Redo className="h-4 w-4" />
+                        <Redo className="h-3 w-3 md:h-4 md:w-4" />
                       </Button>
                       
                       <Separator orientation="vertical" className="h-6" />
                       
-                      <Button onClick={saveChanges} disabled={isSaving}>
+                      <Button onClick={saveChanges} disabled={isSaving} className="text-xs md:text-sm">
                         {isSaving ? (
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          <Loader2 className="h-3 w-3 md:h-4 md:w-4 mr-2 animate-spin" />
                         ) : (
-                          <Save className="h-4 w-4 mr-2" />
+                          <Save className="h-3 w-3 md:h-4 md:w-4 mr-2" />
                         )}
-                        Save Changes
+                        <span className="hidden sm:inline">Save Changes</span>
+                        <span className="sm:hidden">Save</span>
                       </Button>
                     </div>
                   </div>
@@ -849,20 +885,20 @@ export default function PdfEditorPage() {
                 <CardContent className="p-0">
                   <div 
                     ref={pdfViewerRef}
-                    className="relative bg-gray-100 dark:bg-gray-900 min-h-[600px] overflow-auto flex items-center justify-center"
+                    className="relative bg-muted/30 min-h-[400px] md:min-h-[600px] overflow-auto flex items-center justify-center"
                   >
                     {/* Page Navigation */}
                     {totalPages > 1 && (
-                      <div className="absolute top-4 left-4 z-30 flex items-center gap-2 bg-white dark:bg-gray-800 rounded-lg p-2 shadow-lg">
+                      <div className="absolute top-3 md:top-4 left-3 md:left-4 z-30 flex items-center gap-1 md:gap-2 bg-white dark:bg-gray-800 rounded-lg p-2 shadow-lg">
                         <Button 
                           variant="outline" 
                           size="sm" 
                           onClick={() => goToPage(currentPage - 1)}
                           disabled={currentPage <= 1}
                         >
-                          <ArrowLeft className="h-4 w-4" />
+                          <ArrowLeft className="h-3 w-3 md:h-4 md:w-4" />
                         </Button>
-                        <span className="text-sm font-medium px-2">
+                        <span className="text-xs md:text-sm font-medium px-1 md:px-2">
                           {currentPage} / {totalPages}
                         </span>
                         <Button 
@@ -871,21 +907,20 @@ export default function PdfEditorPage() {
                           onClick={() => goToPage(currentPage + 1)}
                           disabled={currentPage >= totalPages}
                         >
-                          <ArrowRight className="h-4 w-4" />
+                          <ArrowRight className="h-3 w-3 md:h-4 md:w-4" />
                         </Button>
                       </div>
                     )}
 
                     {/* PDF Canvas Container */}
-                    <div className="relative bg-white shadow-2xl">
+                    <div className="relative bg-white shadow-lg md:shadow-2xl rounded-sm md:rounded">
                       <canvas
                         ref={canvasRef}
                         onClick={handleCanvasClick}
-                        className="block"
+                        className="block w-full h-auto"
                         style={{ 
                           cursor: editorMode === 'text' ? 'crosshair' : 'default',
                           maxWidth: '100%',
-                          height: 'auto'
                         }}
                       />
 
@@ -917,7 +952,7 @@ export default function PdfEditorPage() {
                           >
                             {element.type === 'text' && (
                               <div
-                                className="w-full h-full flex items-center px-2 text-black dark:text-white"
+                                className="w-full h-full flex items-center px-1 md:px-2 text-black dark:text-white"
                                 style={{
                                   fontSize: (element.fontSize || 14) * (zoomLevel / 100),
                                   fontFamily: element.fontFamily,
@@ -927,7 +962,7 @@ export default function PdfEditorPage() {
                                   textAlign: element.textAlign as any
                                 }}
                               >
-                                {element.content}
+                                <span className="text-xs sm:text-sm break-words">{element.content}</span>
                               </div>
                             )}
                             
@@ -989,47 +1024,47 @@ export default function PdfEditorPage() {
 
         {/* Features Section */}
         {!isEditing && !editedBlob && (
-          <div className="mt-16">
-            <Separator className="mb-12" />
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold mb-4">Hybrid PDF/DOCX Editing Technology</h2>
-              <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
+          <div className="mt-12 md:mt-16">
+            <Separator className="mb-8 md:mb-12" />
+            <div className="text-center mb-6 md:mb-8">
+              <h2 className="text-2xl md:text-3xl font-bold mb-3 md:mb-4">Hybrid PDF/DOCX Editing Technology</h2>
+              <p className="text-base md:text-lg text-muted-foreground max-w-3xl mx-auto px-4">
                 The best of both worlds: Visual PDF interface with powerful DOCX editing capabilities
               </p>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-8">
+            <div className="grid gap-6 md:gap-8 md:grid-cols-2 lg:grid-cols-3">
               <Card className="text-center">
-                <CardContent className="p-8">
-                  <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Eye className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+                <CardContent className="p-6 md:p-8">
+                  <div className="w-12 h-12 md:w-16 md:h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4">
+                    <Eye className="h-6 w-6 md:h-8 md:w-8 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <h3 className="text-xl font-semibold mb-3">Visual PDF Interface</h3>
-                  <p className="text-muted-foreground">
+                  <h3 className="text-lg md:text-xl font-semibold mb-2 md:mb-3">Visual PDF Interface</h3>
+                  <p className="text-sm md:text-base text-muted-foreground">
                     See your document exactly as a PDF while editing. No surprises - what you see is what you get in the final output.
                   </p>
                 </CardContent>
               </Card>
 
               <Card className="text-center">
-                <CardContent className="p-8">
-                  <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Zap className="h-8 w-8 text-green-600 dark:text-green-400" />
+                <CardContent className="p-6 md:p-8">
+                  <div className="w-12 h-12 md:w-16 md:h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4">
+                    <Zap className="h-6 w-6 md:h-8 md:w-8 text-green-600 dark:text-green-400" />
                   </div>
-                  <h3 className="text-xl font-semibold mb-3">Smart Conversion Workflow</h3>
-                  <p className="text-muted-foreground">
+                  <h3 className="text-lg md:text-xl font-semibold mb-2 md:mb-3">Smart Conversion Workflow</h3>
+                  <p className="text-sm md:text-base text-muted-foreground">
                     PDF → DOCX → Edit → PDF process ensures perfect formatting while allowing powerful text editing capabilities.
                   </p>
                 </CardContent>
               </Card>
 
-              <Card className="text-center">
-                <CardContent className="p-8">
-                  <div className="w-16 h-16 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Shield className="h-8 w-8 text-purple-600 dark:text-purple-400" />
+              <Card className="text-center md:col-span-2 lg:col-span-1">
+                <CardContent className="p-6 md:p-8">
+                  <div className="w-12 h-12 md:w-16 md:h-16 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4">
+                    <Shield className="h-6 w-6 md:h-8 md:w-8 text-purple-600 dark:text-purple-400" />
                   </div>
-                  <h3 className="text-xl font-semibold mb-3">Format Preservation</h3>
-                  <p className="text-muted-foreground">
+                  <h3 className="text-lg md:text-xl font-semibold mb-2 md:mb-3">Format Preservation</h3>
+                  <p className="text-sm md:text-base text-muted-foreground">
                     Advanced conversion technology maintains fonts, layouts, and formatting throughout the editing process.
                   </p>
                 </CardContent>
