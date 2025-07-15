@@ -334,7 +334,7 @@ export default function AITextAnalyzerPage() {
     return options
   }
 
-  const performAnalysis = () => {
+  const performAnalysis = async () => {
     if (!text.trim()) {
       toast.error('Please enter text to analyze')
       return
@@ -342,158 +342,235 @@ export default function AITextAnalyzerPage() {
 
     setIsAnalyzing(true)
 
-    setTimeout(() => {
-      try {
-        const words = text.trim().split(/\s+/)
-        const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0)
-        const paragraphs = text.split(/\n\s*\n/).filter(p => p.trim().length > 0)
-        
-        const wordCount = words.length
-        const characterCount = text.length
-        const characterCountNoSpaces = text.replace(/\s/g, '').length
-        const sentenceCount = sentences.length
-        const paragraphCount = paragraphs.length || 1
-        const averageWordsPerSentence = wordCount / sentenceCount
-        
-        // Readability
-        const readability = calculateReadability(text, sentenceCount, wordCount)
-        const readingTime = Math.ceil(wordCount / 200) // 200 words per minute average
-        
-        // Sentiment
-        const sentiment = analyzeSentiment(text)
-        
-        // Grammar and spelling check
-        const grammarCheck = checkGrammarAndSpelling(text)
-        
-        // Generate rewrite options
-        const rewriteOptions = generateRewriteOptions(text)
-        
-        // Keyword analysis
-        const wordFreq: { [key: string]: number } = {}
-        words.forEach(word => {
-          const cleanWord = word.toLowerCase().replace(/[^\w]/g, '')
-          if (cleanWord.length > 3) { // Only words longer than 3 characters
-            wordFreq[cleanWord] = (wordFreq[cleanWord] || 0) + 1
-          }
+    try {
+      // Call our Python API for comprehensive text analysis
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/text/analyze`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          text: text.trim()
         })
-        
-        const keywordDensity = Object.entries(wordFreq)
-          .map(([word, count]) => ({
-            word,
-            count,
-            percentage: (count / wordCount) * 100
-          }))
-          .sort((a, b) => b.count - a.count)
-          .slice(0, 10)
-        
-        const mostCommonWords = Object.entries(wordFreq)
-          .sort((a, b) => b[1] - a[1])
-          .slice(0, 10)
-          .map(([word, count]) => ({ word, count }))
-        
-        // Sentence analysis
-        const sentenceLengths = sentences.map(s => ({
-          text: s.trim(),
-          wordCount: s.trim().split(/\s+/).length
-        }))
-        
-        const longestSentence = sentenceLengths.reduce((max, current) => 
-          current.wordCount > max.wordCount ? current : max, sentenceLengths[0])
-        
-        const shortestSentence = sentenceLengths.reduce((min, current) => 
-          current.wordCount < min.wordCount ? current : min, sentenceLengths[0])
-        
-        // Advanced metrics
-        const uniqueWords = new Set(words.map(w => w.toLowerCase())).size
-        const vocabularyRichness = (uniqueWords / wordCount) * 100
-        
-        // Simple passive voice detection
-        const passiveIndicators = text.match(/\b(was|were|been|being)\s+\w+ed\b/gi) || []
-        const passiveVoicePercentage = (passiveIndicators.length / sentenceCount) * 100
-        
-        // Adverb detection
-        const adverbs = text.match(/\w+ly\b/gi) || []
-        const adverbPercentage = (adverbs.length / wordCount) * 100
-        
-        // Generate recommendations
-        const recommendations: string[] = []
-        const strengths: string[] = []
-        const improvements: string[] = []
-        
-        if (averageWordsPerSentence > 20) {
-          improvements.push('Consider shortening sentences for better readability')
-        } else if (averageWordsPerSentence < 15) {
-          strengths.push('Good sentence length for readability')
-        }
-        
-        if (readability.fleschScore > 70) {
-          strengths.push('Text is easy to read and understand')
-        } else if (readability.fleschScore < 50) {
-          improvements.push('Simplify language to improve readability')
-        }
-        
-        if (vocabularyRichness > 60) {
-          strengths.push('Rich vocabulary with diverse word choice')
-        } else if (vocabularyRichness < 40) {
-          improvements.push('Consider using more varied vocabulary')
-        }
-        
-        if (passiveVoicePercentage > 20) {
-          improvements.push('Reduce passive voice usage for more engaging content')
-        }
-        
-        if (adverbPercentage > 5) {
-          improvements.push('Consider reducing adverb usage for stronger prose')
-        }
-        
-        recommendations.push('Content is well-structured with clear paragraphs')
-        if (sentiment.score > 0.3) {
-          strengths.push('Positive and engaging tone')
-        }
-        
-        const analysis: TextAnalysis = {
-          wordCount,
-          characterCount,
-          characterCountNoSpaces,
-          sentenceCount,
-          paragraphCount,
-          averageWordsPerSentence,
-          fleschKincaidGrade: readability.gradeLevel,
-          fleschReadingEase: readability.fleschScore,
-          readabilityLevel: readability.level,
-          readingTime,
-          sentimentScore: sentiment.score,
-          sentimentLabel: sentiment.label,
-          emotionalTone: sentiment.emotions,
-          complexityScore: Math.min(100, (averageWordsPerSentence * 2) + (readability.gradeLevel * 5)),
-          formalityScore: Math.min(100, (passiveVoicePercentage * 2) + (averageWordsPerSentence * 1.5)),
-          keywordDensity,
-          mostCommonWords,
-          longestSentence,
-          shortestSentence,
-          uniqueWords,
-          vocabularyRichness,
-          passiveVoicePercentage,
-          adverbPercentage,
-          grammarErrors: grammarCheck.errors,
-          correctedText: grammarCheck.correctedText,
-          rewriteOptions,
-          writingScore: grammarCheck.writingScore,
-          recommendations,
-          strengths,
-          improvements
-        }
-        
-        setAnalysis(analysis)
-        toast.success('Text analysis completed successfully!')
-        
-      } catch (error) {
-        console.error('Analysis error:', error)
-        toast.error('Analysis failed. Please try again.')
-      } finally {
-        setIsAnalyzing(false)
+      })
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`)
       }
-    }, 1000) // Simulate processing time
+
+      const result = await response.json()
+      
+      if (!result.success) {
+        throw new Error(result.message || 'Analysis failed')
+      }
+
+      const data = result.data
+      
+      // Transform API response to match our frontend interface
+      const analysis: TextAnalysis = {
+        wordCount: data.basic_stats.word_count,
+        characterCount: data.basic_stats.character_count,
+        characterCountNoSpaces: data.basic_stats.character_count_no_spaces,
+        sentenceCount: data.basic_stats.sentence_count,
+        paragraphCount: data.basic_stats.paragraph_count,
+        averageWordsPerSentence: data.basic_stats.average_words_per_sentence,
+        fleschKincaidGrade: data.readability.grade_level,
+        fleschReadingEase: data.readability.flesch_score,
+        readabilityLevel: data.readability.readability_level,
+        readingTime: data.basic_stats.reading_time_minutes,
+        sentimentScore: data.sentiment.sentiment_score,
+        sentimentLabel: data.sentiment.sentiment_label,
+        emotionalTone: data.sentiment.emotional_tones || [],
+        complexityScore: data.quality_metrics.complexity_score,
+        formalityScore: data.quality_metrics.formality_score,
+        keywordDensity: data.keywords.keyword_density,
+        mostCommonWords: data.keywords.most_common_words,
+        longestSentence: {
+          text: data.quality_metrics.longest_sentence.text,
+          wordCount: data.quality_metrics.longest_sentence.word_count
+        },
+        shortestSentence: {
+          text: data.quality_metrics.shortest_sentence.text,
+          wordCount: data.quality_metrics.shortest_sentence.word_count
+        },
+        uniqueWords: data.keywords.unique_words,
+        vocabularyRichness: data.keywords.vocabulary_richness,
+        passiveVoicePercentage: data.quality_metrics.passive_voice_percentage,
+        adverbPercentage: data.quality_metrics.adverb_percentage,
+        grammarErrors: [], // Will be filled by grammar check
+        correctedText: text, // Will be filled by grammar check
+        rewriteOptions: [], // Will be filled by rewrite service
+        writingScore: 100 - (data.quality_metrics.passive_voice_percentage * 0.5) - (data.quality_metrics.adverb_percentage * 0.3),
+        recommendations: data.recommendations.recommendations || [],
+        strengths: data.recommendations.strengths || [],
+        improvements: data.recommendations.improvements || []
+      }
+
+      setAnalysis(analysis)
+      toast.success('Text analysis completed successfully!')
+      
+    } catch (error) {
+      console.error('Analysis error:', error)
+      toast.error('Analysis failed. Please check your connection and try again.')
+    } finally {
+      setIsAnalyzing(false)
+    }
+  }
+
+  const performGrammarCheck = async () => {
+    if (!text.trim()) {
+      toast.error('Please enter text to check')
+      return
+    }
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/text/grammar-check`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          text: text.trim()
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`)
+      }
+
+      const result = await response.json()
+      
+      if (!result.success) {
+        throw new Error(result.message || 'Grammar check failed')
+      }
+
+      const data = result.data
+
+      // Transform API response to match our frontend interface
+      const grammarErrors: GrammarError[] = [
+        ...data.grammar_errors.map((error: any) => ({
+          type: error.type as 'grammar' | 'spelling' | 'punctuation' | 'style',
+          message: error.rule || error.category,
+          suggestion: error.suggestion,
+          position: error.position,
+          severity: error.severity === 'high' ? 'error' : error.severity === 'medium' ? 'warning' : 'suggestion'
+        })),
+        ...data.spelling_errors.map((error: any) => ({
+          type: 'spelling' as const,
+          message: 'Spelling error',
+          suggestion: error.suggestion || error.suggestions?.[0] || 'Check spelling',
+          position: error.position,
+          severity: 'error' as const
+        })),
+        ...data.punctuation_errors.map((error: any) => ({
+          type: 'punctuation' as const,
+          message: error.rule,
+          suggestion: error.suggestion,
+          position: error.position,
+          severity: 'warning' as const
+        }))
+      ]
+
+      // Update analysis if it exists
+      if (analysis) {
+        setAnalysis({
+          ...analysis,
+          grammarErrors,
+          correctedText: data.corrected_text,
+          writingScore: data.statistics.score || analysis.writingScore
+        })
+      }
+
+      toast.success(`Grammar check completed! Found ${grammarErrors.length} issues.`)
+      
+    } catch (error) {
+      console.error('Grammar check error:', error)
+      toast.error('Grammar check failed. Please try again.')
+    }
+  }
+
+  const performRewrite = async (style: string = 'professional') => {
+    if (!text.trim()) {
+      toast.error('Please enter text to rewrite')
+      return
+    }
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/text/rewrite`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          text: text.trim(),
+          style: style,
+          options: {}
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`)
+      }
+
+      const result = await response.json()
+      
+      if (!result.success) {
+        throw new Error(result.message || 'Rewrite failed')
+      }
+
+      const data = result.data
+
+      // Transform API response to match our frontend interface
+      const rewriteOptions: RewriteOption[] = Object.entries(data.rewrites).map(([styleName, rewriteData]: [string, any]) => ({
+        title: styleName.charAt(0).toUpperCase() + styleName.slice(1),
+        description: `Rewritten in ${styleName} style`,
+        text: rewriteData.text,
+        tone: styleName === 'professional' ? 'professional' : 
+              styleName === 'casual' ? 'casual' : 
+              styleName === 'creative' ? 'friendly' : 'professional'
+      }))
+
+      // Update analysis if it exists
+      if (analysis) {
+        setAnalysis({
+          ...analysis,
+          rewriteOptions
+        })
+      }
+
+      toast.success(`Text rewritten in ${Object.keys(data.rewrites).length} different styles!`)
+      
+    } catch (error) {
+      console.error('Rewrite error:', error)
+      toast.error('Rewrite failed. Please try again.')
+    }
+  }
+
+  // Enhanced analysis that includes grammar check and rewrite
+  const performCompleteAnalysis = async () => {
+    if (!text.trim()) {
+      toast.error('Please enter text to analyze')
+      return
+    }
+
+    setIsAnalyzing(true)
+
+    try {
+      // Perform main analysis
+      await performAnalysis()
+      
+      // Perform grammar check
+      await performGrammarCheck()
+      
+      // Perform rewrite with all styles
+      await performRewrite('all')
+      
+    } catch (error) {
+      console.error('Complete analysis error:', error)
+      toast.error('Analysis failed. Please try again.')
+    } finally {
+      setIsAnalyzing(false)
+    }
   }
 
   const getSentimentColor = (sentiment: string) => {
@@ -719,7 +796,7 @@ Sunlight streamed through the lantern room windows, illuminating dust particles 
                 {/* Action Buttons */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <Button 
-                    onClick={performAnalysis} 
+                    onClick={performCompleteAnalysis} 
                     disabled={!text.trim() || text.trim().split(/\s+/).length < 10 || isAnalyzing}
                     className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
                   >
