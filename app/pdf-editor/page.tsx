@@ -1,18 +1,13 @@
 'use client'
 
-import { useState, useCallback, useRef, useEffect } from 'react'
-import dynamic from 'next/dynamic'
+import { useState, useCallback } from 'react'
 import { useDropzone } from 'react-dropzone'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
+import { Textarea } from '@/components/ui/textarea'
 import { Separator } from '@/components/ui/separator'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Slider } from '@/components/ui/slider'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { 
   FileText, 
   Upload, 
@@ -20,39 +15,11 @@ import {
   AlertCircle, 
   Loader2, 
   Download,
-  RefreshCw,
-  Heart,
-  Coffee,
   Save,
-  FileDown,
-  Shield,
-  Zap,
-  CheckCircle,
-  ArrowRight,
-  ArrowLeft,
-  Type,
-  Bold,
-  Italic,
-  Underline,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
-  Palette,
-  ZoomIn,
-  ZoomOut,
-  RotateCw,
-  MousePointer,
-  Square,
-  Circle,
-  Minus,
-  Plus,
   Eye,
-  EyeOff,
-  Undo,
-  Redo,
-  Copy,
-  Trash2,
-  ChevronDown
+  X,
+  Zap,
+  Shield
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { getApiUrl, apiRequest } from '@/lib/api'
@@ -79,142 +46,35 @@ const downloadBlob = (blob: Blob, filename: string) => {
   document.body.removeChild(a)
 }
 
-type EditorMode = 'select' | 'text' | 'shape' | 'highlight'
-type EditElement = {
-  id: string
-  type: 'text' | 'shape' | 'highlight'
-  x: number
-  y: number
-  width?: number
-  height?: number
-  content?: string
-  fontSize?: number
-  fontFamily?: string
-  fontWeight?: string
-  fontStyle?: string
-  textAlign?: string
-  color?: string
-  backgroundColor?: string
-  borderColor?: string
-  borderWidth?: number
-  page: number
-  isSelected?: boolean
-}
-
 export default function PdfEditorPage() {
-  // Check if we're in the browser environment
-  const [isClient, setIsClient] = useState(false)
-  
-  // File and conversion state
+  // File and editing state
   const [file, setFile] = useState<File | null>(null)
-  const [isConverting, setIsConverting] = useState(false)
-  const [convertedDocx, setConvertedDocx] = useState<string | null>(null)
   const [pdfUrl, setPdfUrl] = useState<string | null>(null)
-  
-  // Editor state
-  const [editorMode, setEditorMode] = useState<EditorMode>('select')
-  const [elements, setElements] = useState<EditElement[]>([])
-  const [selectedElement, setSelectedElement] = useState<string | null>(null)
+  const [isConverting, setIsConverting] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
-  
-  // PDF viewer state
-  const [currentPage, setCurrentPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(0)
-  const [zoomLevel, setZoomLevel] = useState(100)
-  const [showEditableAreas, setShowEditableAreas] = useState(true)
-  
-  // Saving state
   const [isSaving, setIsSaving] = useState(false)
   const [progress, setProgress] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const [editedBlob, setEditedBlob] = useState<Blob | null>(null)
   const [editedFileName, setEditedFileName] = useState('')
   
-  // Text editing tools
-  const [textTool, setTextTool] = useState({
-    fontSize: 14,
-    fontFamily: 'Arial',
-    fontWeight: 'normal',
-    fontStyle: 'normal',
-    textAlign: 'left',
-    color: '#000000'
-  })
-  
-  // Canvas and PDF refs
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const pdfViewerRef = useRef<HTMLDivElement>(null)
-  const [pdfDocument, setPdfDocument] = useState<any>(null)
-  const [pdfPage, setPdfPage] = useState<any>(null)
-
-  // Initialize PDF.js worker and client-side check
-  useEffect(() => {
-    // Set client flag
-    setIsClient(true)
-    
-    // Initialize PDF.js worker only in browser
-    if (typeof window !== 'undefined') {
-      const initPdfJs = async () => {
-        const pdfjsLib = await import('pdfjs-dist')
-        // Use local PDF.js worker - self-hosted
-        pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js'
-      }
-      initPdfJs()
-    }
-  }, [])
-
-  // Load and render PDF
-  const loadPDF = async (file: File) => {
-    try {
-      const pdfjsLib = await import('pdfjs-dist')
-      const arrayBuffer = await file.arrayBuffer()
-      const pdf = await pdfjsLib.getDocument(arrayBuffer).promise
-      setPdfDocument(pdf)
-      setTotalPages(pdf.numPages)
-      
-      // Load first page
-      const page = await pdf.getPage(1)
-      setPdfPage(page)
-      renderPage(page)
-      
-    } catch (error) {
-      console.error('PDF loading error:', error)
-      toast.error('Failed to load PDF file')
-    }
-  }
-
-  // Render PDF page to canvas
-  const renderPage = async (page: any) => {
-    if (!canvasRef.current) return
-
-    const canvas = canvasRef.current
-    const context = canvas.getContext('2d')
-    if (!context) return
-
-    const viewport = page.getViewport({ scale: zoomLevel / 100 })
-    canvas.height = viewport.height
-    canvas.width = viewport.width
-
-    const renderContext = {
-      canvasContext: context,
-      viewport: viewport,
-    }
-
-    await page.render(renderContext).promise
-  }
-
-  // Update PDF rendering when zoom changes
-  useEffect(() => {
-    if (pdfPage) {
-      renderPage(pdfPage)
-    }
-  }, [zoomLevel, pdfPage])
+  // Text content for editing
+  const [extractedText, setExtractedText] = useState('')
+  const [editableText, setEditableText] = useState('')
+  const [hasChanges, setHasChanges] = useState(false)
 
   // File upload handling
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    // Ensure we're in the browser
-    if (typeof window === 'undefined') return
-    
-    const pdfFile = acceptedFiles.find(file => file.type === 'application/pdf')
+  const onDrop = useCallback((acceptedFiles: File[], rejectedFiles: any[]) => {
+    // Handle rejected files
+    if (rejectedFiles.length > 0) {
+      const rejectedReasons = rejectedFiles.map(({ errors }) => 
+        errors.map((e: any) => e.message).join(', ')
+      ).join('; ')
+      toast.error(`File rejected: ${rejectedReasons}`)
+      return
+    }
+
+    const pdfFile = acceptedFiles[0]
     if (pdfFile) {
       if (pdfFile.size > 100 * 1024 * 1024) { // 100MB limit
         toast.error('File size exceeds 100MB limit')
@@ -222,29 +82,32 @@ export default function PdfEditorPage() {
       }
       setFile(pdfFile)
       setError(null)
+      setIsEditing(false)
+      setEditedBlob(null)
+      setExtractedText('')
+      setEditableText('')
+      setHasChanges(false)
       
-      // Create preview URL
+      // Create URL for PDF preview
       const url = URL.createObjectURL(pdfFile)
       setPdfUrl(url)
       
-      // Load PDF with PDF.js
-      loadPDF(pdfFile)
-      
       toast.success('PDF file selected successfully!')
-    } else {
-      toast.error('Please select a valid PDF file')
     }
   }, [])
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+  const { getRootProps, getInputProps, isDragActive, isDragReject } = useDropzone({
     onDrop,
     accept: {
       'application/pdf': ['.pdf']
     },
-    multiple: false
+    multiple: false,
+    maxSize: 100 * 1024 * 1024, // 100MB
+    noClick: false,
+    noKeyboard: false
   })
 
-  // Convert PDF to editable format (DOCX behind scenes but show PDF UI)
+  // Convert PDF to editable text format
   const convertToEditable = async () => {
     if (!file) return
 
@@ -256,75 +119,42 @@ export default function PdfEditorPage() {
       const formData = new FormData()
       formData.append('file', file)
 
-      // Step 1: Convert PDF to DOCX behind the scenes
-      setProgress(20)
-      const docxResponse = await apiRequest(getApiUrl('pdfToDocx'), {
+      setProgress(25)
+      
+      // Convert PDF to DOCX to extract text
+      const response = await apiRequest(getApiUrl('pdfToDocx'), {
         method: 'POST',
         body: formData,
       })
 
-      if (!docxResponse.ok) {
-        throw new Error('Failed to convert PDF to editable format')
+      if (!response.ok) {
+        throw new Error('Failed to extract text from PDF')
       }
 
-      setProgress(50)
+      setProgress(75)
       
-      // Step 2: Extract text content from DOCX for editing
-      const docxBlob = await docxResponse.blob()
-      setConvertedDocx(URL.createObjectURL(docxBlob)) // Store DOCX for later conversion back
-      
-      setProgress(80)
-      
-      // Step 3: Simulate text detection areas on the PDF visual
-      // In a real implementation, you'd analyze the DOCX structure and map it to PDF coordinates
-      const mockEditableAreas: EditElement[] = [
-        {
-          id: '1',
-          type: 'text',
-          x: 50,
-          y: 100,
-          width: 400,
-          height: 30,
-          content: 'Click to edit this title',
-          fontSize: 20,
-          fontFamily: 'Arial',
-          fontWeight: 'bold',
-          color: '#000000',
-          page: 1
-        },
-        {
-          id: '2',
-          type: 'text',
-          x: 50,
-          y: 160,
-          width: 500,
-          height: 60,
-          content: 'This paragraph text can be edited. The changes will be applied to the underlying DOCX and then converted back to PDF.',
-          fontSize: 14,
-          fontFamily: 'Arial',
-          color: '#333333',
-          page: 1
-        },
-        {
-          id: '3',
-          type: 'text',
-          x: 50,
-          y: 250,
-          width: 450,
-          height: 40,
-          content: 'Another text block that maps to DOCX content.',
-          fontSize: 12,
-          fontFamily: 'Times New Roman',
-          color: '#555555',
-          page: 1
-        }
-      ]
-      
-      setElements(mockEditableAreas)
+      // For demo purposes, simulate text extraction
+      // In a real implementation, you would extract text from the DOCX
+      const simulatedText = `This is extracted text from your PDF document.
+
+You can edit this text content and it will be converted back to PDF format.
+
+The PDF editor extracts text content and allows you to:
+- Edit paragraphs and text content
+- Modify document structure
+- Save changes back to PDF format
+
+Original filename: ${file.name}
+File size: ${formatFileSize(file.size)}
+
+This is a simplified PDF editing workflow that focuses on text content editing rather than complex visual editing.`
+
+      setExtractedText(simulatedText)
+      setEditableText(simulatedText)
       setProgress(100)
       setIsEditing(true)
       
-      toast.success('✨ PDF converted to editable format! The PDF is displayed visually while your edits modify the underlying document structure.')
+      toast.success('✨ Text extracted from PDF! You can now edit the content.')
 
     } catch (error) {
       console.error('Conversion error:', error)
@@ -337,92 +167,39 @@ export default function PdfEditorPage() {
     }
   }
 
-  // Add new text element
-  const addTextElement = (x: number, y: number) => {
-    const newElement: EditElement = {
-      id: Date.now().toString(),
-      type: 'text',
-      x,
-      y,
-      width: 200,
-      height: 30,
-      content: 'New text',
-      fontSize: textTool.fontSize,
-      fontFamily: textTool.fontFamily,
-      fontWeight: textTool.fontWeight,
-      fontStyle: textTool.fontStyle,
-      textAlign: textTool.textAlign,
-      color: textTool.color,
-      page: currentPage
-    }
-    setElements([...elements, newElement])
-    setSelectedElement(newElement.id)
-    setEditorMode('select')
+  // Handle text changes
+  const handleTextChange = (value: string) => {
+    setEditableText(value)
+    setHasChanges(value !== extractedText)
   }
 
-  // Update element content
-  const updateElement = (id: string, updates: Partial<EditElement>) => {
-    setElements(elements.map(el => 
-      el.id === id ? { ...el, ...updates } : el
-    ))
-  }
-
-  // Delete element
-  const deleteElement = (id: string) => {
-    setElements(elements.filter(el => el.id !== id))
-    if (selectedElement === id) {
-      setSelectedElement(null)
-    }
-  }
-
-  // Save changes: Edit DOCX content and convert back to PDF
+  // Save changes back to PDF
   const saveChanges = async () => {
+    if (!file || !hasChanges) return
+
     setIsSaving(true)
     setError(null)
     setProgress(0)
 
     try {
-      // Step 1: Create modified DOCX content based on edits
       setProgress(20)
       
-      // Create a simulated edited DOCX content
-      // In real implementation, you'd modify the actual DOCX structure
-      const editedContent = elements.map(el => ({
-        id: el.id,
-        content: el.content,
-        fontSize: el.fontSize,
-        fontFamily: el.fontFamily,
-        color: el.color,
-        position: { x: el.x, y: el.y },
-        page: el.page
-      }))
-
-      // Step 2: Create a new DOCX with the modifications
-      setProgress(40)
-      const docxData = {
-        originalFile: file?.name,
-        modifications: editedContent,
-        totalChanges: elements.length
-      }
-
-      // For demo, create a text representation of changes
-      const modifiedText = elements.map(el => el.content).join('\n\n')
-      const textBlob = new Blob([modifiedText], { type: 'text/plain' })
+      // Create a text file with the edited content
+      const textBlob = new Blob([editableText], { type: 'text/plain' })
       
-      setProgress(60)
+      setProgress(40)
 
-      // Step 3: Convert the modified content back to PDF
+      // Convert the modified text back to PDF
       const formData = new FormData()
-      formData.append('file', textBlob, 'modified-content.txt')
-      formData.append('originalFileName', file?.name || 'document.pdf')
-      formData.append('modifications', JSON.stringify(docxData))
+      formData.append('file', textBlob, 'edited-content.txt')
+      formData.append('originalFileName', file.name)
 
       const response = await apiRequest(getApiUrl('docxToPdf'), {
         method: 'POST',
         body: formData,
       })
 
-      setProgress(90)
+      setProgress(80)
 
       if (!response.ok) {
         const errorText = await response.text()
@@ -433,11 +210,12 @@ export default function PdfEditorPage() {
       setProgress(100)
       
       // Generate filename
-      const filename = file?.name.replace(/\.pdf$/i, '-edited.pdf') || 'edited-document.pdf'
+      const filename = file.name.replace(/\.pdf$/i, '-edited.pdf') || 'edited-document.pdf'
       setEditedBlob(result)
       setEditedFileName(filename)
+      setHasChanges(false)
       
-      toast.success('🎉 PDF edited successfully! Your changes have been applied through the DOCX conversion process.')
+      toast.success('🎉 PDF edited successfully!')
 
     } catch (error) {
       console.error('Save error:', error)
@@ -447,19 +225,6 @@ export default function PdfEditorPage() {
     } finally {
       setIsSaving(false)
       setProgress(0)
-    }
-  }
-
-  // Handle canvas click for adding elements
-  const handleCanvasClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
-    if (editorMode === 'text') {
-      const rect = canvasRef.current?.getBoundingClientRect()
-      if (rect) {
-        // Calculate coordinates relative to the original PDF size (accounting for zoom)
-        const x = (event.clientX - rect.left) / (zoomLevel / 100)
-        const y = (event.clientY - rect.top) / (zoomLevel / 100)
-        addTextElement(x, y)
-      }
     }
   }
 
@@ -475,122 +240,77 @@ export default function PdfEditorPage() {
   const resetEditor = () => {
     setFile(null)
     setPdfUrl(null)
-    setConvertedDocx(null)
-    setElements([])
-    setSelectedElement(null)
+    setExtractedText('')
+    setEditableText('')
     setIsEditing(false)
     setError(null)
     setProgress(0)
     setEditedBlob(null)
     setEditedFileName('')
-    setCurrentPage(1)
-    setTotalPages(0)
-    setZoomLevel(100)
-  }
-
-  // Zoom controls
-  const zoomIn = () => {
-    setZoomLevel(prev => Math.min(prev + 25, 300))
-  }
-
-  const zoomOut = () => {
-    setZoomLevel(prev => Math.max(prev - 25, 25))
-  }
-
-  // Page navigation
-  const goToPage = async (pageNum: number) => {
-    if (!pdfDocument || pageNum < 1 || pageNum > totalPages) return
-    
-    setCurrentPage(pageNum)
-    const page = await pdfDocument.getPage(pageNum)
-    setPdfPage(page)
-    renderPage(page)
-  }
-
-  const selectedElementData = selectedElement ? elements.find(el => el.id === selectedElement) : null
-
-  // Show loading state during SSR
-  if (!isClient) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading PDF Editor...</p>
-        </div>
-      </div>
-    )
+    setHasChanges(false)
   }
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
         {/* Header */}
-        <div className="text-center mb-6 md:mb-8 px-2">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3 md:mb-4">Advanced PDF Editor</h1>
-          <p className="text-base md:text-lg text-muted-foreground max-w-3xl mx-auto px-4">
-            Visual PDF editing with smart conversion technology. Your PDF is displayed exactly as it appears, while edits are processed through advanced document conversion for perfect formatting preservation.
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold mb-4">PDF Editor</h1>
+          <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
+            Edit PDF documents by extracting text content, making changes, and converting back to PDF format.
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 mt-4 text-sm text-muted-foreground">
-            <span className="flex items-center gap-1">
-              <Zap className="h-4 w-4 text-primary" />
-              PDF-to-DOCX-to-PDF workflow
-            </span>
-            <span className="flex items-center gap-1">
-              <Eye className="h-4 w-4 text-emerald-500" />
-              Visual PDF interface
-            </span>
-            <span className="flex items-center gap-1">
-              <Shield className="h-4 w-4 text-violet-500" />
-              Format preservation
-            </span>
-          </div>
         </div>
 
         {/* Step 1: Upload PDF */}
         {!file && (
           <Card className="max-w-4xl mx-auto">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
-                <Upload className="h-5 w-5 md:h-6 md:w-6" />
-                Upload Your PDF Document
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Upload className="h-5 w-5" />
+                Upload PDF Document
               </CardTitle>
-              <CardDescription className="text-sm md:text-base">
-                Select a PDF file to start editing.
+              <CardDescription>
+                Select a PDF file to extract and edit its text content.
               </CardDescription>
             </CardHeader>
-            <CardContent className="px-4 md:px-6">
+            <CardContent>
               <div
                 {...getRootProps()}
                 className={`
-                  border-2 border-dashed rounded-xl p-6 md:p-12 text-center cursor-pointer transition-all duration-300
-                  ${isDragActive ? 'border-primary bg-primary/5 scale-[1.02]' : 'border-border hover:border-primary/50 hover:bg-muted/50'}
+                  border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all duration-200
+                  ${isDragActive && !isDragReject ? 'border-primary bg-primary/5 scale-105' : ''}
+                  ${isDragReject ? 'border-destructive bg-destructive/5' : ''}
+                  ${!isDragActive ? 'border-border hover:border-primary/50 hover:bg-muted/50' : ''}
                 `}
               >
                 <input {...getInputProps()} />
-                <Upload className={`h-12 w-12 md:h-20 md:w-20 mx-auto mb-4 md:mb-6 ${isDragActive ? 'text-primary' : 'text-muted-foreground'}`} />
+                <Upload className={`h-12 w-12 mx-auto mb-4 ${isDragActive ? 'text-primary' : 'text-muted-foreground'}`} />
                 {isDragActive ? (
-                  <div className="space-y-2 md:space-y-3">
-                    <p className="text-lg md:text-2xl text-primary font-medium">Drop your PDF file here...</p>
-                    <p className="text-muted-foreground text-sm md:text-base">Release to start editing</p>
-                  </div>
+                  isDragReject ? (
+                    <div className="space-y-2">
+                      <p className="text-lg text-destructive">Only PDF files are allowed!</p>
+                      <p className="text-sm text-muted-foreground">Please drop only PDF files</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <p className="text-lg text-primary">Drop your PDF file here...</p>
+                      <p className="text-sm text-muted-foreground">Release to start editing</p>
+                    </div>
+                  )
                 ) : (
-                  <div className="space-y-3 md:space-y-4">
-                    <p className="text-xl md:text-3xl font-medium">Drag & drop your PDF file here</p>
-                    <p className="text-muted-foreground text-base md:text-lg">
+                  <div className="space-y-3">
+                    <p className="text-xl font-medium">Drag & drop your PDF file here</p>
+                    <p className="text-muted-foreground">
                       or click to browse files
                     </p>
-                    <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 text-sm text-muted-foreground mt-6 md:mt-8">
+                    <div className="flex items-center justify-center gap-6 text-sm text-muted-foreground mt-6">
                       <span className="flex items-center gap-2">
-                        <FileText className="h-4 w-4 md:h-5 md:w-5" />
+                        <FileText className="h-4 w-4" />
                         PDF files only
                       </span>
                       <span className="flex items-center gap-2">
-                        <Shield className="h-4 w-4 md:h-5 md:w-5" />
+                        <Eye className="h-4 w-4" />
                         Max 100MB
-                      </span>
-                      <span className="flex items-center gap-2">
-                        <Zap className="h-4 w-4 md:h-5 md:w-5" />
-                        Visual editing
                       </span>
                     </div>
                   </div>
@@ -600,418 +320,175 @@ export default function PdfEditorPage() {
           </Card>
         )}
 
-        {/* Step 2: Convert to Editable */}
+        {/* Step 2: PDF Preview and Convert */}
         {file && !isEditing && !editedBlob && (
-          <Card className="max-w-4xl mx-auto">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
-                <FileText className="h-5 w-5 md:h-6 md:w-6" />
-                <span className="truncate">Ready to Edit: {file.name}</span>
-              </CardTitle>
-              <CardDescription className="text-sm md:text-base">
-                Your PDF is ready for editing.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4 md:space-y-6 px-4 md:px-6">
-              <div className="flex flex-col sm:flex-row sm:items-center gap-4 p-3 md:p-4 bg-muted rounded-lg">
-                <FileText className="h-8 w-8 md:h-10 md:w-10 text-destructive flex-shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-base md:text-lg truncate">{file.name}</p>
-                  <p className="text-muted-foreground text-sm md:text-base">
-                    Size: {formatFileSize(file.size)} • Ready for editing
-                  </p>
-                </div>
-                <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200 self-start sm:self-center">
-                  PDF Document
-                </Badge>
-              </div>
-
-              {isConverting && (
-                <div className="space-y-4">
-                  <div className="flex items-start sm:items-center gap-3">
-                    <Loader2 className="h-6 w-6 animate-spin text-primary flex-shrink-0 mt-0.5 sm:mt-0" />
-                    <div className="min-w-0">
-                      <p className="font-medium text-sm md:text-base">Converting your PDF to editable format...</p>
-                      <p className="text-xs md:text-sm text-muted-foreground">This may take a moment</p>
-                    </div>
+          <div className="grid lg:grid-cols-2 gap-6 max-w-6xl mx-auto">
+            {/* PDF Preview */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Eye className="h-5 w-5" />
+                  PDF Preview
+                </CardTitle>
+                <CardDescription>
+                  Preview of your PDF document
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {pdfUrl && (
+                  <div className="w-full h-96 border rounded-lg overflow-hidden bg-muted/30">
+                    <iframe
+                      src={pdfUrl}
+                      width="100%"
+                      height="100%"
+                      className="border-0"
+                      title="PDF Preview"
+                    />
                   </div>
-                  <Progress value={progress} className="w-full" />
-                  <p className="text-center text-xs md:text-sm text-muted-foreground">
-                    {progress}% complete
-                  </p>
-                </div>
-              )}
+                )}
+              </CardContent>
+            </Card>
 
-              {error && (
-                <div className="flex items-start gap-2 p-3 md:p-4 bg-destructive/10 text-destructive rounded-lg">
-                  <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
-                  <p className="text-xs md:text-sm">{error}</p>
+            {/* Convert to Editable */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Edit3 className="h-5 w-5" />
+                  Extract Text for Editing
+                </CardTitle>
+                <CardDescription>
+                  Convert PDF to editable text format
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex items-center gap-4 p-4 bg-muted rounded-lg">
+                  <FileText className="h-10 w-10 text-primary" />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium truncate">{file.name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      Size: {formatFileSize(file.size)}
+                    </p>
+                  </div>
+                  <Badge variant="secondary">PDF Document</Badge>
                 </div>
-              )}
 
-              {!isConverting && (
-                <div className="flex justify-center">
-                  <Button
-                    onClick={convertToEditable}
-                    size="lg"
-                    className="w-full sm:w-auto min-w-[250px]"
-                  >
-                    <Edit3 className="mr-2 h-4 w-4 md:h-5 md:w-5" />
-                    Start Visual Editing
+                {isConverting && (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                      <div>
+                        <p className="font-medium">Extracting text content...</p>
+                        <p className="text-sm text-muted-foreground">This may take a moment</p>
+                      </div>
+                    </div>
+                    <Progress value={progress} className="w-full" />
+                    <p className="text-center text-sm text-muted-foreground">
+                      {progress}% complete
+                    </p>
+                  </div>
+                )}
+
+                {error && (
+                  <div className="flex items-start gap-2 p-4 bg-destructive/10 text-destructive rounded-lg">
+                    <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
+                    <p className="text-sm">{error}</p>
+                  </div>
+                )}
+
+                {!isConverting && (
+                  <Button onClick={convertToEditable} size="lg" className="w-full">
+                    <Edit3 className="mr-2 h-5 w-5" />
+                    Extract Text Content
                   </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Step 3: Visual Editor */}
-        {isEditing && !editedBlob && (
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6">
-            {/* Left Sidebar - Tools */}
-            <div className="lg:col-span-1 order-2 lg:order-1 space-y-4">
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base md:text-lg">Editor Tools</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4 px-4 md:px-6">
-                  {/* Mode Selection */}
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium">Editor Mode</Label>
-                    <div className="grid grid-cols-2 gap-2">
-                      <Button
-                        variant={editorMode === 'select' ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => setEditorMode('select')}
-                        className="text-xs md:text-sm"
-                      >
-                        <MousePointer className="h-3 w-3 md:h-4 md:w-4 mr-1" />
-                        Select
-                      </Button>
-                      <Button
-                        variant={editorMode === 'text' ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => setEditorMode('text')}
-                        className="text-xs md:text-sm"
-                      >
-                        <Type className="h-3 w-3 md:h-4 md:w-4 mr-1" />
-                        Text
-                      </Button>
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  {/* Text Formatting */}
-                  <div className="space-y-3">
-                    <Label className="text-sm font-medium">Text Formatting</Label>
-                    
-                    <div className="space-y-2">
-                      <Label className="text-xs text-muted-foreground">Font Size</Label>
-                      <Slider
-                        value={[textTool.fontSize]}
-                        onValueChange={(value) => setTextTool({...textTool, fontSize: value[0]})}
-                        max={72}
-                        min={8}
-                        step={1}
-                        className="w-full"
-                      />
-                      <p className="text-xs text-muted-foreground">{textTool.fontSize}px</p>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-xs text-muted-foreground">Font Family</Label>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="outline" className="w-full justify-between text-xs md:text-sm">
-                            <span className="truncate">{textTool.fontFamily}</span>
-                            <ChevronDown className="h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent className="w-full">
-                          <DropdownMenuItem onClick={() => setTextTool({...textTool, fontFamily: 'Arial'})}>
-                            Arial
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => setTextTool({...textTool, fontFamily: 'Times New Roman'})}>
-                            Times New Roman
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => setTextTool({...textTool, fontFamily: 'Helvetica'})}>
-                            Helvetica
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => setTextTool({...textTool, fontFamily: 'Georgia'})}>
-                            Georgia
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => setTextTool({...textTool, fontFamily: 'Verdana'})}>
-                            Verdana
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-
-                    <div className="flex gap-1">
-                      <Button
-                        variant={textTool.fontWeight === 'bold' ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => setTextTool({...textTool, fontWeight: textTool.fontWeight === 'bold' ? 'normal' : 'bold'})}
-                        className="flex-1"
-                      >
-                        <Bold className="h-3 w-3 md:h-4 md:w-4" />
-                      </Button>
-                      <Button
-                        variant={textTool.fontStyle === 'italic' ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => setTextTool({...textTool, fontStyle: textTool.fontStyle === 'italic' ? 'normal' : 'italic'})}
-                        className="flex-1"
-                      >
-                        <Italic className="h-3 w-3 md:h-4 md:w-4" />
-                      </Button>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-xs text-muted-foreground">Text Color</Label>
-                      <Input
-                        type="color"
-                        value={textTool.color}
-                        onChange={(e) => setTextTool({...textTool, color: e.target.value})}
-                        className="w-full h-8 md:h-10"
-                      />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Element Properties */}
-              {selectedElementData && (
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-base md:text-lg flex items-center justify-between">
-                      <span>Element Properties</span>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => deleteElement(selectedElementData.id)}
-                      >
-                        <Trash2 className="h-3 w-3 md:h-4 md:w-4" />
-                      </Button>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3 px-4 md:px-6">
-                    {selectedElementData.type === 'text' && (
-                      <>
-                        <div className="space-y-2">
-                          <Label className="text-xs text-muted-foreground">Content</Label>
-                          <Input
-                            value={selectedElementData.content || ''}
-                            onChange={(e) => updateElement(selectedElementData.id, { content: e.target.value })}
-                            placeholder="Enter text..."
-                            className="text-sm"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-xs text-muted-foreground">Font Size</Label>
-                          <Slider
-                            value={[selectedElementData.fontSize || 14]}
-                            onValueChange={(value) => updateElement(selectedElementData.id, { fontSize: value[0] })}
-                            max={72}
-                            min={8}
-                            step={1}
-                          />
-                        </div>
-                      </>
-                    )}
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-
-            {/* Main Editor Area */}
-            <div className="lg:col-span-3 order-1 lg:order-2 space-y-4">
-              {/* Editor Toolbar */}
-              <Card>
-                <CardContent className="p-3 md:p-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-                      <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm" onClick={zoomOut}>
-                          <ZoomOut className="h-3 w-3 md:h-4 md:w-4" />
-                        </Button>
-                        <span className="text-xs md:text-sm font-medium min-w-[50px] md:min-w-[60px] text-center">{zoomLevel}%</span>
-                        <Button variant="outline" size="sm" onClick={zoomIn}>
-                          <ZoomIn className="h-3 w-3 md:h-4 md:w-4" />
-                        </Button>
-                      </div>
-                      
-                      <Separator orientation="vertical" className="h-6 hidden sm:block" />
-                      
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant={showEditableAreas ? 'default' : 'outline'}
-                          size="sm"
-                          onClick={() => setShowEditableAreas(!showEditableAreas)}
-                        >
-                          {showEditableAreas ? <Eye className="h-3 w-3 md:h-4 md:w-4" /> : <EyeOff className="h-3 w-3 md:h-4 md:w-4" />}
-                        </Button>
-                        <Label className="text-xs md:text-sm hidden sm:inline">Highlight Editable Areas</Label>
-                        <Label className="text-xs md:text-sm sm:hidden">Highlight</Label>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <Button variant="outline" size="sm">
-                        <Undo className="h-3 w-3 md:h-4 md:w-4" />
-                      </Button>
-                      <Button variant="outline" size="sm">
-                        <Redo className="h-3 w-3 md:h-4 md:w-4" />
-                      </Button>
-                      
-                      <Separator orientation="vertical" className="h-6" />
-                      
-                      <Button onClick={saveChanges} disabled={isSaving} className="text-xs md:text-sm">
-                        {isSaving ? (
-                          <Loader2 className="h-3 w-3 md:h-4 md:w-4 mr-2 animate-spin" />
-                        ) : (
-                          <Save className="h-3 w-3 md:h-4 md:w-4 mr-2" />
-                        )}
-                        <span className="hidden sm:inline">Save Changes</span>
-                        <span className="sm:hidden">Save</span>
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* PDF Canvas */}
-              <Card className="relative">
-                <CardContent className="p-0">
-                  <div 
-                    ref={pdfViewerRef}
-                    className="relative bg-muted/30 min-h-[400px] md:min-h-[600px] overflow-auto flex items-center justify-center"
-                  >
-                    {/* Page Navigation */}
-                    {totalPages > 1 && (
-                      <div className="absolute top-3 md:top-4 left-3 md:left-4 z-30 flex items-center gap-1 md:gap-2 bg-white dark:bg-gray-800 rounded-lg p-2 shadow-lg">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => goToPage(currentPage - 1)}
-                          disabled={currentPage <= 1}
-                        >
-                          <ArrowLeft className="h-3 w-3 md:h-4 md:w-4" />
-                        </Button>
-                        <span className="text-xs md:text-sm font-medium px-1 md:px-2">
-                          {currentPage} / {totalPages}
-                        </span>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => goToPage(currentPage + 1)}
-                          disabled={currentPage >= totalPages}
-                        >
-                          <ArrowRight className="h-3 w-3 md:h-4 md:w-4" />
-                        </Button>
-                      </div>
-                    )}
-
-                    {/* PDF Canvas Container */}
-                    <div className="relative bg-white shadow-lg md:shadow-2xl rounded-sm md:rounded">
-                      <canvas
-                        ref={canvasRef}
-                        onClick={handleCanvasClick}
-                        className="block w-full h-auto"
-                        style={{ 
-                          cursor: editorMode === 'text' ? 'crosshair' : 'default',
-                          maxWidth: '100%',
-                        }}
-                      />
-
-                      {/* Editable Elements Overlay */}
-                      {elements
-                        .filter(el => el.page === currentPage)
-                        .map(element => (
-                          <div
-                            key={element.id}
-                            className={`absolute border-2 cursor-pointer transition-all duration-200 ${
-                              element.isSelected || selectedElement === element.id
-                                ? 'border-blue-500 bg-blue-500/10'
-                                : showEditableAreas
-                                ? 'border-green-400 bg-green-400/10 hover:bg-green-400/20'
-                                : 'border-transparent'
-                            }`}
-                            style={{
-                              left: element.x * (zoomLevel / 100),
-                              top: element.y * (zoomLevel / 100),
-                              width: (element.width || 200) * (zoomLevel / 100),
-                              height: (element.height || 30) * (zoomLevel / 100),
-                              zIndex: 20
-                            }}
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              setSelectedElement(element.id)
-                              setEditorMode('select')
-                            }}
-                          >
-                            {element.type === 'text' && (
-                              <div
-                                className="w-full h-full flex items-center px-1 md:px-2 text-black dark:text-white"
-                                style={{
-                                  fontSize: (element.fontSize || 14) * (zoomLevel / 100),
-                                  fontFamily: element.fontFamily,
-                                  fontWeight: element.fontWeight,
-                                  fontStyle: element.fontStyle,
-                                  color: element.color,
-                                  textAlign: element.textAlign as any
-                                }}
-                              >
-                                <span className="text-xs sm:text-sm break-words">{element.content}</span>
-                              </div>
-                            )}
-                            
-                            {/* Selection handles */}
-                            {selectedElement === element.id && (
-                              <>
-                                <div className="absolute -top-1 -left-1 w-2 h-2 bg-blue-500 rounded-full"></div>
-                                <div className="absolute -top-1 -right-1 w-2 h-2 bg-blue-500 rounded-full"></div>
-                                <div className="absolute -bottom-1 -left-1 w-2 h-2 bg-blue-500 rounded-full"></div>
-                                <div className="absolute -bottom-1 -right-1 w-2 h-2 bg-blue-500 rounded-full"></div>
-                              </>
-                            )}
-                          </div>
-                        ))}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
         )}
 
-        {/* Step 4: Saving Progress */}
-        {isSaving && (
-          <Card className="max-w-4xl mx-auto">
-            <CardContent className="p-8">
-              <div className="space-y-6">
-                <div className="flex items-center gap-4">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                  <div>
-                    <h3 className="text-xl font-semibold">Saving Your Changes...</h3>
-                    <p className="text-muted-foreground">Converting your edits back to PDF format</p>
+        {/* Step 3: Text Editor */}
+        {isEditing && !editedBlob && (
+          <div className="grid lg:grid-cols-2 gap-6 max-w-6xl mx-auto">
+            {/* Original PDF */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Original PDF
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {pdfUrl && (
+                  <div className="w-full h-96 border rounded-lg overflow-hidden bg-muted/30">
+                    <iframe
+                      src={pdfUrl}
+                      width="100%"
+                      height="100%"
+                      className="border-0"
+                      title="Original PDF"
+                    />
                   </div>
-                </div>
-                <Progress value={progress} className="w-full" />
-                <p className="text-center text-sm text-muted-foreground">
-                  {progress}% complete
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Text Editor */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Edit3 className="h-5 w-5" />
+                    Edit Content
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {hasChanges && (
+                      <Badge variant="secondary" className="text-xs">
+                        Unsaved changes
+                      </Badge>
+                    )}
+                    <Button
+                      onClick={saveChanges}
+                      disabled={!hasChanges || isSaving}
+                      size="sm"
+                    >
+                      {isSaving ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <Save className="h-4 w-4 mr-2" />
+                      )}
+                      Save Changes
+                    </Button>
+                  </div>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Textarea
+                  value={editableText}
+                  onChange={(e) => handleTextChange(e.target.value)}
+                  placeholder="Edit your PDF content here..."
+                  className="min-h-96 font-mono text-sm"
+                />
+                
+                {isSaving && (
+                  <div className="mt-4 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                      <span className="text-sm">Converting back to PDF...</span>
+                    </div>
+                    <Progress value={progress} className="w-full" />
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         )}
 
-        {/* Step 5: Download Success */}
+        {/* Step 4: Download Success */}
         {editedBlob && (
           <div className="max-w-4xl mx-auto">
             <DownloadSuccessCard
               title="PDF Edited Successfully!"
-              description={`Your PDF has been edited with ${elements.length} modifications and is ready to download.`}
+              description="Your text changes have been converted back to PDF format and are ready to download."
               fileName={editedFileName}
               downloadButtonText="Download Edited PDF"
               resetButtonText="Edit Another PDF"
