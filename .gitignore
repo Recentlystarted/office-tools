@@ -35,6 +35,13 @@ yarn-error.log*
 ehthumbs.db
 Thumbs.db
 
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
 # Temporary
 *.tmp
 *.temp
