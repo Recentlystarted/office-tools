@@ -119,9 +119,18 @@ export default function PdfMergerPage() {
 
     try {
       const formData = new FormData()
+      
+      // Append each file with proper field name
       files.forEach((file, index) => {
-        formData.append('files', file)
+        console.log(`Adding file ${index + 1}:`, file.name, `(${formatFileSize(file.size)})`)
+        formData.append('files', file, file.name)
       })
+
+      // Verify FormData content
+      console.log('FormData entries:')
+      for (let [key, value] of formData.entries()) {
+        console.log(key, value instanceof File ? `File: ${value.name}` : value)
+      }
 
       // Add some debugging
       console.log('Merging files:', files.map(f => ({ name: f.name, size: f.size })))
@@ -131,7 +140,7 @@ export default function PdfMergerPage() {
       }
       
       const apiEndpoint = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/pdf-merger/merge`
-      console.log('API endpoint configured')
+      console.log('API endpoint configured:', apiEndpoint)
 
       const response = await fetch(apiEndpoint, {
         method: 'POST',

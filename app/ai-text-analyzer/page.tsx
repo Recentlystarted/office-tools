@@ -191,6 +191,7 @@ export default function AITextAnalyzerPage() {
     
     // Common spelling mistakes and corrections
     const spellingCorrections: { [key: string]: string } = {
+      // Basic corrections
       'recieve': 'receive',
       'seperate': 'separate',
       'definately': 'definitely',
@@ -218,7 +219,67 @@ export default function AITextAnalyzerPage() {
       'hasnt': "hasn't",
       'shouldnt': "shouldn't",
       'couldnt': "couldn't",
-      'wouldnt': "wouldn't"
+      'wouldnt': "wouldn't",
+      
+      // Common typos you mentioned
+      'teh': 'the',
+      'hte': 'the',
+      'taht': 'that',
+      'thsi': 'this',
+      'tihs': 'this',
+      'adn': 'and',
+      'andd': 'and',
+      'ofr': 'for',
+      'fro': 'for',
+      'form': 'from',
+      'frmo': 'from',
+      'whne': 'when',
+      'wehn': 'when',
+      'waht': 'what',
+      'whta': 'what',
+      'whit': 'with',
+      'wtih': 'with',
+      'wiht': 'with',
+      'wuld': 'would',
+      'woudl': 'would',
+      'shoudl': 'should',
+      'shuold': 'should',
+      'coudl': 'could',
+      'cuold': 'could',
+      'yuo': 'you',
+      'yuor': 'your',
+      'oyur': 'your',
+      'youe': 'you',
+      'tot': 'to',
+      'ont': 'not',
+      'nto': 'not',
+      'fi': 'if',
+      'fo': 'of',
+      'abotu': 'about',
+      'aboute': 'about',
+      'aobut': 'about',
+      'jsut': 'just',
+      'juts': 'just',
+      'geting': 'getting',
+      'comeing': 'coming',
+      'goign': 'going',
+      'doign': 'doing',
+      'makign': 'making',
+      'takign': 'taking',
+      'givign': 'giving',
+      'workign': 'working',
+      'lookign': 'looking',
+      'beign': 'being',
+      'havign': 'having',
+      'sayign': 'saying',
+      'playign': 'playing',
+      'tryign': 'trying',
+      'knowign': 'knowing',
+      'thigns': 'things',
+      'somethign': 'something',
+      'everythign': 'everything',
+      'anythign': 'anything',
+      'nothign': 'nothing'
     }
     
     // Grammar patterns to check
@@ -228,24 +289,53 @@ export default function AITextAnalyzerPage() {
       { pattern: /([.!?])\s*([a-z])/g, correction: '$1 $2', type: 'punctuation' as const, message: 'Add space after punctuation and capitalize' },
       { pattern: /([a-z])([.!?])/g, correction: '$1$2', type: 'punctuation' as const, message: 'No space before punctuation' },
       { pattern: /\s+([.!?,:;])/g, correction: '$1', type: 'punctuation' as const, message: 'Remove space before punctuation' },
-      { pattern: /([.!?]){2,}/g, correction: '$1', type: 'punctuation' as const, message: 'Avoid repeated punctuation' }
+      { pattern: /([.!?]){2,}/g, correction: '$1', type: 'punctuation' as const, message: 'Avoid repeated punctuation' },
+      
+      // Enhanced grammar checking
+      { pattern: /\ba\s+(?=[aeiouAEIOU])/g, correction: 'an ', type: 'grammar' as const, message: 'Use "an" before vowel sounds' },
+      { pattern: /\ban\s+(?=[bcdfghjklmnpqrstvwxyzBCDFGHJKLMNPQRSTVWXYZ])/g, correction: 'a ', type: 'grammar' as const, message: 'Use "a" before consonant sounds' },
+      { pattern: /\byour\s+welcome\b/gi, correction: "you're welcome", type: 'grammar' as const, message: 'Use "you\'re welcome" not "your welcome"' },
+      { pattern: /\bits\s+(?=(?:been|being|going|coming|working|playing|saying|doing|making|taking|looking|having|getting|trying|knowing))/gi, correction: "it's ", type: 'grammar' as const, message: 'Use "it\'s" (it is) instead of "its"' },
+      { pattern: /\btheir\s+(?=(?:are|is|was|were|will|going|coming|working|playing|saying|doing|making|taking|looking|having|getting|trying|knowing))/gi, correction: "they're ", type: 'grammar' as const, message: 'Use "they\'re" (they are) instead of "their"' },
+      { pattern: /\bto\s+(?=(?:many|much|few|little|often|rarely|always|never|sometimes|usually|frequently))/gi, correction: "too ", type: 'grammar' as const, message: 'Use "too" (also/excessively) instead of "to"' },
+      { pattern: /\bthen\s+(?=(?:is|are|was|were|will|going|coming|working|playing|saying|doing|making|taking|looking|having|getting|trying|knowing))/gi, correction: "than ", type: 'grammar' as const, message: 'Use "than" for comparisons instead of "then"' }
     ]
     
-    // Check spelling
-    const words = text.split(/\b/)
-    words.forEach((word, index) => {
-      const cleanWord = word.toLowerCase().replace(/[^a-z]/g, '')
-      if (cleanWord && spellingCorrections[cleanWord]) {
-        const start = text.indexOf(word, index > 0 ? text.indexOf(words[index - 1]) : 0)
-        errors.push({
-          type: 'spelling',
-          message: `"${word}" should be "${spellingCorrections[cleanWord]}"`,
-          suggestion: spellingCorrections[cleanWord],
-          position: { start, end: start + word.length },
-          severity: 'error'
-        })
-        correctedText = correctedText.replace(new RegExp(`\\b${word}\\b`, 'gi'), spellingCorrections[cleanWord])
+    // Check spelling with better detection
+    const words = text.split(/(\b\w+\b)/g)
+    let textPosition = 0
+    
+    words.forEach((word) => {
+      if (/^\w+$/.test(word)) { // Only check actual words
+        const cleanWord = word.toLowerCase()
+        if (spellingCorrections[cleanWord]) {
+          const originalCase = word
+          let correctedWord = spellingCorrections[cleanWord]
+          
+          // Preserve original capitalization
+          if (originalCase[0] === originalCase[0].toUpperCase()) {
+            correctedWord = correctedWord.charAt(0).toUpperCase() + correctedWord.slice(1)
+          }
+          if (originalCase === originalCase.toUpperCase() && originalCase.length > 1) {
+            correctedWord = correctedWord.toUpperCase()
+          }
+          
+          errors.push({
+            type: 'spelling',
+            message: `"${originalCase}" should be "${correctedWord}"`,
+            suggestion: correctedWord,
+            position: { start: textPosition, end: textPosition + word.length },
+            severity: 'error'
+          })
+          
+          // Apply correction to text
+          correctedText = correctedText.replace(
+            new RegExp(`\\b${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'g'), 
+            correctedWord
+          )
+        }
       }
+      textPosition += word.length
     })
     
     // Check grammar patterns
