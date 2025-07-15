@@ -104,6 +104,7 @@ export default function AITextAnalyzerPage() {
   const [text, setText] = useState('')
   const [analysis, setAnalysis] = useState<TextAnalysis | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [isRewriting, setIsRewriting] = useState(false)
   const [copied, setCopied] = useState(false)
   const [activeTab, setActiveTab] = useState<string>('analysis')
   const [selectedRewrite, setSelectedRewrite] = useState<string>('')
@@ -519,6 +520,8 @@ export default function AITextAnalyzerPage() {
       return
     }
 
+    setIsRewriting(true)
+
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/text/rewrite`, {
         method: 'POST',
@@ -574,7 +577,23 @@ export default function AITextAnalyzerPage() {
       console.error('Rewrite error:', error)
       
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
-      toast.error(`Rewrite failed: ${errorMessage}`)
+      
+      // Fallback to local rewrite if API fails
+      console.log('API rewrite failed, using local fallback')
+      
+      const localRewriteOptions = generateRewriteOptions(text)
+      
+      if (analysis) {
+        setAnalysis({
+          ...analysis,
+          rewriteOptions: localRewriteOptions
+        })
+      }
+      
+      toast.success(`Generated ${localRewriteOptions.length} local rewrite options`)
+      
+    } finally {
+      setIsRewriting(false)
     }
   }
 
@@ -1206,44 +1225,99 @@ Sunlight streamed through the lantern room windows, illuminating dust particles 
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
-                      {analysis.rewriteOptions.map((option, index) => (
-                        <div key={index} className="border rounded-lg p-4 space-y-3">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <h4 className="font-semibold">{option.title}</h4>
-                              <p className="text-sm text-muted-foreground">{option.description}</p>
+                      {analysis.rewriteOptions.length > 0 ? (
+                        analysis.rewriteOptions.map((option, index) => (
+                          <div key={index} className="border rounded-lg p-4 space-y-3">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <h4 className="font-semibold">{option.title}</h4>
+                                <p className="text-sm text-muted-foreground">{option.description}</p>
+                              </div>
+                              <Badge variant="outline" className="capitalize">
+                                {option.tone}
+                              </Badge>
                             </div>
-                            <Badge variant="outline" className="capitalize">
-                              {option.tone}
-                            </Badge>
-                          </div>
-                          
-                          <div className="p-3 bg-muted/50 rounded-md">
-                            <div className="text-sm leading-relaxed whitespace-pre-wrap">
-                              {option.text}
+                            
+                            <div className="p-3 bg-muted/50 rounded-md">
+                              <div className="text-sm leading-relaxed whitespace-pre-wrap">
+                                {option.text}
+                              </div>
+                            </div>
+                            
+                            <div className="flex gap-2">
+                              <Button 
+                                onClick={() => copyText(option.text, option.title)}
+                                variant="outline"
+                                size="sm"
+                              >
+                                <Copy className="mr-2 h-4 w-4" />
+                                Copy
+                              </Button>
+                              <Button 
+                                onClick={() => applyRewrite(option.text)}
+                                size="sm"
+                                variant={selectedRewrite === option.text ? "default" : "outline"}
+                              >
+                                <Zap className="mr-2 h-4 w-4" />
+                                {selectedRewrite === option.text ? 'Applied' : 'Apply'}
+                              </Button>
                             </div>
                           </div>
-                          
-                          <div className="flex gap-2">
+                        ))
+                      ) : (
+                        <div className="text-center py-8">
+                          <PenTool className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                          <h3 className="text-lg font-semibold mb-2">Generate Rewrites</h3>
+                          <p className="text-muted-foreground mb-4">
+                            Click the button below to generate different versions of your text optimized for various communication styles.
+                          </p>
+                          <div className="space-y-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                              <Button 
+                                onClick={() => performRewrite('professional')}
+                                variant="outline"
+                                size="sm"
+                              >
+                                <FileText className="mr-2 h-4 w-4" />
+                                Professional
+                              </Button>
+                              <Button 
+                                onClick={() => performRewrite('casual')}
+                                variant="outline"
+                                size="sm"
+                              >
+                                <MessageSquare className="mr-2 h-4 w-4" />
+                                Casual
+                              </Button>
+                              <Button 
+                                onClick={() => performRewrite('creative')}
+                                variant="outline"
+                                size="sm"
+                              >
+                                <Sparkles className="mr-2 h-4 w-4" />
+                                Creative
+                              </Button>
+                            </div>
                             <Button 
-                              onClick={() => copyText(option.text, option.title)}
-                              variant="outline"
-                              size="sm"
+                              onClick={() => performRewrite('all')}
+                              className="w-full"
+                              disabled={isRewriting}
                             >
-                              <Copy className="mr-2 h-4 w-4" />
-                              Copy
-                            </Button>
-                            <Button 
-                              onClick={() => applyRewrite(option.text)}
-                              size="sm"
-                              variant={selectedRewrite === option.text ? "default" : "outline"}
-                            >
-                              <Zap className="mr-2 h-4 w-4" />
-                              {selectedRewrite === option.text ? 'Applied' : 'Apply'}
+                              {isRewriting ? (
+                                <>
+                                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                                  Generating...
+                                </>
+                              ) : (
+                                <>
+                                  <PenTool className="mr-2 h-4 w-4" />
+                                  Generate All Styles
+                                </>
+                              )}
                             </Button>
                           </div>
                         </div>
-                      ))}
+                      )}
                     </CardContent>
                   </Card>
                 </TabsContent>
