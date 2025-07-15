@@ -41,6 +41,7 @@ __pycache__/
 *$py.class
 *.so
 .Python
+*.pyc
 
 # Temporary
 *.tmp
