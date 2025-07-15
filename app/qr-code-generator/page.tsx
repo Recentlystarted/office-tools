@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { Slider } from '@/components/ui/slider'
+import { getApiUrl, apiRequest, ApiError } from '@/lib/api'
 import { Switch } from '@/components/ui/switch'
 import { 
   Download,
@@ -141,11 +142,7 @@ export default function QRCodeGeneratorPage() {
 
     setIsLoading(true)
     try {
-      if (!process.env.NEXT_PUBLIC_API_BASE_URL) {
-        throw new Error('API configuration not available. Please check your environment settings.')
-      }
-      
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/generator/qr-generate`, {
+      const response = await apiRequest(getApiUrl('qrGenerator'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Progress } from '@/components/ui/progress'
 import { FileText, Upload, Download, AlertCircle } from 'lucide-react'
 import { toast } from 'sonner'
+import { getApiUrl, apiRequest, ApiError } from '@/lib/api'
 
 // Helper function to format file size
 const formatFileSize = (bytes: number): string => {
@@ -65,11 +66,7 @@ export default function PdfToDocxPage() {
       const formData = new FormData()
       formData.append('file', file)
 
-      if (!process.env.NEXT_PUBLIC_API_BASE_URL) {
-        throw new Error('API configuration not available. Please check your environment settings.')
-      }
-
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/pdf/convert`, {
+      const response = await apiRequest(getApiUrl('pdfToWord'), {
         method: 'POST',
         body: formData,
       })

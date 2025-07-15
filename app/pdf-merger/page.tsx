@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Progress } from '@/components/ui/progress'
 import { FileText, Upload, Download, AlertCircle, X, GripVertical, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { getApiUrl, apiRequest, ApiError } from '@/lib/api'
 
 interface FileWithId {
   id: string
@@ -141,14 +142,7 @@ export default function PdfMergerPage() {
       // Add some debugging
       console.log('Merging files:', files.map(f => ({ name: f.name, size: f.size })))
       
-      if (!process.env.NEXT_PUBLIC_API_BASE_URL) {
-        throw new Error('API configuration not available. Please check your environment settings.')
-      }
-      
-      const apiEndpoint = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/pdf-merger/merge`
-      console.log('API endpoint configured:', apiEndpoint)
-
-      const response = await fetch(apiEndpoint, {
+      const response = await apiRequest(getApiUrl('pdfMerger'), {
         method: 'POST',
         body: formData,
       })

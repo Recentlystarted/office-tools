@@ -8,6 +8,7 @@ import { Progress } from '@/components/ui/progress'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Slider } from '@/components/ui/slider'
+import { getApiUrl, apiRequest, ApiError } from '@/lib/api'
 import { 
   ImageIcon, 
   Upload, 
@@ -121,11 +122,7 @@ export default function ImageConverterPage() {
       if (resizeWidth) formData.append('width', resizeWidth)
       if (resizeHeight) formData.append('height', resizeHeight)
 
-      if (!process.env.NEXT_PUBLIC_API_BASE_URL) {
-        throw new Error('API configuration not available. Please check your environment settings.')
-      }
-
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/image-converter/convert`, {
+      const response = await apiRequest(getApiUrl('imageConverter'), {
         method: 'POST',
         body: formData,
       })

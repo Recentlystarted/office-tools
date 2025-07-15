@@ -8,6 +8,7 @@ import { Progress } from '@/components/ui/progress'
 import { FileImage, Upload, Download, AlertCircle, X, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { DownloadSuccessCard } from '@/components/download-success-card'
+import { getApiUrl, apiRequest, ApiError } from '@/lib/api'
 
 interface ImageWithId {
   id: string
@@ -142,13 +143,7 @@ export default function ImageToPdfPage() {
         formData.append('images', imageWithId.file, imageWithId.name)
       })
 
-      if (!process.env.NEXT_PUBLIC_API_BASE_URL) {
-        throw new Error('API configuration not available. Please check your environment settings.')
-      }
-      
-      const apiEndpoint = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/image-to-pdf/convert`
-
-      const response = await fetch(apiEndpoint, {
+      const response = await apiRequest(getApiUrl('imageToPdf'), {
         method: 'POST',
         body: formData,
       })

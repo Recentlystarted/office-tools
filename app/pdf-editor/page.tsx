@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge'
 import { FileText, Upload, Edit3, AlertCircle, Loader2, Type, Image, Square, Circle, Minus } from 'lucide-react'
 import { toast } from 'sonner'
 import { DownloadSuccessCard } from '@/components/download-success-card'
+import { getApiUrl, apiRequest, ApiError } from '@/lib/api'
 
 // Helper function to format file size
 const formatFileSize = (bytes: number): string => {
@@ -157,11 +158,7 @@ export default function PdfEditorPage() {
       formData.append('file', file)
       formData.append('operations', JSON.stringify(editOperations))
 
-      if (!process.env.NEXT_PUBLIC_API_BASE_URL) {
-        throw new Error('API configuration not available. Please check your environment settings.')
-      }
-
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/pdf-editor/edit`, {
+      const response = await apiRequest(getApiUrl('pdfEditor'), {
         method: 'POST',
         body: formData,
       })

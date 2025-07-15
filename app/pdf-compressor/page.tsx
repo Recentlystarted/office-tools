@@ -10,6 +10,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { FileText, Upload, Download, AlertCircle, Loader2, Archive } from 'lucide-react'
 import { toast } from 'sonner'
 import { DownloadSuccessCard } from '@/components/download-success-card'
+import { getApiUrl, apiRequest, ApiError } from '@/lib/api'
 
 // Helper function to format file size
 const formatFileSize = (bytes: number): string => {
@@ -75,11 +76,7 @@ export default function PdfCompressorPage() {
       formData.append('file', file)
       formData.append('compression_level', compressionLevel)
 
-      if (!process.env.NEXT_PUBLIC_API_BASE_URL) {
-        throw new Error('API configuration not available. Please check your environment settings.')
-      }
-
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/pdf-compressor/compress`, {
+      const response = await apiRequest(getApiUrl('pdfCompressor'), {
         method: 'POST',
         body: formData,
       })

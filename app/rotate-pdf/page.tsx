@@ -10,6 +10,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { FileText, Upload, RotateCw, AlertCircle, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { DownloadSuccessCard } from '@/components/download-success-card'
+import { getApiUrl, apiRequest, ApiError } from '@/lib/api'
 
 // Helper function to format file size
 const formatFileSize = (bytes: number): string => {
@@ -84,11 +85,7 @@ export default function RotatePdfPage() {
         formData.append('specific_pages', specificPages.trim())
       }
 
-      if (!process.env.NEXT_PUBLIC_API_BASE_URL) {
-        throw new Error('API configuration not available. Please check your environment settings.')
-      }
-
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/pdf-rotate/rotate`, {
+      const response = await apiRequest(getApiUrl('pdfRotate'), {
         method: 'POST',
         body: formData,
       })

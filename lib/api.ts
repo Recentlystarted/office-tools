@@ -19,8 +19,11 @@ export const API_CONFIG = {
     pdfToWord: '/api/pdf/convert',
     pdfMerger: '/api/pdf-merger/merge',
     pdfCompressor: '/api/pdf-compressor/compress',
+    pdfRotate: '/api/pdf-rotate/rotate',
+    pdfEditor: '/api/pdf-editor/edit',
     pdfUnlock: '/api/pdf-unlock/unlock',
-    imageToPdf: '/api/image-to-pdf/convert',
+    imageToPdf: '/api/image/to-pdf',
+    imageConverter: '/api/image/convert',
     
     // Generators
     qrGenerator: '/api/generator/qr-generate',

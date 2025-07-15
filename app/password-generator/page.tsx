@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
+import { getApiUrl, apiRequest, ApiError } from '@/lib/api'
 import { 
   Key,
   Copy,
@@ -95,11 +96,7 @@ export default function PasswordGeneratorPage() {
     try {
       // Try API first, fallback to local generation
       try {
-        if (!process.env.NEXT_PUBLIC_API_BASE_URL) {
-          throw new Error('API configuration not available. Please check your environment settings.')
-        }
-        
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/password/generate`, {
+        const response = await apiRequest(getApiUrl('passwordGenerator'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
