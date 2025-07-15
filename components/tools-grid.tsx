@@ -94,11 +94,11 @@ const tools = [
   {
     name: 'PDF Password Remover',
     description: 'Remove password protection from PDF files when you have the password',
-    slug: 'pdf-password-remover',
+    slug: 'pdf-unlock',
     icon: Unlock,
     category: 'PDF Tools',
     popular: false,
-    status: 'coming-soon'
+    status: 'active'
   },
   {
     name: 'PDF Compressor',

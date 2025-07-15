@@ -14,7 +14,22 @@ const nextConfig = {
   },
   experimental: {
     optimizePackageImports: ['lucide-react']
-  }
+  },
+  webpack: (config) => {
+    // Fix for PDF.js worker
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      canvas: false,
+    };
+    
+    // Handle PDF.js worker files
+    config.module.rules.push({
+      test: /\.worker\.(js|ts)$/,
+      use: { loader: 'worker-loader' },
+    });
+
+    return config;
+  },
 }
 
 module.exports = nextConfig

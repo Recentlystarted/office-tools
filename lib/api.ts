@@ -17,11 +17,14 @@ export const API_CONFIG = {
   endpoints: {
     // PDF Tools
     pdfToWord: '/api/pdf/convert',
+    pdfToDocx: '/api/pdf/convert',
+    docxToPdf: '/api/docx/convert-to-pdf',
     pdfMerger: '/api/pdf-merger/merge',
+    pdfMergerInfo: '/api/pdf-merger/info',
     pdfCompressor: '/api/pdf-compressor/compress',
     pdfRotate: '/api/pdf-rotate/rotate',
     pdfEditor: '/api/pdf-editor/edit',
-    pdfUnlock: '/api/pdf-unlock/unlock',
+    pdfUnlock: '/api/pdf/unlock',
     imageToPdf: '/api/image/to-pdf',
     imageConverter: '/api/image/convert',
     
