@@ -106,8 +106,8 @@ const tools = [
     slug: 'pdf-compressor',
     icon: Archive,
     category: 'PDF Tools',
-    popular: false,
-    status: 'coming-soon'
+    popular: true,
+    status: 'active'
   },
   {
     name: 'Rotate PDF',
@@ -116,7 +116,7 @@ const tools = [
     icon: RotateCcw,
     category: 'PDF Tools',
     popular: false,
-    status: 'coming-soon'
+    status: 'active'
   },
   {
     name: 'PDF Editor',
@@ -124,8 +124,8 @@ const tools = [
     slug: 'pdf-editor',
     icon: Edit3,
     category: 'PDF Tools',
-    popular: false,
-    status: 'coming-soon'
+    popular: true,
+    status: 'active'
   },
   {
     name: 'PDF Viewer',
@@ -134,7 +134,7 @@ const tools = [
     icon: Eye,
     category: 'PDF Tools',
     popular: false,
-    status: 'coming-soon'
+    status: 'active'
   },
 
   // Converters
@@ -145,7 +145,7 @@ const tools = [
     icon: FileImage,
     category: 'Converters',
     popular: true,
-    status: 'coming-soon'
+    status: 'active'
   },
   {
     name: 'Image Converter',
@@ -153,8 +153,8 @@ const tools = [
     slug: 'image-converter',
     icon: Image,
     category: 'Converters',
-    popular: false,
-    status: 'coming-soon'
+    popular: true,
+    status: 'active'
   },
 
   // Generators
