@@ -33,6 +33,11 @@ export const API_CONFIG = {
     textCaseConverter: '/api/text/case-convert',
     wordCounter: '/api/text/word-count',
     
+    // AI Text Analysis
+    textAnalyzer: '/api/text/analyze',
+    grammarCheck: '/api/text/grammar-check',
+    textRewrite: '/api/text/rewrite',
+    
     // Converters
     jsonFormatter: '/api/text/json-format',
     base64Encoder: '/api/text/base64',

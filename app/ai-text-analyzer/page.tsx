@@ -38,6 +38,7 @@ import {
   Target
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { getApiUrl, apiRequest, ApiError } from '@/lib/api'
 
 interface GrammarError {
   type: 'grammar' | 'spelling' | 'punctuation' | 'style'
@@ -345,7 +346,9 @@ export default function AITextAnalyzerPage() {
 
     try {
       // Call our Python API for comprehensive text analysis
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/text/analyze`, {
+      console.log('Starting text analysis...')
+      
+      const response = await apiRequest(getApiUrl('textAnalyzer'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -355,19 +358,14 @@ export default function AITextAnalyzerPage() {
         })
       })
 
-      if (!response.ok) {
-        throw new Error(`API error: ${response.status}`)
-      }
-
       const result = await response.json()
       
       // Debug: Log the API response structure in development
-      if (process.env.NODE_ENV === 'development') {
-        console.log('API Response:', result)
-      }
+      console.log('Text Analysis API Response:', result)
       
-      if (!result.success) {
-        throw new Error(result.message || 'Analysis failed')
+      if (!result || !result.success) {
+        console.error('API returned unsuccessful response:', result)
+        throw new ApiError(result?.message || 'Analysis failed')
       }
 
       const data = result.data
@@ -386,18 +384,18 @@ export default function AITextAnalyzerPage() {
         readingTime: data.basic_stats?.reading_time_minutes || 0,
         sentimentScore: data.sentiment?.sentiment_score || 0,
         sentimentLabel: data.sentiment?.sentiment_label || 'Neutral',
-        emotionalTone: data.sentiment?.emotional_tones || [],
-        complexityScore: data.quality_metrics?.complexity_score || 0,
-        formalityScore: data.quality_metrics?.formality_score || 0,
+        emotionalTone: [], // Not provided by current API
+        complexityScore: data.quality_metrics?.grade_level || data.readability?.grade_level || 0,
+        formalityScore: 50, // Default middle value since not provided
         keywordDensity: data.keywords?.keyword_density || [],
-        mostCommonWords: data.keywords?.most_common_words || [],
+        mostCommonWords: (data.keywords?.keyword_density || []).map((kw: any) => ({ word: kw.word, count: kw.count })),
         longestSentence: {
-          text: data.quality_metrics?.longest_sentence?.text || 'No sentence found',
-          wordCount: data.quality_metrics?.longest_sentence?.word_count || 0
+          text: `Longest sentence (${data.quality_metrics?.longest_sentence_words || 0} words)`,
+          wordCount: data.quality_metrics?.longest_sentence_words || 0
         },
         shortestSentence: {
-          text: data.quality_metrics?.shortest_sentence?.text || 'No sentence found',
-          wordCount: data.quality_metrics?.shortest_sentence?.word_count || 0
+          text: `Shortest sentence (${data.quality_metrics?.shortest_sentence_words || 0} words)`,
+          wordCount: data.quality_metrics?.shortest_sentence_words || 0
         },
         uniqueWords: data.keywords?.unique_words || 0,
         vocabularyRichness: data.keywords?.vocabulary_richness || 0,
@@ -406,7 +404,7 @@ export default function AITextAnalyzerPage() {
         grammarErrors: [], // Will be filled by grammar check
         correctedText: text, // Will be filled by grammar check
         rewriteOptions: [], // Will be filled by rewrite service
-        writingScore: 100 - ((data.quality_metrics?.passive_voice_percentage || 0) * 0.5) - ((data.quality_metrics?.adverb_percentage || 0) * 0.3),
+        writingScore: Math.max(0, 100 - ((data.quality_metrics?.passive_voice_percentage || 0) * 0.5) - ((data.quality_metrics?.adverb_percentage || 0) * 0.3)),
         recommendations: data.recommendations?.recommendations || [],
         strengths: data.recommendations?.strengths || [],
         improvements: data.recommendations?.improvements || []
@@ -442,7 +440,9 @@ export default function AITextAnalyzerPage() {
     }
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/text/grammar-check`, {
+      console.log('Starting grammar check...')
+      
+      const response = await apiRequest(getApiUrl('grammarCheck'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -452,43 +452,38 @@ export default function AITextAnalyzerPage() {
         })
       })
 
-      if (!response.ok) {
-        throw new Error(`API error: ${response.status}`)
-      }
-
       const result = await response.json()
       
       // Debug: Log the API response structure in development
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Grammar API Response:', result)
-      }
+      console.log('Grammar Check API Response:', result)
       
-      if (!result.success) {
-        throw new Error(result.message || 'Grammar check failed')
+      if (!result || !result.success) {
+        console.error('Grammar API returned unsuccessful response:', result)
+        throw new ApiError(result?.message || 'Grammar check failed')
       }
 
       const data = result.data
 
       // Transform API response to match our frontend interface with safe fallbacks
       const grammarErrors: GrammarError[] = [
-        ...(data.grammar_errors || []).map((error: any) => ({
-          type: (error.type || 'grammar') as 'grammar' | 'spelling' | 'punctuation' | 'style',
-          message: error.rule || error.category || 'Grammar issue',
-          suggestion: error.suggestion || 'Check grammar',
-          position: error.position || { start: 0, end: 0 },
-          severity: (error.severity === 'high' ? 'error' : error.severity === 'medium' ? 'warning' : 'suggestion') as 'error' | 'warning' | 'suggestion'
-        })),
-        ...(data.spelling_errors || []).map((error: any) => ({
-          type: 'spelling' as const,
-          message: 'Spelling error',
-          suggestion: error.suggestion || error.suggestions?.[0] || 'Check spelling',
+        ...(data.grammar_issues || []).map((error: any) => ({
+          type: 'grammar' as const,
+          message: error.message || error.rule || 'Grammar issue',
+          suggestion: error.suggestion || error.replacement || 'Check grammar',
           position: error.position || { start: 0, end: 0 },
           severity: 'error' as const
         })),
-        ...(data.punctuation_errors || []).map((error: any) => ({
-          type: 'punctuation' as const,
-          message: error.rule || 'Punctuation issue',
-          suggestion: error.suggestion || 'Check punctuation',
+        ...(data.spelling_issues || []).map((error: any) => ({
+          type: 'spelling' as const,
+          message: error.message || 'Spelling error',
+          suggestion: error.suggestion || error.replacement || 'Check spelling',
+          position: error.position || { start: 0, end: 0 },
+          severity: 'error' as const
+        })),
+        ...(data.style_issues || []).map((error: any) => ({
+          type: 'style' as const,
+          message: error.message || error.rule || 'Style issue',
+          suggestion: error.suggestion || error.replacement || 'Check style',
           position: error.position || { start: 0, end: 0 },
           severity: 'warning' as const
         }))
@@ -500,7 +495,7 @@ export default function AITextAnalyzerPage() {
           ...analysis,
           grammarErrors,
           correctedText: data.corrected_text || text,
-          writingScore: data.statistics?.score || analysis.writingScore
+          writingScore: data.scores?.overall_score || analysis.writingScore
         })
       }
 
@@ -523,7 +518,9 @@ export default function AITextAnalyzerPage() {
     setIsRewriting(true)
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/text/rewrite`, {
+      console.log('Starting text rewrite...')
+      
+      const response = await apiRequest(getApiUrl('textRewrite'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -535,33 +532,39 @@ export default function AITextAnalyzerPage() {
         })
       })
 
-      if (!response.ok) {
-        throw new Error(`API error: ${response.status}`)
-      }
-
       const result = await response.json()
       
       // Debug: Log the API response structure in development
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Rewrite API Response:', result)
-      }
+      console.log('Rewrite API Response:', result)
       
-      if (!result.success) {
-        throw new Error(result.message || 'Rewrite failed')
+      if (!result || !result.success) {
+        console.error('Rewrite API returned unsuccessful response:', result)
+        throw new ApiError(result?.message || 'Rewrite failed')
       }
 
       const data = result.data
 
       // Transform API response to match our frontend interface with safe fallbacks
-      const rewriteOptions: RewriteOption[] = data.rewrites ? 
-        Object.entries(data.rewrites).map(([styleName, rewriteData]: [string, any]) => ({
-          title: styleName.charAt(0).toUpperCase() + styleName.slice(1),
-          description: `Rewritten in ${styleName} style`,
-          text: rewriteData?.text || text,
-          tone: (styleName === 'professional' ? 'professional' : 
-                styleName === 'casual' ? 'casual' : 
-                styleName === 'creative' ? 'friendly' : 'professional') as 'professional' | 'casual' | 'formal' | 'friendly' | 'concise'
-        })) : []
+      const rewriteOptions: RewriteOption[] = data.rewritten_versions ? 
+        Object.entries(data.rewritten_versions).map(([styleName, rewriteText]: [string, any]) => ({
+          title: styleName === 'primary' ? 'Enhanced Professional' : 
+                 styleName === 'concise' ? 'Concise & Direct' :
+                 styleName === 'detailed' ? 'Detailed & Comprehensive' :
+                 styleName === 'alternative_1' ? 'Alternative Style 1' :
+                 styleName === 'alternative_2' ? 'Alternative Style 2' :
+                 styleName.charAt(0).toUpperCase() + styleName.slice(1),
+          description: styleName === 'primary' ? 'Enhanced professional version with improved flow' :
+                      styleName === 'concise' ? 'Clear and to the point without unnecessary words' :
+                      styleName === 'detailed' ? 'Comprehensive version with additional context' :
+                      styleName === 'alternative_1' ? 'Alternative phrasing and structure' :
+                      styleName === 'alternative_2' ? 'Different approach and tone' :
+                      `Rewritten in ${styleName} style`,
+          text: rewriteText || text,
+          tone: (styleName === 'primary' ? 'professional' : 
+                styleName === 'concise' ? 'concise' : 
+                styleName === 'detailed' ? 'formal' : 
+                'friendly') as 'professional' | 'casual' | 'formal' | 'friendly' | 'concise'
+        })).filter(option => option.text.trim().length > 0) : []
 
       // Update analysis if it exists
       if (analysis) {
@@ -571,7 +574,7 @@ export default function AITextAnalyzerPage() {
         })
       }
 
-      toast.success(`Text rewritten in ${data.rewrites ? Object.keys(data.rewrites).length : 0} different styles!`)
+      toast.success(`Text rewritten in ${data.rewritten_versions ? Object.keys(data.rewritten_versions).length : 0} different styles!`)
       
     } catch (error) {
       console.error('Rewrite error:', error)
