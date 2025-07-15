@@ -34,6 +34,8 @@ export default function PdfToDocxPage() {
   const [isConverting, setIsConverting] = useState(false)
   const [progress, setProgress] = useState(0)
   const [error, setError] = useState<string | null>(null)
+  const [convertedBlob, setConvertedBlob] = useState<Blob | null>(null)
+  const [convertedFileName, setConvertedFileName] = useState<string>('')
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const selectedFile = acceptedFiles[0]
@@ -78,10 +80,11 @@ export default function PdfToDocxPage() {
 
       const result = await response.blob()
       
-      // Success - download the converted file
+      // Success - prepare download
       const filename = file.name.replace(/\.pdf$/i, '.docx')
-      downloadBlob(result, filename)
-      toast.success('PDF converted to Word successfully!')
+      setConvertedBlob(result)
+      setConvertedFileName(filename)
+      toast.success('PDF converted to Word successfully! Click download to save the file.')
 
     } catch (error) {
       console.error('Conversion error:', error)
@@ -98,6 +101,15 @@ export default function PdfToDocxPage() {
     setFile(null)
     setError(null)
     setProgress(0)
+    setConvertedBlob(null)
+    setConvertedFileName('')
+  }
+
+  const handleDownload = () => {
+    if (convertedBlob && convertedFileName) {
+      downloadBlob(convertedBlob, convertedFileName)
+      toast.success('File downloaded successfully!')
+    }
   }
 
   return (
@@ -172,24 +184,65 @@ export default function PdfToDocxPage() {
             </div>
           )}
 
+          {/* Download Success Section */}
+          {convertedBlob && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex-shrink-0 w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                    <FileText className="h-5 w-5 text-green-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-green-900 mb-1">PDF Converted Successfully!</h3>
+                    <p className="text-green-700 text-sm">
+                      Your PDF has been converted to an editable Word document
+                    </p>
+                    <p className="text-green-600 text-xs mt-1">
+                      File: {convertedFileName}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={handleDownload}
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                    size="lg"
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    Download DOCX
+                  </Button>
+                  <Button 
+                    onClick={resetForm}
+                    variant="outline"
+                    size="lg"
+                  >
+                    Convert Another File
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Convert Button */}
-          <div className="flex justify-center">
-            <Button
-              onClick={handleConvert}
-              disabled={!file || isConverting}
-              size="lg"
-              className="min-w-[200px]"
-            >
-              {isConverting ? (
-                <>Converting...</>
-              ) : (
-                <>
-                  <Download className="h-4 w-4 mr-2" />
-                  Convert to Word
-                </>
-              )}
-            </Button>
-          </div>
+          {!convertedBlob && (
+            <div className="flex justify-center">
+              <Button
+                onClick={handleConvert}
+                disabled={!file || isConverting}
+                size="lg"
+                className="min-w-[200px]"
+              >
+                {isConverting ? (
+                  <>Converting...</>
+                ) : (
+                  <>
+                    <Download className="h-4 w-4 mr-2" />
+                    Convert to Word
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 

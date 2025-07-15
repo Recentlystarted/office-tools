@@ -40,6 +40,8 @@ export default function PdfMergerPage() {
   const [isMerging, setIsMerging] = useState(false)
   const [progress, setProgress] = useState(0)
   const [error, setError] = useState<string | null>(null)
+  const [mergedBlob, setMergedBlob] = useState<Blob | null>(null)
+  const [mergedFileName, setMergedFileName] = useState<string>('')
 
   const onDrop = useCallback((acceptedFiles: File[], rejectedFiles: any[]) => {
     // Handle rejected files
@@ -166,10 +168,11 @@ export default function PdfMergerPage() {
       }
 
       const blob = await response.blob()
-      downloadBlob(blob, 'merged-document.pdf')
+      const fileName = `merged-${files.length}-files-${Date.now()}.pdf`
+      setMergedBlob(blob)
+      setMergedFileName(fileName)
       
-      toast.success('PDFs merged successfully!')
-      resetForm()
+      toast.success('PDFs merged successfully! Click download to save the file.')
 
     } catch (error) {
       console.error('Merge error:', error)
@@ -186,6 +189,15 @@ export default function PdfMergerPage() {
     setFiles([])
     setError(null)
     setProgress(0)
+    setMergedBlob(null)
+    setMergedFileName('')
+  }
+
+  const handleDownload = () => {
+    if (mergedBlob && mergedFileName) {
+      downloadBlob(mergedBlob, mergedFileName)
+      toast.success('File downloaded successfully!')
+    }
   }
 
   const totalSize = files.reduce((sum, fileWithId) => sum + fileWithId.size, 0)
@@ -386,6 +398,45 @@ export default function PdfMergerPage() {
                     </>
                   )}
                 </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Download Success Section */}
+          {mergedBlob && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex-shrink-0 w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                    <FileText className="h-5 w-5 text-green-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-green-900 mb-1">PDF Merged Successfully!</h3>
+                    <p className="text-green-700 text-sm">
+                      Your {files.length} PDF files have been combined into one document
+                    </p>
+                    <p className="text-green-600 text-xs mt-1">
+                      File: {mergedFileName}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={handleDownload}
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                    size="lg"
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    Download PDF
+                  </Button>
+                  <Button 
+                    onClick={resetForm}
+                    variant="outline"
+                    size="lg"
+                  >
+                    Merge More Files
+                  </Button>
+                </div>
               </div>
             </div>
           )}
