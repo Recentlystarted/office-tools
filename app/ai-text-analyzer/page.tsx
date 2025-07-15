@@ -360,50 +360,55 @@ export default function AITextAnalyzerPage() {
 
       const result = await response.json()
       
+      // Debug: Log the API response structure in development
+      if (process.env.NODE_ENV === 'development') {
+        console.log('API Response:', result)
+      }
+      
       if (!result.success) {
         throw new Error(result.message || 'Analysis failed')
       }
 
       const data = result.data
       
-      // Transform API response to match our frontend interface
+      // Transform API response to match our frontend interface with safe fallbacks
       const analysis: TextAnalysis = {
-        wordCount: data.basic_stats.word_count,
-        characterCount: data.basic_stats.character_count,
-        characterCountNoSpaces: data.basic_stats.character_count_no_spaces,
-        sentenceCount: data.basic_stats.sentence_count,
-        paragraphCount: data.basic_stats.paragraph_count,
-        averageWordsPerSentence: data.basic_stats.average_words_per_sentence,
-        fleschKincaidGrade: data.readability.grade_level,
-        fleschReadingEase: data.readability.flesch_score,
-        readabilityLevel: data.readability.readability_level,
-        readingTime: data.basic_stats.reading_time_minutes,
-        sentimentScore: data.sentiment.sentiment_score,
-        sentimentLabel: data.sentiment.sentiment_label,
-        emotionalTone: data.sentiment.emotional_tones || [],
-        complexityScore: data.quality_metrics.complexity_score,
-        formalityScore: data.quality_metrics.formality_score,
-        keywordDensity: data.keywords.keyword_density,
-        mostCommonWords: data.keywords.most_common_words,
+        wordCount: data.basic_stats?.word_count || 0,
+        characterCount: data.basic_stats?.character_count || 0,
+        characterCountNoSpaces: data.basic_stats?.character_count_no_spaces || 0,
+        sentenceCount: data.basic_stats?.sentence_count || 0,
+        paragraphCount: data.basic_stats?.paragraph_count || 0,
+        averageWordsPerSentence: data.basic_stats?.average_words_per_sentence || 0,
+        fleschKincaidGrade: data.readability?.grade_level || 0,
+        fleschReadingEase: data.readability?.flesch_score || 0,
+        readabilityLevel: data.readability?.readability_level || 'Unknown',
+        readingTime: data.basic_stats?.reading_time_minutes || 0,
+        sentimentScore: data.sentiment?.sentiment_score || 0,
+        sentimentLabel: data.sentiment?.sentiment_label || 'Neutral',
+        emotionalTone: data.sentiment?.emotional_tones || [],
+        complexityScore: data.quality_metrics?.complexity_score || 0,
+        formalityScore: data.quality_metrics?.formality_score || 0,
+        keywordDensity: data.keywords?.keyword_density || [],
+        mostCommonWords: data.keywords?.most_common_words || [],
         longestSentence: {
-          text: data.quality_metrics.longest_sentence.text,
-          wordCount: data.quality_metrics.longest_sentence.word_count
+          text: data.quality_metrics?.longest_sentence?.text || 'No sentence found',
+          wordCount: data.quality_metrics?.longest_sentence?.word_count || 0
         },
         shortestSentence: {
-          text: data.quality_metrics.shortest_sentence.text,
-          wordCount: data.quality_metrics.shortest_sentence.word_count
+          text: data.quality_metrics?.shortest_sentence?.text || 'No sentence found',
+          wordCount: data.quality_metrics?.shortest_sentence?.word_count || 0
         },
-        uniqueWords: data.keywords.unique_words,
-        vocabularyRichness: data.keywords.vocabulary_richness,
-        passiveVoicePercentage: data.quality_metrics.passive_voice_percentage,
-        adverbPercentage: data.quality_metrics.adverb_percentage,
+        uniqueWords: data.keywords?.unique_words || 0,
+        vocabularyRichness: data.keywords?.vocabulary_richness || 0,
+        passiveVoicePercentage: data.quality_metrics?.passive_voice_percentage || 0,
+        adverbPercentage: data.quality_metrics?.adverb_percentage || 0,
         grammarErrors: [], // Will be filled by grammar check
         correctedText: text, // Will be filled by grammar check
         rewriteOptions: [], // Will be filled by rewrite service
-        writingScore: 100 - (data.quality_metrics.passive_voice_percentage * 0.5) - (data.quality_metrics.adverb_percentage * 0.3),
-        recommendations: data.recommendations.recommendations || [],
-        strengths: data.recommendations.strengths || [],
-        improvements: data.recommendations.improvements || []
+        writingScore: 100 - ((data.quality_metrics?.passive_voice_percentage || 0) * 0.5) - ((data.quality_metrics?.adverb_percentage || 0) * 0.3),
+        recommendations: data.recommendations?.recommendations || [],
+        strengths: data.recommendations?.strengths || [],
+        improvements: data.recommendations?.improvements || []
       }
 
       setAnalysis(analysis)
@@ -411,7 +416,19 @@ export default function AITextAnalyzerPage() {
       
     } catch (error) {
       console.error('Analysis error:', error)
-      toast.error('Analysis failed. Please check your connection and try again.')
+      
+      // More detailed error message
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+      
+      if (errorMessage.includes('Failed to fetch') || errorMessage.includes('network')) {
+        toast.error('Network error. Please check your internet connection and try again.')
+      } else if (errorMessage.includes('API error: 404')) {
+        toast.error('API endpoint not found. Please contact support.')
+      } else if (errorMessage.includes('API error: 500')) {
+        toast.error('Server error. Please try again later.')
+      } else {
+        toast.error(`Analysis failed: ${errorMessage}`)
+      }
     } finally {
       setIsAnalyzing(false)
     }
@@ -440,33 +457,38 @@ export default function AITextAnalyzerPage() {
 
       const result = await response.json()
       
+      // Debug: Log the API response structure in development
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Grammar API Response:', result)
+      }
+      
       if (!result.success) {
         throw new Error(result.message || 'Grammar check failed')
       }
 
       const data = result.data
 
-      // Transform API response to match our frontend interface
+      // Transform API response to match our frontend interface with safe fallbacks
       const grammarErrors: GrammarError[] = [
-        ...data.grammar_errors.map((error: any) => ({
-          type: error.type as 'grammar' | 'spelling' | 'punctuation' | 'style',
-          message: error.rule || error.category,
-          suggestion: error.suggestion,
-          position: error.position,
-          severity: error.severity === 'high' ? 'error' : error.severity === 'medium' ? 'warning' : 'suggestion'
+        ...(data.grammar_errors || []).map((error: any) => ({
+          type: (error.type || 'grammar') as 'grammar' | 'spelling' | 'punctuation' | 'style',
+          message: error.rule || error.category || 'Grammar issue',
+          suggestion: error.suggestion || 'Check grammar',
+          position: error.position || { start: 0, end: 0 },
+          severity: (error.severity === 'high' ? 'error' : error.severity === 'medium' ? 'warning' : 'suggestion') as 'error' | 'warning' | 'suggestion'
         })),
-        ...data.spelling_errors.map((error: any) => ({
+        ...(data.spelling_errors || []).map((error: any) => ({
           type: 'spelling' as const,
           message: 'Spelling error',
           suggestion: error.suggestion || error.suggestions?.[0] || 'Check spelling',
-          position: error.position,
+          position: error.position || { start: 0, end: 0 },
           severity: 'error' as const
         })),
-        ...data.punctuation_errors.map((error: any) => ({
+        ...(data.punctuation_errors || []).map((error: any) => ({
           type: 'punctuation' as const,
-          message: error.rule,
-          suggestion: error.suggestion,
-          position: error.position,
+          message: error.rule || 'Punctuation issue',
+          suggestion: error.suggestion || 'Check punctuation',
+          position: error.position || { start: 0, end: 0 },
           severity: 'warning' as const
         }))
       ]
@@ -476,8 +498,8 @@ export default function AITextAnalyzerPage() {
         setAnalysis({
           ...analysis,
           grammarErrors,
-          correctedText: data.corrected_text,
-          writingScore: data.statistics.score || analysis.writingScore
+          correctedText: data.corrected_text || text,
+          writingScore: data.statistics?.score || analysis.writingScore
         })
       }
 
@@ -485,7 +507,9 @@ export default function AITextAnalyzerPage() {
       
     } catch (error) {
       console.error('Grammar check error:', error)
-      toast.error('Grammar check failed. Please try again.')
+      
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+      toast.error(`Grammar check failed: ${errorMessage}`)
     }
   }
 
@@ -514,21 +538,27 @@ export default function AITextAnalyzerPage() {
 
       const result = await response.json()
       
+      // Debug: Log the API response structure in development
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Rewrite API Response:', result)
+      }
+      
       if (!result.success) {
         throw new Error(result.message || 'Rewrite failed')
       }
 
       const data = result.data
 
-      // Transform API response to match our frontend interface
-      const rewriteOptions: RewriteOption[] = Object.entries(data.rewrites).map(([styleName, rewriteData]: [string, any]) => ({
-        title: styleName.charAt(0).toUpperCase() + styleName.slice(1),
-        description: `Rewritten in ${styleName} style`,
-        text: rewriteData.text,
-        tone: styleName === 'professional' ? 'professional' : 
-              styleName === 'casual' ? 'casual' : 
-              styleName === 'creative' ? 'friendly' : 'professional'
-      }))
+      // Transform API response to match our frontend interface with safe fallbacks
+      const rewriteOptions: RewriteOption[] = data.rewrites ? 
+        Object.entries(data.rewrites).map(([styleName, rewriteData]: [string, any]) => ({
+          title: styleName.charAt(0).toUpperCase() + styleName.slice(1),
+          description: `Rewritten in ${styleName} style`,
+          text: rewriteData?.text || text,
+          tone: (styleName === 'professional' ? 'professional' : 
+                styleName === 'casual' ? 'casual' : 
+                styleName === 'creative' ? 'friendly' : 'professional') as 'professional' | 'casual' | 'formal' | 'friendly' | 'concise'
+        })) : []
 
       // Update analysis if it exists
       if (analysis) {
@@ -538,11 +568,13 @@ export default function AITextAnalyzerPage() {
         })
       }
 
-      toast.success(`Text rewritten in ${Object.keys(data.rewrites).length} different styles!`)
+      toast.success(`Text rewritten in ${data.rewrites ? Object.keys(data.rewrites).length : 0} different styles!`)
       
     } catch (error) {
       console.error('Rewrite error:', error)
-      toast.error('Rewrite failed. Please try again.')
+      
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+      toast.error(`Rewrite failed: ${errorMessage}`)
     }
   }
 
