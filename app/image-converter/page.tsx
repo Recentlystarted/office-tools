@@ -60,13 +60,13 @@ export default function ImageConverterPage() {
   const [progress, setProgress] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const [convertedFiles, setConvertedFiles] = useState<ConvertedFile[]>([])
-  const [outputFormat, setOutputFormat] = useState<'jpg' | 'png' | 'webp' | 'gif' | 'bmp'>('jpg')
+  const [outputFormat, setOutputFormat] = useState<'jpg' | 'png' | 'webp' | 'gif' | 'bmp' | 'svg' | 'ico' | 'tiff'>('jpg')
   const [quality, setQuality] = useState([85])
   const [maintainAspectRatio, setMaintainAspectRatio] = useState(true)
   const [resizeWidth, setResizeWidth] = useState('')
   const [resizeHeight, setResizeHeight] = useState('')
 
-  const supportedFormats = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'tiff', 'svg']
+  const supportedFormats = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'tiff', 'svg', 'ico']
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const imageFiles = acceptedFiles.filter(file => {
@@ -321,6 +321,18 @@ export default function ImageConverterPage() {
                       <div className="flex items-center space-x-2 p-3 border rounded-lg">
                         <RadioGroupItem value="bmp" id="bmp" />
                         <Label htmlFor="bmp" className="font-medium">BMP</Label>
+                      </div>
+                      <div className="flex items-center space-x-2 p-3 border rounded-lg">
+                        <RadioGroupItem value="svg" id="svg" />
+                        <Label htmlFor="svg" className="font-medium">SVG</Label>
+                      </div>
+                      <div className="flex items-center space-x-2 p-3 border rounded-lg">
+                        <RadioGroupItem value="ico" id="ico" />
+                        <Label htmlFor="ico" className="font-medium">ICO</Label>
+                      </div>
+                      <div className="flex items-center space-x-2 p-3 border rounded-lg">
+                        <RadioGroupItem value="tiff" id="tiff" />
+                        <Label htmlFor="tiff" className="font-medium">TIFF</Label>
                       </div>
                     </div>
                   </RadioGroup>

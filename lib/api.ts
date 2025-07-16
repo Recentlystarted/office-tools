@@ -24,7 +24,7 @@ export const API_CONFIG = {
     pdfRotate: '/api/pdf/rotate',
     pdfEditor: '/api/pdf/edit',
     pdfUnlock: '/api/pdf/unlock',
-    imageToPdf: '/api/image/convert-to-pdf',
+    imageToPdf: '/api/image/to-pdf',
     imageConverter: '/api/image/convert',
     
     // Generators - corrected to match backend
