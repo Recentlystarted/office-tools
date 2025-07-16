@@ -4,11 +4,14 @@ import { useState, useCallback } from 'react'
 import { useDropzone } from 'react-dropzone'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Label } from '@/components/ui/label'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { Input } from '@/components/ui/input'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Slider } from '@/components/ui/slider'
 import { getApiUrl, apiRequest, ApiError } from '@/lib/api'
+import { generateStructuredData } from '@/lib/seo'
 import { 
   ImageIcon, 
   Upload, 
@@ -20,7 +23,9 @@ import {
   X
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { DownloadSuccessCard } from '@/components/download-success-card'
+
+// Structured Data for SEO
+const structuredData = generateStructuredData('image-converter')
 
 // Helper function to format file size
 const formatFileSize = (bytes: number): string => {
@@ -60,13 +65,31 @@ export default function ImageConverterPage() {
   const [progress, setProgress] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const [convertedFiles, setConvertedFiles] = useState<ConvertedFile[]>([])
-  const [outputFormat, setOutputFormat] = useState<'jpg' | 'png' | 'webp' | 'gif' | 'bmp' | 'svg' | 'ico' | 'tiff'>('jpg')
+  const [outputFormat, setOutputFormat] = useState<'jpg' | 'png' | 'webp' | 'gif' | 'bmp' | 'tiff' | 'svg' | 'ico'>('jpg')
   const [quality, setQuality] = useState([85])
   const [maintainAspectRatio, setMaintainAspectRatio] = useState(true)
   const [resizeWidth, setResizeWidth] = useState('')
   const [resizeHeight, setResizeHeight] = useState('')
 
   const supportedFormats = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'tiff', 'svg', 'ico']
+  
+  // Get unique input formats from selected files
+  const getInputFormats = () => {
+    const formats = new Set<string>()
+    files.forEach(file => {
+      const ext = getFileExtension(file.name)
+      if (ext) formats.add(ext)
+    })
+    return Array.from(formats)
+  }
+
+  // Check if conversion makes sense (not same format)
+  const isValidConversion = () => {
+    if (files.length === 0) return false
+    const inputFormats = getInputFormats()
+    // Allow conversion if we have multiple input formats OR output format is different from all inputs
+    return inputFormats.length > 1 || !inputFormats.includes(outputFormat) || inputFormats.includes('jpeg') && outputFormat === 'jpg'
+  }
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const imageFiles = acceptedFiles.filter(file => {
@@ -148,7 +171,7 @@ export default function ImageConverterPage() {
           originalName
         }])
       } else {
-        // Multiple files - should be a zip
+        // Multiple files - always return as zip to avoid browser blocking
         const filename = `converted-images-${outputFormat}.zip`
         setConvertedFiles([{
           blob: result,
@@ -193,16 +216,21 @@ export default function ImageConverterPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
-      <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold mb-4">Image Converter</h1>
-        <p className="text-lg text-muted-foreground">
-          Convert images between different formats - JPG, PNG, WebP, GIF, BMP and more
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
+      
+      <div className="text-center mb-6 lg:mb-8">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3 lg:mb-4">Image Converter</h1>
+        <p className="text-base lg:text-lg text-muted-foreground px-4">
+          Convert images between different formats - JPG, PNG, WebP, GIF, BMP, TIFF, SVG, and ICO
         </p>
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-8">
+      <div className="grid lg:grid-cols-2 gap-6 lg:gap-8">
         {/* Left Column - Upload & Files */}
-        <div className="space-y-6">
+        <div className="space-y-4 lg:space-y-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -263,9 +291,12 @@ export default function ImageConverterPage() {
                         <ImageIcon className="h-6 w-6 text-blue-500" />
                         <div className="flex-1 min-w-0">
                           <p className="font-medium truncate">{file.name}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {formatFileSize(file.size)} • {getFileExtension(file.name).toUpperCase()}
-                          </p>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <span>{formatFileSize(file.size)}</span>
+                            <Badge variant="secondary" className="text-xs">
+                              {getFileExtension(file.name).toUpperCase()}
+                            </Badge>
+                          </div>
                         </div>
                         <Button
                           variant="outline"
@@ -284,7 +315,7 @@ export default function ImageConverterPage() {
         </div>
 
         {/* Right Column - Conversion Settings */}
-        <div className="space-y-6">
+        <div className="space-y-4 lg:space-y-6">
           {files.length > 0 && convertedFiles.length === 0 && (
             <Card>
               <CardHeader>
@@ -297,45 +328,84 @@ export default function ImageConverterPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
+                {/* Format Conversion Overview */}
+                {files.length > 0 && (
+                  <div className="mb-4 lg:mb-6 p-3 sm:p-4 bg-muted/50 rounded-lg">
+                    <h3 className="font-medium mb-2 text-sm sm:text-base">Conversion Preview</h3>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-sm">
+                      <span className="font-medium">From:</span>
+                      <div className="flex flex-wrap gap-1">
+                        {getInputFormats().map(format => (
+                          <Badge key={format} variant="outline" className="text-xs">
+                            {format.toUpperCase()}
+                          </Badge>
+                        ))}
+                      </div>
+                      <span className="hidden sm:inline mx-2">→</span>
+                      <span className="sm:hidden text-center py-1">↓</span>
+                      <span className="font-medium">To:</span>
+                      <Badge variant="default" className="text-xs">
+                        {outputFormat.toUpperCase()}
+                      </Badge>
+                    </div>
+                    {!isValidConversion() && (
+                      <p className="text-amber-600 text-sm mt-2 flex items-start gap-1">
+                        <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                        <span>Select a different output format - converting to the same format is not needed</span>
+                      </p>
+                    )}
+                  </div>
+                )}
+
                 {/* Output Format */}
                 <div className="space-y-3">
                   <Label className="text-base font-medium">Output Format</Label>
-                  <RadioGroup value={outputFormat} onValueChange={(value: string) => setOutputFormat(value as any)}>
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="flex items-center space-x-2 p-3 border rounded-lg">
-                        <RadioGroupItem value="jpg" id="jpg" />
-                        <Label htmlFor="jpg" className="font-medium">JPG</Label>
-                      </div>
-                      <div className="flex items-center space-x-2 p-3 border rounded-lg">
-                        <RadioGroupItem value="png" id="png" />
-                        <Label htmlFor="png" className="font-medium">PNG</Label>
-                      </div>
-                      <div className="flex items-center space-x-2 p-3 border rounded-lg">
-                        <RadioGroupItem value="webp" id="webp" />
-                        <Label htmlFor="webp" className="font-medium">WebP</Label>
-                      </div>
-                      <div className="flex items-center space-x-2 p-3 border rounded-lg">
-                        <RadioGroupItem value="gif" id="gif" />
-                        <Label htmlFor="gif" className="font-medium">GIF</Label>
-                      </div>
-                      <div className="flex items-center space-x-2 p-3 border rounded-lg">
-                        <RadioGroupItem value="bmp" id="bmp" />
-                        <Label htmlFor="bmp" className="font-medium">BMP</Label>
-                      </div>
-                      <div className="flex items-center space-x-2 p-3 border rounded-lg">
-                        <RadioGroupItem value="svg" id="svg" />
-                        <Label htmlFor="svg" className="font-medium">SVG</Label>
-                      </div>
-                      <div className="flex items-center space-x-2 p-3 border rounded-lg">
-                        <RadioGroupItem value="ico" id="ico" />
-                        <Label htmlFor="ico" className="font-medium">ICO</Label>
-                      </div>
-                      <div className="flex items-center space-x-2 p-3 border rounded-lg">
-                        <RadioGroupItem value="tiff" id="tiff" />
-                        <Label htmlFor="tiff" className="font-medium">TIFF</Label>
-                      </div>
-                    </div>
-                  </RadioGroup>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-4 gap-2 sm:gap-3">
+                    {[
+                      { value: 'jpg', label: 'JPG', description: 'Small file size' },
+                      { value: 'png', label: 'PNG', description: 'With transparency' },
+                      { value: 'webp', label: 'WebP', description: 'Modern format' },
+                      { value: 'gif', label: 'GIF', description: 'Animated images' },
+                      { value: 'bmp', label: 'BMP', description: 'Uncompressed' },
+                      { value: 'tiff', label: 'TIFF', description: 'High quality' },
+                      { value: 'svg', label: 'SVG', description: 'Vector graphics' },
+                      { value: 'ico', label: 'ICO', description: 'Icon format' }
+                    ].map((format) => {
+                      const isSelected = outputFormat === format.value
+                      const isInputFormat = getInputFormats().includes(format.value)
+                      const isDisabled = files.length > 0 && isInputFormat && getInputFormats().length === 1
+                      
+                      return (
+                        <Button
+                          key={format.value}
+                          type="button"
+                          variant={isSelected ? "default" : "outline"}
+                          disabled={isDisabled}
+                          className={`p-2 sm:p-3 h-auto flex flex-col items-center justify-center space-y-1 relative min-h-[80px] text-center ${
+                            isSelected ? 'ring-2 ring-primary' : ''
+                          } ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          onClick={() => !isDisabled && setOutputFormat(format.value as any)}
+                        >
+                          {isInputFormat && (
+                            <div className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full"></div>
+                          )}
+                          <span className="font-medium text-sm">{format.label}</span>
+                          <span className="text-xs text-muted-foreground text-center hidden sm:block">
+                            {format.description}
+                          </span>
+                          {isDisabled && (
+                            <span className="text-xs text-amber-600 dark:text-amber-400 hidden sm:block">Source format</span>
+                          )}
+                        </Button>
+                      )
+                    })}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    <span className="inline-flex items-center gap-1">
+                      <span className="w-2 h-2 bg-primary rounded-full"></span>
+                      Blue dot indicates your source format(s)
+                    </span>
+                  </p>
                 </div>
 
                 {/* Quality Setting */}
@@ -363,36 +433,32 @@ export default function ImageConverterPage() {
                 <div className="space-y-3">
                   <Label className="text-base font-medium">Resize (Optional)</Label>
                   <div className="grid grid-cols-2 gap-3">
-                    <div>
+                    <div className="space-y-2">
                       <Label htmlFor="width" className="text-sm">Width (px)</Label>
-                      <input
+                      <Input
                         id="width"
                         type="number"
                         value={resizeWidth}
                         onChange={(e) => setResizeWidth(e.target.value)}
                         placeholder="Auto"
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
                       />
                     </div>
-                    <div>
+                    <div className="space-y-2">
                       <Label htmlFor="height" className="text-sm">Height (px)</Label>
-                      <input
+                      <Input
                         id="height"
                         type="number"
                         value={resizeHeight}
                         onChange={(e) => setResizeHeight(e.target.value)}
                         placeholder="Auto"
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
                       />
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
+                    <Checkbox
                       id="aspectRatio"
                       checked={maintainAspectRatio}
-                      onChange={(e) => setMaintainAspectRatio(e.target.checked)}
-                      className="rounded"
+                      onCheckedChange={(checked) => setMaintainAspectRatio(checked as boolean)}
                     />
                     <Label htmlFor="aspectRatio" className="text-sm">
                       Maintain aspect ratio
@@ -426,16 +492,32 @@ export default function ImageConverterPage() {
           {convertedFiles.length > 0 && (
             <div className="space-y-4">
               {convertedFiles.length === 1 ? (
-                <DownloadSuccessCard
-                  title="Image Converted Successfully!"
-                  description={`Converted to ${outputFormat.toUpperCase()} format`}
-                  fileName={convertedFiles[0].filename}
-                  downloadButtonText="Download Converted Image"
-                  resetButtonText="Convert More Images"
-                  onDownload={() => handleDownload(convertedFiles[0])}
-                  onReset={resetForm}
-                  icon={<RefreshCw className="h-5 w-5 text-green-600" />}
-                />
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-green-600">
+                      <RefreshCw className="h-5 w-5" />
+                      Image Converted Successfully!
+                    </CardTitle>
+                    <CardDescription>
+                      Converted to {outputFormat.toUpperCase()} format
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="p-3 bg-muted rounded-lg">
+                      <p className="text-sm font-medium text-muted-foreground">File ready for download:</p>
+                      <p className="text-sm font-mono break-all">{convertedFiles[0].filename}</p>
+                    </div>
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <Button onClick={() => handleDownload(convertedFiles[0])} className="flex-1">
+                        <Download className="h-4 w-4 mr-2" />
+                        Download Converted Image
+                      </Button>
+                      <Button variant="outline" onClick={resetForm} className="flex-1 sm:flex-none">
+                        Convert More Images
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
               ) : (
                 <Card>
                   <CardHeader>
@@ -448,12 +530,12 @@ export default function ImageConverterPage() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="flex gap-3">
+                    <div className="flex flex-col sm:flex-row gap-3">
                       <Button onClick={handleDownloadAll} className="flex-1">
                         <Download className="h-4 w-4 mr-2" />
                         Download All ({convertedFiles.length})
                       </Button>
-                      <Button variant="outline" onClick={resetForm}>
+                      <Button variant="outline" onClick={resetForm} className="flex-1 sm:flex-none">
                         Convert More
                       </Button>
                     </div>
@@ -465,22 +547,30 @@ export default function ImageConverterPage() {
 
           {/* Convert Button */}
           {files.length > 0 && convertedFiles.length === 0 && (
-            <div className="flex justify-center">
+            <div className="flex justify-center px-4">
               <Button
                 onClick={handleConvert}
-                disabled={isConverting}
+                disabled={isConverting || !isValidConversion()}
                 size="lg"
-                className="min-w-[200px]"
+                className="w-full sm:w-auto min-w-[200px] max-w-sm"
               >
                 {isConverting ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Converting...
+                    <span className="hidden sm:inline">Converting...</span>
+                    <span className="sm:hidden">Converting...</span>
+                  </>
+                ) : !isValidConversion() ? (
+                  <>
+                    <AlertCircle className="h-4 w-4 mr-2" />
+                    <span className="hidden sm:inline">Choose Different Format</span>
+                    <span className="sm:hidden">Choose Different Format</span>
                   </>
                 ) : (
                   <>
                     <RefreshCw className="h-4 w-4 mr-2" />
-                    Convert to {outputFormat.toUpperCase()} ({files.length})
+                    <span className="hidden sm:inline">Convert to {outputFormat.toUpperCase()} ({files.length})</span>
+                    <span className="sm:hidden">Convert ({files.length})</span>
                   </>
                 )}
               </Button>
@@ -490,35 +580,35 @@ export default function ImageConverterPage() {
       </div>
 
       {/* Features Section */}
-      <div className="mt-12 grid md:grid-cols-4 gap-6">
+      <div className="mt-8 lg:mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
         <Card>
-          <CardContent className="p-6">
-            <h3 className="font-semibold mb-2">Multiple Formats</h3>
-            <p className="text-sm text-muted-foreground">
-              Support for JPG, PNG, WebP, GIF, BMP, TIFF, and SVG formats
+          <CardContent className="p-4 sm:p-6">
+            <h3 className="font-semibold mb-2 text-sm sm:text-base">Multiple Formats</h3>
+            <p className="text-xs sm:text-sm text-muted-foreground">
+              Support for JPG, PNG, WebP, GIF, BMP, TIFF, SVG, and ICO formats
             </p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-6">
-            <h3 className="font-semibold mb-2">Batch Processing</h3>
-            <p className="text-sm text-muted-foreground">
+          <CardContent className="p-4 sm:p-6">
+            <h3 className="font-semibold mb-2 text-sm sm:text-base">Batch Processing</h3>
+            <p className="text-xs sm:text-sm text-muted-foreground">
               Convert up to 20 images at once with bulk download
             </p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-6">
-            <h3 className="font-semibold mb-2">Quality Control</h3>
-            <p className="text-sm text-muted-foreground">
+          <CardContent className="p-4 sm:p-6">
+            <h3 className="font-semibold mb-2 text-sm sm:text-base">Quality Control</h3>
+            <p className="text-xs sm:text-sm text-muted-foreground">
               Adjust compression quality and resize images as needed
             </p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-6">
-            <h3 className="font-semibold mb-2">Fast & Reliable</h3>
-            <p className="text-sm text-muted-foreground">
+          <CardContent className="p-4 sm:p-6">
+            <h3 className="font-semibold mb-2 text-sm sm:text-base">Fast & Reliable</h3>
+            <p className="text-xs sm:text-sm text-muted-foreground">
               High-speed conversion with maintained image quality
             </p>
           </CardContent>
