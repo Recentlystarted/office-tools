@@ -1,53 +1,55 @@
 /**
- * API Configuration - Single Source of Truth
- * Clean, simple, and secure for GitHub Pages deployment
+ * API Configuration - Production Ready
+ * Configured for office-tools.in deployment
  */
 
 // Main API Configuration
 export const API_CONFIG = {
-  // API base URL from environment variable - automatically injected during build
-  baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000',
+  // Production API base URL for api.tundasportsclub.com
+  baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.tundasportsclub.com',
   
-
   // Request configuration
   timeout: parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || '600000'), // 10 minutes
   maxFileSize: parseInt(process.env.NEXT_PUBLIC_MAX_FILE_SIZE || '52428800'), // 50MB
   
-  // API endpoints 
+  // API endpoints - updated to match VPS backend
   endpoints: {
     // PDF Tools
-    pdfToWord: '/api/pdf/convert',
-    pdfToDocx: '/api/pdf/convert',
+    pdfToWord: '/api/pdf/convert-to-word',
+    pdfToDocx: '/api/pdf/convert-to-docx',
     docxToPdf: '/api/docx/convert-to-pdf',
-    pdfMerger: '/api/pdf-merger/merge',
-    pdfMergerInfo: '/api/pdf-merger/info',
-    pdfCompressor: '/api/pdf-compressor/compress',
-    pdfRotate: '/api/pdf-rotate/rotate',
-    pdfEditor: '/api/pdf-editor/edit',
+    pdfMerger: '/api/pdf/merge',
+    pdfMergerInfo: '/api/pdf/info',
+    pdfCompressor: '/api/pdf/compress',
+    pdfRotate: '/api/pdf/rotate',
+    pdfEditor: '/api/pdf/edit',
     pdfUnlock: '/api/pdf/unlock',
-    imageToPdf: '/api/image/to-pdf',
+    imageToPdf: '/api/image/convert-to-pdf',
     imageConverter: '/api/image/convert',
     
-    // Generators
+    // Generators - corrected to match backend
     qrGenerator: '/api/generator/qr-generate',
     passwordGenerator: '/api/text/password',
-    uuidGenerator: '/api/generator/uuid',
-    loremGenerator: '/api/text/lorem-ipsum',
-    hashGenerator: '/api/text/hash',
+    uuidGenerator: '/api/generator/uuid-generate',
+    loremGenerator: '/api/generator/lorem-generate',
+    hashGenerator: '/api/generator/hash-generate',
     
-    // Text Tools
-    textCaseConverter: '/api/text/case-convert',
+    // Text Tools - corrected paths
+    textCaseConverter: '/api/text/text-case',
     wordCounter: '/api/text/word-count',
+    base64Encoder: '/api/text/base64',
+    urlEncoder: '/api/text/url-encode',
     
-    // AI Text Analysis
+    // AI Text Analysis - updated paths
     textAnalyzer: '/api/text/analyze',
     grammarCheck: '/api/text/grammar-check',
     textRewrite: '/api/text/rewrite',
     
-    // Converters
-    jsonFormatter: '/api/text/json-format',
-    base64Encoder: '/api/text/base64',
-    urlEncoder: '/api/text/url-encode',
+    // Tools - corrected to match backend
+    jsonFormatter: '/api/tools/json-format',
+    timestampConverter: '/api/tools/timestamp-convert',
+    colorPicker: '/api/tools/color-convert',
+    urlShortener: '/api/tools/url-shorten'
   }
 }
 

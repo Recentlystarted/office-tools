@@ -61,6 +61,30 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+        <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <style dangerouslySetInnerHTML={{
+          __html: `
+            /* Prevent FOUC and layout shifts */
+            html { visibility: hidden; opacity: 0; }
+            html.hydrated { visibility: visible; opacity: 1; transition: opacity 0.3s ease; }
+            
+            /* Fix webkit text size adjust */
+            html, body { -webkit-text-size-adjust: 100%; }
+            
+            /* Prevent layout shifts during hydration */
+            * { box-sizing: border-box; }
+            
+            /* AdSense optimization */
+            .adsbygoogle { display: block !important; }
+          `
+        }} />
+      </head>
       <body className={inter.className}>
         <AdSenseHead />
         <ThemeProvider
@@ -78,6 +102,22 @@ export default function RootLayout({
           </div>
           <Toaster />
         </ThemeProvider>
+        <script dangerouslySetInnerHTML={{
+          __html: `
+            // Mark HTML as hydrated to prevent FOUC
+            document.documentElement.classList.add('hydrated');
+            
+            // Fix AdSense layout issues
+            (function() {
+              var ads = document.querySelectorAll('.adsbygoogle');
+              ads.forEach(function(ad) {
+                if (!ad.getAttribute('data-ad-status')) {
+                  ad.style.display = 'block';
+                }
+              });
+            })();
+          `
+        }} />
       </body>
     </html>
   )

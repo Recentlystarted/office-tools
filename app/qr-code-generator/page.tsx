@@ -230,9 +230,9 @@ export default function QRCodeGeneratorPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="text-center mb-8">
+      {/* Header Section */}
+      <div className="w-full px-4 py-8 bg-gradient-to-b from-background via-muted/10 to-background">
+        <div className="max-w-4xl mx-auto text-center">
           <div className="flex items-center justify-center gap-3 mb-4">
             <div className="p-3 rounded-xl bg-primary/10 text-primary">
               <QrCode className="h-8 w-8" />
@@ -248,7 +248,10 @@ export default function QRCodeGeneratorPage() {
             <Badge variant="secondary">Instant Download</Badge>
           </div>
         </div>
+      </div>
 
+      {/* Main Content */}
+      <div className="w-full px-4 py-8">
         <div className="grid lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
           {/* Input Section */}
           <div className="space-y-6">
@@ -850,29 +853,34 @@ export default function QRCodeGeneratorPage() {
         </div>
 
         {/* Features */}
-        <div className="mt-16 text-center">
-          <h2 className="text-2xl font-bold mb-8">Features</h2>
-          <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-            <div className="p-6 rounded-lg border bg-card">
-              <Smartphone className="h-8 w-8 text-primary mx-auto mb-4" />
-              <h3 className="font-semibold mb-2">Multiple Types</h3>
-              <p className="text-sm text-muted-foreground">
-                Support for text, URLs, WiFi, contacts, UPI payments, and more
-              </p>
-            </div>
-            <div className="p-6 rounded-lg border bg-card">
-              <Settings className="h-8 w-8 text-primary mx-auto mb-4" />
-              <h3 className="font-semibold mb-2">Customizable</h3>
-              <p className="text-sm text-muted-foreground">
-                Adjust size, border, and error correction to fit your needs
-              </p>
-            </div>
-            <div className="p-6 rounded-lg border bg-card">
-              <Download className="h-8 w-8 text-primary mx-auto mb-4" />
-              <h3 className="font-semibold mb-2">Instant Download</h3>
-              <p className="text-sm text-muted-foreground">
-                Generate and download your QR codes instantly in PNG format
-              </p>
+        <div className="w-full px-4 py-16 bg-muted/30">
+          <div className="max-w-6xl mx-auto text-center">
+            <h2 className="text-3xl font-bold mb-4">Advanced QR Features</h2>
+            <p className="text-lg text-muted-foreground mb-12 max-w-2xl mx-auto">
+              Professional QR code generation with enterprise-level customization
+            </p>
+            <div className="grid md:grid-cols-3 gap-8">
+              <div className="p-8 rounded-xl border bg-card shadow-sm hover:shadow-md transition-shadow">
+                <Smartphone className="h-12 w-12 text-primary mx-auto mb-6" />
+                <h3 className="text-xl font-semibold mb-3">Multiple Types</h3>
+                <p className="text-muted-foreground">
+                  Support for text, URLs, WiFi, contacts, UPI payments, and more data formats
+                </p>
+              </div>
+              <div className="p-8 rounded-xl border bg-card shadow-sm hover:shadow-md transition-shadow">
+                <Settings className="h-12 w-12 text-primary mx-auto mb-6" />
+                <h3 className="text-xl font-semibold mb-3">Fully Customizable</h3>
+                <p className="text-muted-foreground">
+                  Adjust size, colors, borders, and error correction to match your brand
+                </p>
+              </div>
+              <div className="p-8 rounded-xl border bg-card shadow-sm hover:shadow-md transition-shadow">
+                <Download className="h-12 w-12 text-primary mx-auto mb-6" />
+                <h3 className="text-xl font-semibold mb-3">Instant Download</h3>
+                <p className="text-muted-foreground">
+                  Generate and download high-quality QR codes instantly in multiple formats
+                </p>
+              </div>
             </div>
           </div>
         </div>
