@@ -6,6 +6,7 @@ import { Footer } from '@/components/footer'
 import { Toaster } from '@/components/ui/sonner'
 import { AdSenseHead } from '@/components/ads/AdSenseHead'
 import DonationSupport from '@/components/donation-support'
+import GlobalDonationButton from '@/components/global-donation-button'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -100,6 +101,7 @@ export default function RootLayout({
               {children}
             </main>
             <DonationSupport />
+            <GlobalDonationButton />
             <Footer />
           </div>
           <Toaster />

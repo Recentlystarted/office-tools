@@ -209,12 +209,30 @@ export default function DonationModal({ trigger, className = '' }: DonationModal
           setProcessingAmount(null)
         }
       )
-    } catch (error) {
+    } catch (error: any) {
       console.error('Donation error:', error)
-      toast.error('Unable to process donation', {
-        description: 'Please try again later',
-        duration: 4000,
-      })
+      
+      // Handle different error types
+      if (error.message && error.message.includes('Payment system is in test mode')) {
+        toast.error('Payment system is in test mode', {
+          description: 'Live payments are not yet configured. Please contact support.',
+          duration: 6000,
+          icon: <XCircle className="h-4 w-4 text-red-500" />,
+        })
+      } else if (error.message && error.message.includes('not configured')) {
+        toast.error('Payment system not configured', {
+          description: 'Please contact support for donations.',
+          duration: 5000,
+          icon: <XCircle className="h-4 w-4 text-red-500" />,
+        })
+      } else {
+        toast.error('Unable to process donation', {
+          description: 'Please try again later or contact support.',
+          duration: 4000,
+          icon: <XCircle className="h-4 w-4 text-red-500" />,
+        })
+      }
+      
       setIsLoading(false)
       setProcessingAmount(null)
     }

@@ -101,10 +101,23 @@ export class RazorpayService {
     onError?: (error: any) => void
   ): RazorpayOptions {
     const razorpayKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+    const isProduction = process.env.NODE_ENV === 'production';
+    const isTestKey = razorpayKey?.startsWith('rzp_test_');
     
     if (!razorpayKey) {
-      throw new Error('Razorpay key not configured');
+      console.error('Razorpay key not configured. Please check NEXT_PUBLIC_RAZORPAY_KEY_ID environment variable.');
+      throw new Error('Payment system is not configured. Please contact support.');
     }
+
+    // Warn if using test keys in production
+    if (isProduction && isTestKey) {
+      console.warn('Using test Razorpay key in production environment!');
+      throw new Error('Payment system is in test mode. Please contact support.');
+    }
+
+    console.log('Razorpay key loaded:', razorpayKey ? 'Yes' : 'No');
+    console.log('Environment:', process.env.NODE_ENV);
+    console.log('Key type:', isTestKey ? 'Test' : 'Live');
 
     return {
       key: razorpayKey,

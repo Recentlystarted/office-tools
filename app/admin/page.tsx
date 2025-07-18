@@ -27,10 +27,45 @@ export default function AdminDashboard() {
   const [shares, setShares] = useState<ShareSummary | null>(null)
   const [recentRatings, setRecentRatings] = useState<RecentRating[]>([])
   const [loading, setLoading] = useState(true)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [password, setPassword] = useState('')
+
+  // Simple authentication check
+  useEffect(() => {
+    const stored = localStorage.getItem('admin-authenticated')
+    if (stored === 'true') {
+      setIsAuthenticated(true)
+    }
+  }, [])
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault()
+    // Get admin password from environment variable
+    const adminPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD;
+    
+    if (!adminPassword) {
+      alert('Admin access is not configured. Please contact support.');
+      return;
+    }
+    
+    if (password === adminPassword) {
+      setIsAuthenticated(true)
+      localStorage.setItem('admin-authenticated', 'true')
+    } else {
+      alert('Invalid password')
+    }
+  }
+
+  const handleLogout = () => {
+    setIsAuthenticated(false)
+    localStorage.removeItem('admin-authenticated')
+  }
 
   useEffect(() => {
-    fetchData()
-  }, [])
+    if (isAuthenticated) {
+      fetchData()
+    }
+  }, [isAuthenticated])
 
   const fetchData = async () => {
     try {
@@ -77,6 +112,43 @@ export default function AdminDashboard() {
     })
   }
 
+  if (!isAuthenticated) {
+    return (
+      <div className="container mx-auto p-6 max-w-md">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+            Admin Access
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-2">
+            Please enter password to access analytics
+          </p>
+        </div>
+        <Card>
+          <CardContent className="p-6">
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter admin password"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500"
+                  required
+                />
+              </div>
+              <button
+                type="submit"
+                className="w-full bg-violet-600 text-white p-3 rounded-lg hover:bg-violet-700 transition-colors"
+              >
+                Login
+              </button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   if (loading) {
     return (
       <div className="container mx-auto p-6">
@@ -90,13 +162,21 @@ export default function AdminDashboard() {
 
   return (
     <div className="container mx-auto p-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-          Office Tools Analytics
-        </h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-2">
-          Monitor ratings and sharing activity
-        </p>
+      <div className="mb-8 flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+            Office Tools Analytics
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-2">
+            Monitor ratings and sharing activity
+          </p>
+        </div>
+        <button
+          onClick={handleLogout}
+          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+        >
+          Logout
+        </button>
       </div>
 
       {/* Summary Cards */}

@@ -37,14 +37,20 @@ export default function ApiStatus() {
     // Test primary API (our main API)
     try {
       const start = Date.now();
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/health`, {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      console.log('Testing API URL:', apiUrl);
+      
+      const response = await fetch(`${apiUrl}/health`, {
         method: 'GET',
         headers: { 'Accept': 'application/json' },
         signal: AbortSignal.timeout(5000)
       });
+      
+      console.log('API Response status:', response.status);
       result.primaryTime = Date.now() - start;
       result.primary = response.ok;
     } catch (error) {
+      console.error('API test failed:', error);
       result.primary = false;
     }
 
