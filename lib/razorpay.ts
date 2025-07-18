@@ -128,7 +128,11 @@ export class RazorpayService {
       modal: {
         ondismiss: () => {
           console.log('Payment cancelled by user');
-          onError?.(new Error('Payment cancelled'));
+          if (onError) {
+            setTimeout(() => {
+              onError(new Error('Payment cancelled'));
+            }, 100);
+          }
         },
       },
     };

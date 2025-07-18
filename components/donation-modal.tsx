@@ -40,15 +40,28 @@ export default function DonationModal({ trigger, className = '' }: DonationModal
           setIsOpen(false)
         },
         (error: any) => {
-          console.error('Donation failed:', error)
-          toast.error(
-            'Payment cancelled or failed',
-            {
-              description: 'No worries! You can try again anytime.',
-              duration: 4000,
-              icon: <XCircle className="h-4 w-4 text-red-500" />,
-            }
-          )
+          console.log('Payment cancelled or failed:', error.message)
+          
+          // Don't show error toast for user cancellation
+          if (error.message === 'Payment cancelled') {
+            toast.info(
+              'Payment cancelled',
+              {
+                description: 'No worries! You can donate anytime.',
+                duration: 3000,
+                icon: <XCircle className="h-4 w-4 text-blue-500" />,
+              }
+            )
+          } else {
+            toast.error(
+              'Payment failed',
+              {
+                description: 'Please try again later.',
+                duration: 4000,
+                icon: <XCircle className="h-4 w-4 text-red-500" />,
+              }
+            )
+          }
           setIsLoading(false)
           setProcessingAmount(null)
         }

@@ -15,6 +15,10 @@ const nextConfig = {
   experimental: {
     optimizePackageImports: ['lucide-react']
   },
+  compiler: {
+    // Remove console.log in production
+    removeConsole: process.env.NODE_ENV === 'production'
+  },
   webpack: (config) => {
     // Fix for PDF.js worker
     config.resolve.alias = {
@@ -27,6 +31,11 @@ const nextConfig = {
       test: /\.worker\.(js|ts)$/,
       use: { loader: 'worker-loader' },
     });
+
+    // Reduce bundle size and warnings in production
+    if (process.env.NODE_ENV === 'production') {
+      config.optimization.minimize = true;
+    }
 
     return config;
   },
