@@ -32,7 +32,7 @@ export default function ApiStatus() {
     // Test primary API
     try {
       const start = Date.now();
-      const response = await fetch('http://localhost:5000/health', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/health`, {
         method: 'GET',
         headers: { 'Accept': 'application/json' },
         signal: AbortSignal.timeout(5000)
@@ -47,8 +47,9 @@ export default function ApiStatus() {
     // Test Stirling-PDF API
     try {
       const start = Date.now();
-      const response = await fetch('http://localhost:8080/', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/stirling/health`, {
         method: 'GET',
+        headers: { 'Accept': 'application/json' },
         signal: AbortSignal.timeout(5000)
       });
       result.stirlingTime = Date.now() - start;
@@ -182,7 +183,7 @@ export default function ApiStatus() {
               {getTimeDisplay(connectivity.primaryTime)}
             </div>
             <div className="text-muted-foreground text-xs">
-              localhost:5000
+              {(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000').replace(/^https?:\/\//, '')}
             </div>
           </div>
         </div>
@@ -197,7 +198,7 @@ export default function ApiStatus() {
               {getTimeDisplay(connectivity.stirlingTime)}
             </div>
             <div className="text-muted-foreground text-xs">
-              localhost:8080
+              {(process.env.NEXT_PUBLIC_STIRLING_URL || 'http://localhost:8080').replace(/^https?:\/\//, '')}
             </div>
           </div>
         </div>

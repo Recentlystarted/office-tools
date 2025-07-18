@@ -189,29 +189,28 @@ export const smartPdfRequest = async (
 };
 
 /**
- * Stirling-PDF direct request - with CORS handling
+ * Stirling-PDF request via VPS proxy
  */
 export const stirlingPdfRequest = async (
   endpoint: string,
   formData: FormData,
   options: { signal?: AbortSignal } = {}
 ): Promise<Response> => {
-  // Use direct Sterling PDF URL from environment
-  const stirlingUrl = `${API_CONFIG.stirlingBaseUrl}/api/v1/convert/pdf/docx`;
+  // Use the VPS API Sterling PDF proxy endpoint
+  const stirlingUrl = `${API_CONFIG.baseUrl}/api/stirling/convert/pdf/word`;
   
-  console.log(`Using Stirling-PDF direct: ${stirlingUrl}`);
+  console.log(`Using Sterling-PDF via VPS proxy: ${stirlingUrl}`);
   
   try {
-    // Make direct request to Sterling PDF
+    // Make request to VPS API which will proxy to Sterling PDF
     const response = await fetch(stirlingUrl, {
       method: 'POST',
       body: formData,
-      mode: 'cors', // Enable CORS
       signal: options.signal || AbortSignal.timeout(API_CONFIG.timeout),
     });
 
     if (!response.ok) {
-      throw new Error(`Stirling-PDF request failed: ${response.status} ${response.statusText}`);
+      throw new Error(`Sterling-PDF request failed: ${response.status} ${response.statusText}`);
     }
 
     return response;
