@@ -5,28 +5,17 @@
 
 // Main API Configuration
 export const API_CONFIG = {
-  // Priority: Environment variables > Gateway API > Direct API
+  // Use direct API only - no fallback complexity
   baseUrl: process.env.NEXT_PUBLIC_API_URL || 
            process.env.NEXT_PUBLIC_API_BASE_URL || 
-           'http://localhost:8082', // Use gateway by default
+           'http://localhost:5000',
   
-  // Stirling-PDF configuration
-  stirlingPdf: {
-    baseUrl: process.env.NEXT_PUBLIC_STIRLING_URL || 'http://localhost:8080',
-    enabled: process.env.NEXT_PUBLIC_ENABLE_STIRLING_FALLBACK !== 'false',
-    timeout: 600000, // 10 minutes for complex PDFs
-  },
+  // Stirling-PDF direct access for testing
+  stirlingBaseUrl: process.env.NEXT_PUBLIC_STIRLING_URL || 'http://localhost:8080',
   
   // Request configuration
-  timeout: parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || '300000'), // 5 minutes for primary API
+  timeout: parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || '600000'), // 10 minutes for complex PDFs
   maxFileSize: parseInt(process.env.NEXT_PUBLIC_MAX_FILE_SIZE || '52428800'), // 50MB
-  
-  // Fallback thresholds
-  fallback: {
-    timeoutMs: 30000, // If primary API takes more than 30s, try Stirling
-    maxRetries: 2,
-    complexPdfSizeMb: 10, // Files larger than 10MB go to Stirling first
-  },
   
   // API endpoints - updated to match actual VPS backend structure
   endpoints: {
@@ -180,90 +169,56 @@ export const apiRequest = async (url: string, options: RequestInit = {}): Promis
 }
 
 /**
- * Smart PDF processing with fallback to Stirling-PDF
+ * Simple direct API request without fallback complexity
  */
 export const smartPdfRequest = async (
   endpoint: string,
   options: RequestInit,
   file?: File
 ): Promise<Response> => {
-  const fileSize = file ? file.size / (1024 * 1024) : 0; // Size in MB
-  
-  // Determine if we should use Stirling-PDF first for complex files
-  const useStirlingFirst = fileSize > API_CONFIG.fallback.complexPdfSizeMb;
-  
-  if (useStirlingFirst && API_CONFIG.stirlingPdf.enabled) {
-    try {
-      console.log(`Large file (${fileSize.toFixed(1)}MB), trying Stirling-PDF first...`);
-      const stirlingResponse = await tryStirlingPdf(endpoint, options);
-      if (stirlingResponse.ok) {
-        return stirlingResponse;
-      }
-    } catch (error) {
-      console.warn('Stirling-PDF failed, falling back to primary API:', error);
-    }
+  const response = await apiRequest(endpoint, {
+    ...options,
+    signal: options.signal || AbortSignal.timeout(API_CONFIG.timeout),
+  });
+
+  if (!response.ok) {
+    throw new Error(`API request failed: ${response.status} ${response.statusText}`);
   }
-  
-  // Try primary Python API with timeout
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.fallback.timeoutMs);
-    
-    const response = await apiRequest(endpoint, {
-      ...options,
-      signal: controller.signal
-    });
-    
-    clearTimeout(timeoutId);
-    
-    if (response.ok) {
-      return response;
-    }
-    
-    // If primary API failed and we haven't tried Stirling yet, try it now
-    if (!useStirlingFirst && API_CONFIG.stirlingPdf.enabled) {
-      console.log('Primary API failed, trying Stirling-PDF fallback...');
-      return await tryStirlingPdf(endpoint, options);
-    }
-    
-    return response;
-    
-  } catch (error) {
-    // If primary API timed out or failed, try Stirling-PDF
-    if (!useStirlingFirst && API_CONFIG.stirlingPdf.enabled) {
-      console.log('Primary API error, trying Stirling-PDF fallback...');
-      try {
-        return await tryStirlingPdf(endpoint, options);
-      } catch (stirlingError) {
-        console.error('Both APIs failed:', error, stirlingError);
-        throw error; // Throw original error
-      }
-    }
-    throw error;
-  }
+
+  return response;
 };
 
 /**
- * Try Stirling-PDF endpoint
+ * Stirling-PDF direct request - with CORS handling
  */
-const tryStirlingPdf = async (endpoint: string, options: RequestInit): Promise<Response> => {
-  // Map primary endpoints to Stirling-PDF endpoints
-  const stirlingEndpointMap: Record<string, string> = {
-    '/api/pdf/convert': '/api/v1/convert/pdf/docx',
-    '/api/pdf-compressor/compress': '/api/v1/misc/compress-pdf',
-    '/api/pdf-merger/merge': '/api/v1/general/merge-pdfs',
-    '/api/pdf-rotate/rotate': '/api/v1/general/rotate-pdf',
-  };
+export const stirlingPdfRequest = async (
+  endpoint: string,
+  formData: FormData,
+  options: { signal?: AbortSignal } = {}
+): Promise<Response> => {
+  // Use direct Sterling PDF URL from environment
+  const stirlingUrl = `${API_CONFIG.stirlingBaseUrl}/api/v1/convert/pdf/docx`;
   
-  const stirlingEndpoint = stirlingEndpointMap[endpoint] || endpoint;
-  const stirlingUrl = `${API_CONFIG.stirlingPdf.baseUrl}${stirlingEndpoint}`;
+  console.log(`Using Stirling-PDF direct: ${stirlingUrl}`);
   
-  console.log(`Trying Stirling-PDF at: ${stirlingUrl}`);
-  
-  return await fetch(stirlingUrl, {
-    ...options,
-    signal: AbortSignal.timeout(API_CONFIG.stirlingPdf.timeout),
-  });
+  try {
+    // Make direct request to Sterling PDF
+    const response = await fetch(stirlingUrl, {
+      method: 'POST',
+      body: formData,
+      mode: 'cors', // Enable CORS
+      signal: options.signal || AbortSignal.timeout(API_CONFIG.timeout),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Stirling-PDF request failed: ${response.status} ${response.statusText}`);
+    }
+
+    return response;
+  } catch (error) {
+    console.error('Stirling-PDF request error:', error);
+    throw error;
+  }
 };
 
 /**
@@ -285,7 +240,7 @@ export const testApiConnectivity = async (): Promise<{
   // Test primary API
   try {
     const start = Date.now()
-    const response = await apiRequest(`${API_CONFIG.baseUrl}/health`)
+    const response = await fetch(`${API_CONFIG.baseUrl}/health`)
     result.primaryTime = Date.now() - start
     result.primary = response.ok
   } catch (error) {
@@ -293,15 +248,13 @@ export const testApiConnectivity = async (): Promise<{
   }
 
   // Test Stirling-PDF API
-  if (API_CONFIG.stirlingPdf.enabled) {
-    try {
-      const start = Date.now()
-      const response = await fetch(`${API_CONFIG.stirlingPdf.baseUrl}/`)
-      result.stirlingTime = Date.now() - start
-      result.stirling = response.ok
-    } catch (error) {
-      console.error('Stirling-PDF test failed:', error)
-    }
+  try {
+    const start = Date.now()
+    const response = await fetch(`${API_CONFIG.stirlingBaseUrl}/`)
+    result.stirlingTime = Date.now() - start
+    result.stirling = response.ok
+  } catch (error) {
+    console.error('Stirling-PDF test failed:', error)
   }
 
   return result

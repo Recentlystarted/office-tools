@@ -4,12 +4,14 @@ import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Toggle } from '@/components/ui/toggle';
 import { useDropzone } from 'react-dropzone';
 import { 
   Upload, Download, FileText, Loader2, X, AlertCircle,
   CheckCircle, Clock, Cpu
 } from 'lucide-react';
-import { getApiUrl, smartPdfRequest, downloadBlob, formatFileSize } from '@/lib/api';
+import { getApiUrl, smartPdfRequest, stirlingPdfRequest, downloadBlob, formatFileSize } from '@/lib/api';
+import ApiStatus from '@/components/api-status';
 
 interface UploadedFile {
   file: File;
@@ -24,10 +26,7 @@ export default function PdfToDocxPage() {
   const [result, setResult] = useState<{ blob: Blob; filename: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [processingInfo, setProcessingInfo] = useState<string>('');
-  const [debugInfo, setDebugInfo] = useState<string>('');
-
-  // Debug logging
-  console.log('Component state - result:', result, 'error:', error, 'isConverting:', isConverting);
+  const [useStirlingPdf, setUseStirlingPdf] = useState(false);
 
   const onDrop = (acceptedFiles: File[]) => {
     const newFiles = acceptedFiles.map(file => ({
@@ -53,57 +52,40 @@ export default function PdfToDocxPage() {
 
     setIsConverting(true);
     setError(null);
-    setProcessingInfo('Initializing conversion...');
+    setProcessingInfo(`Converting using ${useStirlingPdf ? 'Stirling-PDF' : 'Primary API'}...`);
 
     try {
       const file = files[0];
-      const fileSize = file.size / (1024 * 1024); // Size in MB
-      
-      console.log('Starting conversion for file:', file.name, 'Size:', fileSize.toFixed(2) + 'MB');
-      
-      if (fileSize > 10) {
-        setProcessingInfo('Large file detected - using Stirling-PDF for optimal conversion...');
-      } else {
-        setProcessingInfo('Processing with primary API...');
-      }
-
       const formData = new FormData();
       formData.append('file', file.file);
 
-      console.log('FormData created, making API request to:', getApiUrl('pdfToDocx'));
+      let response: Response;
       
-      const response = await smartPdfRequest(getApiUrl('pdfToDocx'), {
-        method: 'POST',
-        body: formData,
-      }, file.file);
-
-      console.log('API Response received:', response);
-      console.log('Response status:', response.status);
-      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+      if (useStirlingPdf) {
+        response = await stirlingPdfRequest(getApiUrl('pdfToDocx'), formData);
+      } else {
+        response = await smartPdfRequest(getApiUrl('pdfToDocx'), {
+          method: 'POST',
+          body: formData,
+        }, file.file);
+      }
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('API Error response:', errorText);
         throw new Error(`Conversion failed: ${errorText}`);
       }
 
       setProcessingInfo('Converting to Word document...');
       const blob = await response.blob();
-      console.log('Blob created successfully:', blob);
-      console.log('Blob size:', blob.size);
-      console.log('Blob type:', blob.type);
       
       if (blob.size === 0) {
         throw new Error('Received empty file from server');
       }
       
       const filename = file.name.replace('.pdf', '.docx');
-      console.log('Setting result with filename:', filename);
 
       setResult({ blob, filename });
       setProcessingInfo('Conversion completed successfully!');
-      setDebugInfo(`Conversion completed: ${filename}, ${blob.size} bytes`);
-      console.log('Conversion completed successfully!');
 
     } catch (error) {
       console.error('PDF conversion error:', error);
@@ -127,12 +109,8 @@ export default function PdfToDocxPage() {
 
   const downloadResult = () => {
     if (result) {
-      console.log('Downloading file:', result.filename);
-      console.log('Blob size:', result.blob.size);
       downloadBlob(result.blob, result.filename);
       setResult(null);
-    } else {
-      console.error('No result to download');
     }
   };
 
@@ -165,6 +143,9 @@ export default function PdfToDocxPage() {
       </div>
 
       <div className="container mx-auto px-4 py-8 max-w-4xl space-y-8">
+        {/* API Status */}
+        <ApiStatus />
+
         {/* Features */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card>
@@ -270,6 +251,37 @@ export default function PdfToDocxPage() {
               </CardContent>
             </Card>
 
+            {/* API Selection */}
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <h3 className="font-medium">Conversion Engine</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Choose between Primary API and Stirling-PDF for conversion
+                    </p>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <Badge variant={!useStirlingPdf ? "default" : "outline"} className="text-xs">
+                      Primary API
+                    </Badge>
+                    <Toggle
+                      pressed={useStirlingPdf}
+                      onPressedChange={setUseStirlingPdf}
+                      variant="outline"
+                      size="sm"
+                      className="data-[state=on]:bg-blue-600 data-[state=on]:text-white data-[state=on]:border-blue-600 hover:bg-blue-50"
+                    >
+                      {useStirlingPdf ? '🔄' : '⚡'}
+                    </Toggle>
+                    <Badge variant={useStirlingPdf ? "default" : "outline"} className="text-xs">
+                      Stirling-PDF
+                    </Badge>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Convert Button */}
             <Card>
               <CardContent className="p-6 text-center">
@@ -288,6 +300,9 @@ export default function PdfToDocxPage() {
                     <>
                       <FileText className="h-5 w-5 mr-2" />
                       Convert to Word Document
+                      <span className="text-xs ml-2 opacity-70">
+                        ({useStirlingPdf ? 'Stirling-PDF' : 'Primary API'})
+                      </span>
                     </>
                   )}
                 </Button>
@@ -320,9 +335,6 @@ export default function PdfToDocxPage() {
                 <div>
                   <h3 className="text-lg font-medium text-green-700">Conversion Successful!</h3>
                   <p className="text-muted-foreground">Your PDF has been converted to a Word document</p>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Debug: Blob size: {result.blob.size} bytes, Type: {result.blob.type}
-                  </p>
                 </div>
                 <div className="flex justify-center gap-3">
                   <Button onClick={downloadResult} size="lg">
@@ -336,17 +348,6 @@ export default function PdfToDocxPage() {
                 <p className="text-sm text-muted-foreground">
                   File: {result.filename}
                 </p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Debug Info */}
-        {debugInfo && (
-          <Card className="border-blue-500">
-            <CardContent className="p-4">
-              <div className="text-sm font-mono text-blue-600">
-                Debug: {debugInfo}
               </div>
             </CardContent>
           </Card>
