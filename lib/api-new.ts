@@ -5,15 +5,13 @@
 
 // Main API Configuration
 export const API_CONFIG = {
-  // Priority: Environment variables > Gateway API > Direct API
-  baseUrl: process.env.NEXT_PUBLIC_API_URL || 
-           process.env.NEXT_PUBLIC_API_BASE_URL || 
-           'http://localhost:8082', // Use gateway by default
+  // Production API base URL for api.tundasportsclub.com  
+  baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.tundasportsclub.com',
   
-  // Stirling-PDF configuration
+  // Stirling-PDF fallback configuration
   stirlingPdf: {
-    baseUrl: process.env.NEXT_PUBLIC_STIRLING_URL || 'http://localhost:8080',
-    enabled: process.env.NEXT_PUBLIC_ENABLE_STIRLING_FALLBACK !== 'false',
+    baseUrl: process.env.NEXT_PUBLIC_STIRLING_URL || 'https://api.tundasportsclub.com:8080',
+    enabled: true,
     timeout: 600000, // 10 minutes for complex PDFs
   },
   
@@ -257,8 +255,6 @@ const tryStirlingPdf = async (endpoint: string, options: RequestInit): Promise<R
   
   const stirlingEndpoint = stirlingEndpointMap[endpoint] || endpoint;
   const stirlingUrl = `${API_CONFIG.stirlingPdf.baseUrl}${stirlingEndpoint}`;
-  
-  console.log(`Trying Stirling-PDF at: ${stirlingUrl}`);
   
   return await fetch(stirlingUrl, {
     ...options,

@@ -38,6 +38,16 @@ import {
 const tools = [
   // PDF Tools
   {
+    name: 'PDF Tools Suite',
+    description: 'Professional PDF processing with smart API fallback - convert, compress, merge, split, and secure PDFs',
+    slug: 'pdf-tools',
+    icon: Settings,
+    category: 'PDF Tools',
+    popular: true,
+    status: 'active',
+    featured: true
+  },
+  {
     name: 'PDF to Word',
     description: 'Convert PDF documents to editable Word files with perfect formatting preservation',
     slug: 'pdf-to-docx',
@@ -116,15 +126,6 @@ const tools = [
     icon: RotateCcw,
     category: 'PDF Tools',
     popular: false,
-    status: 'active'
-  },
-  {
-    name: 'PDF Editor',
-    description: 'Edit PDF content, add text, annotations, and signatures',
-    slug: 'pdf-editor',
-    icon: Edit3,
-    category: 'PDF Tools',
-    popular: true,
     status: 'active'
   },
   {
