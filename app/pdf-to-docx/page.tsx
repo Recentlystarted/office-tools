@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { getApiUrl, smartPdfRequest, stirlingPdfRequest, downloadBlob, formatFileSize } from '@/lib/api';
 import ApiStatus from '@/components/api-status';
+import { DownloadSuccessCard } from '@/components/download-success-card';
 
 interface UploadedFile {
   file: File;
@@ -88,7 +89,7 @@ export default function PdfToDocxPage() {
       setProcessingInfo('Conversion completed successfully!');
 
     } catch (error) {
-      console.error('PDF conversion error:', error);
+      // Console output removed for production
       
       let errorMessage = 'Conversion failed';
       if (error instanceof Error) {
@@ -328,29 +329,16 @@ export default function PdfToDocxPage() {
 
         {/* Success Result */}
         {result && (
-          <Card className="border-green-500">
-            <CardContent className="p-6">
-              <div className="text-center space-y-4">
-                <CheckCircle className="h-12 w-12 mx-auto text-green-500" />
-                <div>
-                  <h3 className="text-lg font-medium text-green-700">Conversion Successful!</h3>
-                  <p className="text-muted-foreground">Your PDF has been converted to a Word document</p>
-                </div>
-                <div className="flex justify-center gap-3">
-                  <Button onClick={downloadResult} size="lg">
-                    <Download className="h-5 w-5 mr-2" />
-                    Download Word Document
-                  </Button>
-                  <Button onClick={() => setResult(null)} variant="outline">
-                    Convert Another File
-                  </Button>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  File: {result.filename}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+          <DownloadSuccessCard
+            title="Conversion Successful!"
+            description="Your PDF has been converted to a Word document"
+            fileName={result.filename}
+            downloadButtonText="Download Word Document"
+            resetButtonText="Convert Another File"
+            onDownload={downloadResult}
+            onReset={() => setResult(null)}
+            icon={<FileText className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />}
+          />
         )}
 
         {/* How it Works */}

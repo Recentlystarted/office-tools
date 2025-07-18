@@ -6,6 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
+import { getApiUrl, apiRequest, ApiError } from '@/lib/api'
+import ApiStatus from '@/components/api-status'
 import { 
   Type,
   Copy,
@@ -84,80 +86,123 @@ export default function TextCaseConverterPage() {
   const [results, setResults] = useState<{[key: string]: string}>({})
   const [copied, setCopied] = useState<string | null>(null)
 
-  const convertText = (text: string) => {
+  const convertText = async (text: string) => {
     if (!text.trim()) {
       setResults({})
       return
     }
 
-    const newResults: {[key: string]: string} = {}
+    const newResults: { [key: string]: string } = {}
 
-    // lowercase
-    newResults['lowercase'] = text.toLowerCase()
+    // Try API first for each case type, fallback to local
+    const caseTypesToConvert = [
+      'lower', 'upper', 'title', 'sentence', 'camel', 'pascal', 
+      'snake', 'kebab', 'constant', 'dot'
+    ]
 
-    // UPPERCASE
-    newResults['UPPERCASE'] = text.toUpperCase()
+    for (const caseType of caseTypesToConvert) {
+      try {
+        // Try API conversion
+        const response = await apiRequest(getApiUrl('textCaseConverter'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text, type: caseType })
+        })
 
-    // Title Case
-    newResults['Title Case'] = text.replace(/\w\S*/g, (txt) => 
-      txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
-    )
+        if (response.ok) {
+          const result = await response.json()
+          const displayName = getDisplayName(caseType)
+          newResults[displayName] = result.converted
+          continue
+        }
+      } catch (error) {
+        // API failed, use local conversion
+      }
 
-    // Sentence case
-    newResults['Sentence case'] = text.toLowerCase().replace(/(^\w|\.\s+\w)/g, (match) => 
-      match.toUpperCase()
-    )
-
-    // camelCase
-    newResults['camelCase'] = text
-      .replace(/(?:^\w|[A-Z]|\b\w)/g, (word, index) => 
-        index === 0 ? word.toLowerCase() : word.toUpperCase()
-      )
-      .replace(/\s+/g, '')
-
-    // PascalCase
-    newResults['PascalCase'] = text
-      .replace(/(?:^\w|[A-Z]|\b\w)/g, (word) => word.toUpperCase())
-      .replace(/\s+/g, '')
-
-    // snake_case
-    newResults['snake_case'] = text
-      .toLowerCase()
-      .replace(/\s+/g, '_')
-      .replace(/[^\w]/g, '_')
-      .replace(/_+/g, '_')
-      .replace(/^_|_$/g, '')
-
-    // kebab-case
-    newResults['kebab-case'] = text
-      .toLowerCase()
-      .replace(/\s+/g, '-')
-      .replace(/[^\w-]/g, '-')
-      .replace(/-+/g, '-')
-      .replace(/^-|-$/g, '')
-
-    // CONSTANT_CASE
-    newResults['CONSTANT_CASE'] = text
-      .toUpperCase()
-      .replace(/\s+/g, '_')
-      .replace(/[^\w]/g, '_')
-      .replace(/_+/g, '_')
-      .replace(/^_|_$/g, '')
-
-    // dot.case
-    newResults['dot.case'] = text
-      .toLowerCase()
-      .replace(/\s+/g, '.')
-      .replace(/[^\w.]/g, '.')
-      .replace(/\.+/g, '.')
-      .replace(/^\.|\.$/g, '')
+      // Local fallback conversion
+      const displayName = getDisplayName(caseType)
+      newResults[displayName] = convertLocalCase(text, caseType)
+    }
 
     setResults(newResults)
   }
 
-  const handleInputChange = (value: string) => {
+  const getDisplayName = (caseType: string): string => {
+    const mapping: { [key: string]: string } = {
+      'lower': 'lowercase',
+      'upper': 'UPPERCASE',
+      'title': 'Title Case',
+      'sentence': 'Sentence case',
+      'camel': 'camelCase',
+      'pascal': 'PascalCase',
+      'snake': 'snake_case',
+      'kebab': 'kebab-case',
+      'constant': 'CONSTANT_CASE',
+      'dot': 'dot.case'
+    }
+    return mapping[caseType] || caseType
+  }
+
+  const convertLocalCase = (text: string, caseType: string): string => {
+    switch (caseType) {
+      case 'lower':
+        return text.toLowerCase()
+      case 'upper':
+        return text.toUpperCase()
+      case 'title':
+        return text.replace(/\w\S*/g, (txt) => 
+          txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
+        )
+      case 'sentence':
+        return text.toLowerCase().replace(/(^\w|\.\s+\w)/g, (match) => 
+          match.toUpperCase()
+        )
+      case 'camel':
+        return text
+          .replace(/(?:^\w|[A-Z]|\b\w)/g, (word, index) => 
+            index === 0 ? word.toLowerCase() : word.toUpperCase()
+          )
+          .replace(/\s+/g, '')
+      case 'pascal':
+        return text
+          .replace(/(?:^\w|[A-Z]|\b\w)/g, (word) => word.toUpperCase())
+          .replace(/\s+/g, '')
+      case 'snake':
+        return text
+          .toLowerCase()
+          .replace(/\s+/g, '_')
+          .replace(/[^\w]/g, '_')
+          .replace(/_+/g, '_')
+          .replace(/^_|_$/g, '')
+      case 'kebab':
+        return text
+          .toLowerCase()
+          .replace(/\s+/g, '-')
+          .replace(/[^\w-]/g, '-')
+          .replace(/-+/g, '-')
+          .replace(/^-|-$/g, '')
+      case 'constant':
+        return text
+          .toUpperCase()
+          .replace(/\s+/g, '_')
+          .replace(/[^\w]/g, '_')
+          .replace(/_+/g, '_')
+          .replace(/^_|_$/g, '')
+      case 'dot':
+        return text
+          .toLowerCase()
+          .replace(/\s+/g, '.')
+          .replace(/[^\w.]/g, '.')
+          .replace(/\.+/g, '.')
+          .replace(/^\.|\.$/g, '')
+      default:
+        return text
+    }
+  }
+
+  const handleInputChange = async (value: string) => {
     setInputText(value)
-    convertText(value)
+    await convertText(value)
   }
 
   const copyResult = async (caseType: string, text: string) => {
@@ -167,7 +212,7 @@ export default function TextCaseConverterPage() {
       setTimeout(() => setCopied(null), 2000)
       toast.success(`${caseType} copied to clipboard!`)
     } catch (error) {
-      console.error('Error copying to clipboard:', error)
+      // Console output removed for production
       toast.error('Failed to copy text')
     }
   }
@@ -199,7 +244,10 @@ export default function TextCaseConverterPage() {
           <div className="flex items-center justify-center gap-2 mt-4">
             <Badge variant="secondary">10 Cases</Badge>
             <Badge variant="secondary">Instant</Badge>
-            <Badge variant="secondary">No Server</Badge>
+            <Badge variant="secondary">API Enhanced</Badge>
+          </div>
+          <div className="mt-6">
+            <ApiStatus />
           </div>
         </div>
 

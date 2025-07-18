@@ -9,6 +9,7 @@ import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
 import { getApiUrl, apiRequest, ApiError } from '@/lib/api'
+import ApiStatus from '@/components/api-status'
 import { 
   Key,
   Copy,
@@ -119,7 +120,8 @@ export default function PasswordGeneratorPage() {
           return
         }
       } catch (apiError) {
-        console.log('API failed, using local generation:', apiError)
+        // API failed, fallback to local generation
+        toast.info('Using local password generation')
       }
 
       // Fallback to local generation
@@ -136,7 +138,6 @@ export default function PasswordGeneratorPage() {
       setPasswordResult(result)
       toast.success('Password generated successfully!')
     } catch (error) {
-      console.error('Error generating password:', error)
       toast.error('Failed to generate password. Please try again.')
     } finally {
       setIsLoading(false)
@@ -152,7 +153,6 @@ export default function PasswordGeneratorPage() {
       setTimeout(() => setCopied(false), 2000)
       toast.success('Password copied to clipboard!')
     } catch (error) {
-      console.error('Error copying to clipboard:', error)
       toast.error('Failed to copy password')
     }
   }
@@ -212,6 +212,8 @@ export default function PasswordGeneratorPage() {
             <Badge variant="secondary">No Logging</Badge>
           </div>
         </div>
+
+        <ApiStatus />
 
         <div className="grid lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
           {/* Settings Section */}

@@ -10,6 +10,8 @@ import { Progress } from '@/components/ui/progress'
 import { FileText, Upload, Download, AlertCircle, Loader2, Unlock, Lock, Shield, Eye, EyeOff } from 'lucide-react'
 import { toast } from 'sonner'
 import { getApiUrl, apiRequest } from '@/lib/api'
+import ApiStatus from '@/components/api-status'
+import { DownloadSuccessCard } from '@/components/download-success-card'
 
 // Helper function to format file size
 const formatFileSize = (bytes: number): string => {
@@ -112,7 +114,7 @@ export default function PdfUnlockPage() {
       toast.success('PDF password removed successfully! Click download to save the unlocked file.')
 
     } catch (error) {
-      console.error('Unlock error:', error)
+      // Console output removed for production
       const errorMessage = error instanceof Error ? error.message : 'Password removal failed. Please try again.'
       setError(errorMessage)
       toast.error(errorMessage)
@@ -146,6 +148,8 @@ export default function PdfUnlockPage() {
           Remove password protection from PDF files when you have the correct password
         </p>
       </div>
+
+      <ApiStatus />
 
       <Card className="w-full">
         <CardHeader>
@@ -275,41 +279,16 @@ export default function PdfUnlockPage() {
 
           {/* Download Success Section */}
           {unlockedBlob && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-6">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex-shrink-0 w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                    <Unlock className="h-5 w-5 text-green-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-green-900 mb-1">Password Removed Successfully!</h3>
-                    <p className="text-green-700 text-sm">
-                      Your PDF is now unlocked and ready to use without password
-                    </p>
-                    <p className="text-green-600 text-xs mt-1">
-                      File: {unlockedFileName}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <Button 
-                    onClick={handleDownload}
-                    className="bg-green-600 hover:bg-green-700 text-white"
-                    size="lg"
-                  >
-                    <Download className="mr-2 h-4 w-4" />
-                    Download Unlocked PDF
-                  </Button>
-                  <Button 
-                    onClick={resetForm}
-                    variant="outline"
-                    size="lg"
-                  >
-                    Unlock Another File
-                  </Button>
-                </div>
-              </div>
-            </div>
+            <DownloadSuccessCard
+              title="Password Removed Successfully!"
+              description="Your PDF is now unlocked and ready to use without password"
+              fileName={unlockedFileName}
+              downloadButtonText="Download Unlocked PDF"
+              resetButtonText="Unlock Another File"
+              onDownload={handleDownload}
+              onReset={resetForm}
+              icon={<Unlock className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />}
+            />
           )}
 
           {/* Unlock Button */}

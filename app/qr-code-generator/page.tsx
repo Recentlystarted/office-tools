@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge'
 import { Slider } from '@/components/ui/slider'
 import { getApiUrl, apiRequest, ApiError } from '@/lib/api'
 import { Switch } from '@/components/ui/switch'
+import ApiStatus from '@/components/api-status'
 import { 
   Download,
   QrCode, 
@@ -173,7 +174,7 @@ export default function QRCodeGeneratorPage() {
       
       toast.success('QR code generated successfully!')
     } catch (error) {
-      console.error('Error generating QR code:', error)
+      // Console output removed for production
       toast.error('Failed to generate QR code. Please try again.')
     } finally {
       setIsLoading(false)
@@ -210,7 +211,7 @@ export default function QRCodeGeneratorPage() {
         toast.error('Clipboard not supported in this browser')
       }
     } catch (error) {
-      console.error('Error copying to clipboard:', error)
+      // Console output removed for production
       toast.error('Failed to copy QR code')
     }
   }
@@ -252,6 +253,9 @@ export default function QRCodeGeneratorPage() {
 
       {/* Main Content */}
       <div className="w-full px-4 py-8">
+        <div className="max-w-7xl mx-auto">
+          <ApiStatus />
+        </div>
         <div className="grid lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
           {/* Input Section */}
           <div className="space-y-6">

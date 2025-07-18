@@ -39,6 +39,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { getApiUrl, apiRequest, ApiError } from '@/lib/api'
+import ApiStatus from '@/components/api-status'
 
 interface GrammarError {
   type: 'grammar' | 'spelling' | 'punctuation' | 'style'
@@ -436,7 +437,7 @@ export default function AITextAnalyzerPage() {
 
     try {
       // Call our Python API for comprehensive text analysis
-      console.log('Starting text analysis...')
+      // Console output removed for production
       
       const response = await apiRequest(getApiUrl('textAnalyzer'), {
         method: 'POST',
@@ -451,10 +452,10 @@ export default function AITextAnalyzerPage() {
       const result = await response.json()
       
       // Debug: Log the API response structure in development
-      console.log('Text Analysis API Response:', result)
+      // Console output removed for production
       
       if (!result || !result.success) {
-        console.error('API returned unsuccessful response:', result)
+        // Console output removed for production
         throw new ApiError(result?.message || 'Analysis failed')
       }
 
@@ -504,7 +505,7 @@ export default function AITextAnalyzerPage() {
       toast.success('Text analysis completed successfully!')
       
     } catch (error) {
-      console.error('Analysis error:', error)
+      // Console output removed for production
       
       // More detailed error message
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
@@ -530,7 +531,7 @@ export default function AITextAnalyzerPage() {
     }
 
     try {
-      console.log('Starting grammar check...')
+      // Console output removed for production
       
       const response = await apiRequest(getApiUrl('grammarCheck'), {
         method: 'POST',
@@ -545,10 +546,10 @@ export default function AITextAnalyzerPage() {
       const result = await response.json()
       
       // Debug: Log the API response structure in development
-      console.log('Grammar Check API Response:', result)
+      // Console output removed for production
       
       if (!result || !result.success) {
-        console.error('Grammar API returned unsuccessful response:', result)
+        // Console output removed for production
         throw new ApiError(result?.message || 'Grammar check failed')
       }
 
@@ -592,7 +593,7 @@ export default function AITextAnalyzerPage() {
       toast.success(`Grammar check completed! Found ${grammarErrors.length} issues.`)
       
     } catch (error) {
-      console.error('Grammar check error:', error)
+      // Console output removed for production
       
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
       toast.error(`Grammar check failed: ${errorMessage}`)
@@ -608,7 +609,7 @@ export default function AITextAnalyzerPage() {
     setIsRewriting(true)
 
     try {
-      console.log('Starting text rewrite...')
+      // Console output removed for production
       
       const response = await apiRequest(getApiUrl('textRewrite'), {
         method: 'POST',
@@ -625,10 +626,10 @@ export default function AITextAnalyzerPage() {
       const result = await response.json()
       
       // Debug: Log the API response structure in development
-      console.log('Rewrite API Response:', result)
+      // Console output removed for production
       
       if (!result || !result.success) {
-        console.error('Rewrite API returned unsuccessful response:', result)
+        // Console output removed for production
         throw new ApiError(result?.message || 'Rewrite failed')
       }
 
@@ -667,12 +668,12 @@ export default function AITextAnalyzerPage() {
       toast.success(`Text rewritten in ${data.rewritten_versions ? Object.keys(data.rewritten_versions).length : 0} different styles!`)
       
     } catch (error) {
-      console.error('Rewrite error:', error)
+      // Console output removed for production
       
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
       
       // Fallback to local rewrite if API fails
-      console.log('API rewrite failed, using local fallback')
+      // Console output removed for production
       
       const localRewriteOptions = generateRewriteOptions(text)
       
@@ -710,7 +711,7 @@ export default function AITextAnalyzerPage() {
       await performRewrite('all')
       
     } catch (error) {
-      console.error('Complete analysis error:', error)
+      // Console output removed for production
       toast.error('Analysis failed. Please try again.')
     } finally {
       setIsAnalyzing(false)
@@ -858,6 +859,8 @@ Sunlight streamed through the lantern room windows, illuminating dust particles 
             <Badge variant="secondary" className="text-xs sm:text-sm">Smart Insights</Badge>
           </div>
         </div>
+
+        <ApiStatus />
 
         {/* Real-time Stats Bar */}
         {text && (

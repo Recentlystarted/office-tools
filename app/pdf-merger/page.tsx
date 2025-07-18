@@ -8,6 +8,8 @@ import { Progress } from '@/components/ui/progress'
 import { FileText, Upload, Download, AlertCircle, X, GripVertical, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { getApiUrl, apiRequest, ApiError } from '@/lib/api'
+import ApiStatus from '@/components/api-status'
+import { DownloadSuccessCard } from '@/components/download-success-card'
 
 interface FileWithId {
   id: string
@@ -129,18 +131,18 @@ export default function PdfMergerPage() {
       
       // Append each file with proper field name
       files.forEach((fileWithId, index) => {
-        console.log(`Adding file ${index + 1}:`, fileWithId.name, `(${formatFileSize(fileWithId.size)})`)
+        // Console output removed for production})`)
         formData.append('files', fileWithId.file, fileWithId.name)
       })
 
       // Verify FormData content
-      console.log('FormData entries:')
+      // Console output removed for production
       for (let [key, value] of formData.entries()) {
-        console.log(key, value instanceof File ? `File: ${value.name}` : value)
+        // Console output removed for production
       }
 
       // Add some debugging
-      console.log('Merging files:', files.map(f => ({ name: f.name, size: f.size })))
+      // Console output removed for production))
       
       const response = await apiRequest(getApiUrl('pdfMerger'), {
         method: 'POST',
@@ -169,7 +171,7 @@ export default function PdfMergerPage() {
       toast.success('PDFs merged successfully! Click download to save the file.')
 
     } catch (error) {
-      console.error('Merge error:', error)
+      // Console output removed for production
       const errorMessage = error instanceof Error ? error.message : 'Merge failed. Please try again.'
       setError(errorMessage)
       toast.error(errorMessage)
@@ -204,6 +206,8 @@ export default function PdfMergerPage() {
           Combine multiple PDF files into a single document. Drag and drop to reorder files.
         </p>
       </div>
+
+      <ApiStatus />
 
       <Card className="w-full">
         <CardHeader>
@@ -398,41 +402,16 @@ export default function PdfMergerPage() {
 
           {/* Download Success Section */}
           {mergedBlob && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-6">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex-shrink-0 w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                    <FileText className="h-5 w-5 text-green-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-green-900 mb-1">PDF Merged Successfully!</h3>
-                    <p className="text-green-700 text-sm">
-                      Your {files.length} PDF files have been combined into one document
-                    </p>
-                    <p className="text-green-600 text-xs mt-1">
-                      File: {mergedFileName}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <Button 
-                    onClick={handleDownload}
-                    className="bg-green-600 hover:bg-green-700 text-white"
-                    size="lg"
-                  >
-                    <Download className="mr-2 h-4 w-4" />
-                    Download PDF
-                  </Button>
-                  <Button 
-                    onClick={resetForm}
-                    variant="outline"
-                    size="lg"
-                  >
-                    Merge More Files
-                  </Button>
-                </div>
-              </div>
-            </div>
+            <DownloadSuccessCard
+              title="PDF Merged Successfully!"
+              description={`Your ${files.length} PDF files have been combined into one document`}
+              fileName={mergedFileName}
+              downloadButtonText="Download PDF"
+              resetButtonText="Merge More Files"
+              onDownload={handleDownload}
+              onReset={resetForm}
+              icon={<FileText className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />}
+            />
           )}
 
           {/* Progress Bar */}

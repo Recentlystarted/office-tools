@@ -131,7 +131,6 @@ Average Words per Sentence: ${stats.averageWordsPerSentence}`
       setTimeout(() => setCopied(false), 2000)
       toast.success('Statistics copied to clipboard!')
     } catch (error) {
-      console.error('Error copying to clipboard:', error)
       toast.error('Failed to copy statistics')
     }
   }

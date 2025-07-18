@@ -199,8 +199,6 @@ export const stirlingPdfRequest = async (
   // Use the VPS API Sterling PDF proxy endpoint
   const stirlingUrl = `${API_CONFIG.baseUrl}/api/stirling/convert/pdf/word`;
   
-  console.log(`Using Sterling-PDF via VPS proxy: ${stirlingUrl}`);
-  
   try {
     // Make request to VPS API which will proxy to Sterling PDF
     const response = await fetch(stirlingUrl, {
@@ -210,12 +208,22 @@ export const stirlingPdfRequest = async (
     });
 
     if (!response.ok) {
-      throw new Error(`Sterling-PDF request failed: ${response.status} ${response.statusText}`);
+      let errorMessage = `Sterling-PDF request failed: ${response.status} ${response.statusText}`;
+      
+      // Provide more specific error messages
+      if (response.status === 503) {
+        errorMessage = 'Sterling-PDF service is temporarily unavailable. Complex PDFs may take longer to process. Please try again or use the Primary API.';
+      } else if (response.status === 504) {
+        errorMessage = 'Sterling-PDF conversion timed out. This PDF may be too complex. Please try using the Primary API or a smaller file.';
+      } else if (response.status === 413) {
+        errorMessage = 'PDF file is too large for Sterling-PDF conversion. Please try a smaller file or use the Primary API.';
+      }
+      
+      throw new Error(errorMessage);
     }
 
     return response;
   } catch (error) {
-    console.error('Stirling-PDF request error:', error);
     throw error;
   }
 };
@@ -243,7 +251,7 @@ export const testApiConnectivity = async (): Promise<{
     result.primaryTime = Date.now() - start
     result.primary = response.ok
   } catch (error) {
-    console.error('Primary API test failed:', error)
+    // Silent fail for connectivity test
   }
 
   // Test Stirling-PDF API
@@ -253,7 +261,7 @@ export const testApiConnectivity = async (): Promise<{
     result.stirlingTime = Date.now() - start
     result.stirling = response.ok
   } catch (error) {
-    console.error('Stirling-PDF test failed:', error)
+    // Silent fail for connectivity test
   }
 
   return result
@@ -274,7 +282,6 @@ export const getSmartApiUrl = async (toolName: string): Promise<string> => {
     return `${API_CONFIG.baseUrl}${endpoint}`
   } catch (error) {
     // Fallback to base URL if main API is down
-    console.warn('Main API appears to be down, using fallback')
     return `${API_CONFIG.baseUrl}${endpoint}`
   }
 }

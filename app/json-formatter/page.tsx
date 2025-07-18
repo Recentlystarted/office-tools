@@ -23,6 +23,8 @@ import {
   Download
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { getApiUrl, apiRequest, ApiError } from '@/lib/api'
+import ApiStatus from '@/components/api-status'
 
 interface JsonValidationResult {
   isValid: boolean
@@ -243,7 +245,7 @@ export default function JsonFormatterPage() {
       setTimeout(() => setCopied(null), 2000)
       toast.success(`${type} copied to clipboard!`)
     } catch (error) {
-      console.error('Error copying to clipboard:', error)
+      // Console output removed for production
       toast.error('Failed to copy to clipboard')
     }
   }

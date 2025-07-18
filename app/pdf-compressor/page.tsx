@@ -11,6 +11,7 @@ import { FileText, Upload, Download, AlertCircle, Loader2, Archive } from 'lucid
 import { toast } from 'sonner'
 import { DownloadSuccessCard } from '@/components/download-success-card'
 import { getApiUrl, apiRequest, ApiError } from '@/lib/api'
+import ApiStatus from '@/components/api-status'
 
 // Helper function to format file size
 const formatFileSize = (bytes: number): string => {
@@ -98,7 +99,7 @@ export default function PdfCompressorPage() {
       toast.success(`PDF compressed successfully! File size reduced by ${savedPercentage}%. Click download to save.`)
 
     } catch (error) {
-      console.error('Compression error:', error)
+      // Console output removed for production
       const errorMessage = error instanceof Error ? error.message : 'Compression failed. Please try again.'
       setError(errorMessage)
       toast.error(errorMessage)
@@ -135,6 +136,8 @@ export default function PdfCompressorPage() {
           Reduce PDF file size while maintaining quality for easier sharing and storage
         </p>
       </div>
+
+      <ApiStatus />
 
       <Card className="w-full">
         <CardHeader>

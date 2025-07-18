@@ -11,6 +11,7 @@ import { FileText, Upload, RotateCw, AlertCircle, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { DownloadSuccessCard } from '@/components/download-success-card'
 import { getApiUrl, apiRequest, ApiError } from '@/lib/api'
+import ApiStatus from '@/components/api-status'
 
 // Helper function to format file size
 const formatFileSize = (bytes: number): string => {
@@ -105,7 +106,7 @@ export default function RotatePdfPage() {
       toast.success(`PDF rotated successfully! Pages rotated ${rotationAngle}°. Click download to save.`)
 
     } catch (error) {
-      console.error('Rotation error:', error)
+      // Console output removed for production
       const errorMessage = error instanceof Error ? error.message : 'Rotation failed. Please try again.'
       setError(errorMessage)
       toast.error(errorMessage)
@@ -139,6 +140,8 @@ export default function RotatePdfPage() {
           Rotate PDF pages to the correct orientation - 90°, 180°, or 270°
         </p>
       </div>
+
+      <ApiStatus />
 
       <Card className="w-full">
         <CardHeader>

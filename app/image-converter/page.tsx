@@ -12,6 +12,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Slider } from '@/components/ui/slider'
 import { getApiUrl, apiRequest, ApiError } from '@/lib/api'
 import { generateStructuredData } from '@/lib/seo'
+import ApiStatus from '@/components/api-status'
 import { 
   ImageIcon, 
   Upload, 
@@ -183,7 +184,7 @@ export default function ImageConverterPage() {
       toast.success(`${files.length} image(s) converted successfully to ${outputFormat.toUpperCase()}!`)
 
     } catch (error) {
-      console.error('Conversion error:', error)
+      // Console output removed for production
       const errorMessage = error instanceof Error ? error.message : 'Image conversion failed. Please try again.'
       setError(errorMessage)
       toast.error(errorMessage)
@@ -227,6 +228,8 @@ export default function ImageConverterPage() {
           Convert images between different formats - JPG, PNG, WebP, GIF, BMP, TIFF, SVG, and ICO
         </p>
       </div>
+
+      <ApiStatus />
 
       <div className="grid lg:grid-cols-2 gap-6 lg:gap-8">
         {/* Left Column - Upload & Files */}

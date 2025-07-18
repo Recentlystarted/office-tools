@@ -23,6 +23,8 @@ import {
   AlertCircle
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { getApiUrl, apiRequest, ApiError } from '@/lib/api'
+import ApiStatus from '@/components/api-status'
 
 export default function Base64EncoderDecoderPage() {
   const [inputText, setInputText] = useState('')
@@ -82,12 +84,36 @@ export default function Base64EncoderDecoderPage() {
     }
   }
 
-  const processText = () => {
+  const processText = async () => {
     if (!inputText.trim()) {
       toast.error('Please enter text to process')
       return
     }
 
+    try {
+      // Try API first
+      const response = await apiRequest(getApiUrl('base64Encoder'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          text: inputText.trim(), 
+          operation: mode,
+          urlSafe: urlSafe
+        })
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        setOutputText(result.result)
+        setIsValidBase64(true)
+        toast.success(`Text ${mode}d successfully via API!`)
+        return
+      }
+    } catch (error) {
+      // API failed, use local processing
+    }
+
+    // Local fallback processing
     try {
       if (mode === 'encode') {
         const encoded = encodeBase64(inputText)
@@ -134,7 +160,7 @@ export default function Base64EncoderDecoderPage() {
       setTimeout(() => setCopied(false), 2000)
       toast.success('Result copied to clipboard!')
     } catch (error) {
-      console.error('Error copying to clipboard:', error)
+      // Console output removed for production
       toast.error('Failed to copy result')
     }
   }
@@ -228,7 +254,10 @@ export default function Base64EncoderDecoderPage() {
               {mode === 'encode' ? 'Encoding' : 'Decoding'}
             </Badge>
             <Badge variant="secondary">File Support</Badge>
-            <Badge variant="secondary">URL Safe</Badge>
+            <Badge variant="secondary">API Enhanced</Badge>
+          </div>
+          <div className="mt-6">
+            <ApiStatus />
           </div>
         </div>
 

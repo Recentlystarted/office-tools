@@ -149,7 +149,7 @@ export default function TimestampConverterPage() {
       setConversion(result)
       toast.success('Timestamp converted successfully!')
     } catch (error) {
-      console.error('Conversion error:', error)
+      // Console output removed for production
       toast.error('Failed to convert timestamp')
     }
   }
@@ -193,7 +193,7 @@ export default function TimestampConverterPage() {
       setConversion(result)
       toast.success('Date converted to timestamp successfully!')
     } catch (error) {
-      console.error('Conversion error:', error)
+      // Console output removed for production
       toast.error('Failed to convert date')
     }
   }

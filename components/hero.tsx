@@ -1,7 +1,8 @@
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { ArrowRight, FileText, Zap, Shield, Play } from 'lucide-react'
+import { ArrowRight, FileText, Zap, Shield, Play, Heart } from 'lucide-react'
 import Link from 'next/link'
+import DonationModal from '@/components/donation-modal'
 
 export function Hero() {
   return (
@@ -44,6 +45,14 @@ export function Hero() {
                 Try PDF to Word
               </Link>
             </Button>
+            <DonationModal 
+              trigger={
+                <Button size="lg" className="text-lg px-8 py-6 h-auto bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300">
+                  <Heart className="mr-2 h-5 w-5" />
+                  Support Us
+                </Button>
+              } 
+            />
           </div>
 
           {/* Feature Pills */}

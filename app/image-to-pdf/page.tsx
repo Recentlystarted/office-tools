@@ -9,6 +9,7 @@ import { FileImage, Upload, Download, AlertCircle, X, Loader2 } from 'lucide-rea
 import { toast } from 'sonner'
 import { DownloadSuccessCard } from '@/components/download-success-card'
 import { getApiUrl, apiRequest, ApiError } from '@/lib/api'
+import ApiStatus from '@/components/api-status'
 
 interface ImageWithId {
   id: string
@@ -161,7 +162,7 @@ export default function ImageToPdfPage() {
       toast.success('Images converted to PDF successfully! Click download to save the file.')
 
     } catch (error) {
-      console.error('Conversion error:', error)
+      // Console output removed for production
       const errorMessage = error instanceof Error ? error.message : 'Conversion failed. Please try again.'
       setError(errorMessage)
       toast.error(errorMessage)
@@ -198,6 +199,8 @@ export default function ImageToPdfPage() {
           Convert your images (JPG, PNG, GIF, etc.) to PDF documents with custom layout options
         </p>
       </div>
+
+      <ApiStatus />
 
       <Card className="w-full">
         <CardHeader>

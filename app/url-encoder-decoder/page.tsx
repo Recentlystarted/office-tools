@@ -147,7 +147,7 @@ export default function URLEncoderDecoderPage() {
       setTimeout(() => setCopied(false), 2000)
       toast.success('Result copied to clipboard!')
     } catch (error) {
-      console.error('Error copying to clipboard:', error)
+      // Console output removed for production
       toast.error('Failed to copy result')
     }
   }

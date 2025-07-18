@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Download, FileText, RefreshCw, CheckCircle, Heart, Coffee } from 'lucide-react'
+import { Download, FileText, RefreshCw, CheckCircle, Heart, Coffee, CreditCard } from 'lucide-react'
 
 interface DownloadSuccessCardProps {
   title: string
@@ -86,31 +86,37 @@ export function DownloadSuccessCard({
           <CardContent className="p-6">
             <div className="text-center space-y-4">
               <div className="flex items-center justify-center gap-2">
-                <Heart className="h-5 w-5 text-destructive" />
+                <Heart className="h-5 w-5 text-red-500" />
                 <h3 className="text-lg font-semibold text-amber-900 dark:text-amber-100">
                   Support Our Free Service
                 </h3>
-                <Heart className="h-5 w-5 text-destructive" />
+                <Heart className="h-5 w-5 text-red-500" />
               </div>
               <p className="text-amber-700 dark:text-amber-300 text-sm max-w-md mx-auto">
-                Help us keep this tool free and secure for everyone! No signup required, your privacy protected.
+                Help us keep this tool free and secure for everyone! Your support helps us maintain and improve our services.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="border-destructive/50 text-destructive hover:bg-destructive/10"
+                  onClick={() => {
+                    // Razorpay integration will be added here
+                    console.log('Razorpay payment initiated');
+                  }}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
                 >
-                  <Heart className="mr-2 h-4 w-4" />
-                  One-time Donation
+                  <CreditCard className="mr-2 h-4 w-4" />
+                  Donate via Razorpay
                 </Button>
                 <Button 
                   variant="outline" 
                   size="sm"
                   className="border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950/30"
+                  onClick={() => {
+                    // Alternative donation method
+                    console.log('Alternative donation method');
+                  }}
                 >
                   <Coffee className="mr-2 h-4 w-4" />
-                  Buy Us Coffee
+                  Other Ways to Support
                 </Button>
               </div>
             </div>

@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Slider } from '@/components/ui/slider'
+import ApiStatus from '@/components/api-status'
 import { 
   Hash,
   Copy,
@@ -159,7 +160,6 @@ export default function UUIDGeneratorPage() {
       setTimeout(() => setCopied(null), 2000)
       toast.success('UUID copied to clipboard!')
     } catch (error) {
-      console.error('Error copying to clipboard:', error)
       toast.error('Failed to copy UUID')
     }
   }
@@ -170,7 +170,6 @@ export default function UUIDGeneratorPage() {
       await navigator.clipboard.writeText(allUUIDs)
       toast.success('All UUIDs copied to clipboard!')
     } catch (error) {
-      console.error('Error copying to clipboard:', error)
       toast.error('Failed to copy UUIDs')
     }
   }
@@ -249,6 +248,8 @@ export default function UUIDGeneratorPage() {
             <Badge variant="secondary">Multiple Formats</Badge>
           </div>
         </div>
+
+        <ApiStatus />
 
         <div className="grid lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
           {/* Settings Section */}

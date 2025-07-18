@@ -22,6 +22,8 @@ import {
   Lock
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { getApiUrl, apiRequest, ApiError } from '@/lib/api'
+import ApiStatus from '@/components/api-status'
 
 interface HashResult {
   algorithm: string
@@ -70,11 +72,61 @@ export default function HashGeneratorPage() {
   }
 
   // Note: This is a simplified implementation for demo purposes
-  // In a real application, you should use the Web Crypto API or a proper hash library
+  // Enhanced hash generation with API integration and local fallback
   const generateHash = async (input: string, algorithm: string): Promise<string> => {
-    // For demonstration purposes, we'll use a simple hash function
-    // In production, you would use crypto.subtle.digest() for proper hashing
-    return simpleHash(input + algorithm, algorithm)
+    try {
+      // Try API first
+      const response = await apiRequest(getApiUrl('hashGenerator'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ input, algorithm })
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        return result.hash
+      }
+    } catch (error) {
+      // API failed, use local fallback
+    }
+
+    // Local fallback using Web Crypto API
+    return await generateLocalHash(input, algorithm)
+  }
+
+  // Local hash generation using Web Crypto API
+  const generateLocalHash = async (input: string, algorithm: string): Promise<string> => {
+    const encoder = new TextEncoder()
+    const data = encoder.encode(input)
+    
+    try {
+      let hashBuffer: ArrayBuffer
+      
+      switch (algorithm) {
+        case 'sha256':
+          hashBuffer = await crypto.subtle.digest('SHA-256', data)
+          break
+        case 'sha512':
+          hashBuffer = await crypto.subtle.digest('SHA-512', data)
+          break
+        case 'sha384':
+          hashBuffer = await crypto.subtle.digest('SHA-384', data)
+          break
+        case 'sha1':
+          hashBuffer = await crypto.subtle.digest('SHA-1', data)
+          break
+        default:
+          // For unsupported algorithms, use simple hash
+          return simpleHash(input + algorithm, algorithm)
+      }
+
+      // Convert buffer to hex string
+      const hashArray = Array.from(new Uint8Array(hashBuffer))
+      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+    } catch (error) {
+      // Fallback to simple hash
+      return simpleHash(input + algorithm, algorithm)
+    }
   }
 
   const hashAlgorithms = [
@@ -125,7 +177,7 @@ export default function HashGeneratorPage() {
       setHashResults(newResults)
       toast.success(`Generated ${newResults.length} hash${newResults.length > 1 ? 'es' : ''}!`)
     } catch (error) {
-      console.error('Error generating hashes:', error)
+      // Console output removed for production
       toast.error('Failed to generate hashes')
     } finally {
       setIsProcessing(false)
@@ -163,7 +215,7 @@ export default function HashGeneratorPage() {
       setInputText(text.substring(0, 1000) + (text.length > 1000 ? '...' : ''))
       toast.success(`Generated hashes for file: ${file.name}`)
     } catch (error) {
-      console.error('Error processing file:', error)
+      // Console output removed for production
       toast.error('Failed to process file')
     } finally {
       setIsProcessing(false)
@@ -177,7 +229,7 @@ export default function HashGeneratorPage() {
       setTimeout(() => setCopied(null), 2000)
       toast.success(`${algorithm.toUpperCase()} hash copied to clipboard!`)
     } catch (error) {
-      console.error('Error copying to clipboard:', error)
+      // Console output removed for production
       toast.error('Failed to copy hash')
     }
   }
@@ -191,7 +243,7 @@ export default function HashGeneratorPage() {
       await navigator.clipboard.writeText(allHashes)
       toast.success('All hashes copied to clipboard!')
     } catch (error) {
-      console.error('Error copying to clipboard:', error)
+      // Console output removed for production
       toast.error('Failed to copy hashes')
     }
   }
@@ -248,7 +300,10 @@ export default function HashGeneratorPage() {
           <div className="flex items-center justify-center gap-2 mt-4">
             <Badge variant="secondary">Multiple Algorithms</Badge>
             <Badge variant="secondary">File Support</Badge>
-            <Badge variant="secondary">Secure</Badge>
+            <Badge variant="secondary">API Enhanced</Badge>
+          </div>
+          <div className="mt-6">
+            <ApiStatus />
           </div>
         </div>
 

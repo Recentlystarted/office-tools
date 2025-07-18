@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
+import ApiStatus from '@/components/api-status'
 import { 
   Link2,
   Copy,
@@ -116,7 +117,6 @@ export default function URLShortenerPage() {
         setIsShortening(false)
       }, 1000)
     } catch (error) {
-      console.error('Error shortening URL:', error)
       toast.error('Failed to shorten URL. Please try again.')
       setIsShortening(false)
     }
@@ -205,6 +205,8 @@ export default function URLShortenerPage() {
           Create short, shareable links from long URLs. Track clicks and manage all your shortened links in one place.
         </p>
       </div>
+
+      <ApiStatus />
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8 max-w-7xl mx-auto">
         {/* URL Shortener Form */}
