@@ -41,13 +41,24 @@ export default function AdminDashboard() {
 
       if (ratingsResponse.ok) {
         const ratingsData = await ratingsResponse.json()
-        setRatings(ratingsData.summary)
-        setRecentRatings(ratingsData.recentRatings || [])
+        setRatings({
+          totalRatings: ratingsData.total_ratings,
+          averageRating: ratingsData.average_rating,
+          ratingDistribution: ratingsData.distribution
+        })
+        setRecentRatings(ratingsData.recent_ratings?.map((rating: any) => ({
+          rating: rating.rating,
+          timestamp: rating.timestamp,
+          source: 'Web'
+        })) || [])
       }
 
       if (sharesResponse.ok) {
         const sharesData = await sharesResponse.json()
-        setShares(sharesData.summary)
+        setShares({
+          totalShares: sharesData.total_shares,
+          platformBreakdown: sharesData.platform_breakdown
+        })
       }
     } catch (error) {
       console.error('Error fetching data:', error)

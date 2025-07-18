@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
@@ -20,14 +20,14 @@ export default function DonationModal({ trigger, className = '' }: DonationModal
   const [userRating, setUserRating] = useState<number>(0)
   const [hasRated, setHasRated] = useState(false)
 
-  // Check if user has already rated
-  useState(() => {
+  // Check if user has already rated (client-side only)
+  useEffect(() => {
     const savedRating = localStorage.getItem('office-tools-rating')
     if (savedRating) {
       setUserRating(parseInt(savedRating))
       setHasRated(true)
     }
-  })
+  }, [])
 
   const handleRating = async (rating: number) => {
     try {
